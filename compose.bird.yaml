@@ -23,7 +23,7 @@ services:
     environment:
       DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:?set in .env}
       DEEPSEEK_API_BASE: ${DEEPSEEK_API_BASE:-https://api.deepseek.com}
-      SYSTEM_AGENT_MODEL: ${SYSTEM_AGENT_MODEL:-deepseek-v4-flash}
+      SYSTEM_AGENT_MODEL: ${SYSTEM_AGENT_MODEL:-deepseek-flash}
       BIRD_CONFIG_ROOT: /app/configs/model
       BIRD_CACHE_ROOT: /app/.cache/commerce-agent
       BIRD_SPOOL_DIR: /app/spool

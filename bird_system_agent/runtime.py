@@ -51,8 +51,8 @@ from commerce_agent.orchestration.bird_tools_http import (
     HttpBirdToolPort,
 )
 
-CAPABILITY_SNAPSHOT = "deepseek-v4-flash-capability.v3.json"
-PRICE_SNAPSHOT = "deepseek-v4-flash-price.2026-09-06.json"
+CAPABILITY_SNAPSHOT = "deepseek-flash-capability.v1.json"
+PRICE_SNAPSHOT = "deepseek-flash-price.2026-09-12.json"
 TOKENIZER_MANIFEST = "deepseek-tokenizer-artifact.v1.json"
 
 
@@ -198,7 +198,7 @@ class DeepSeekBirdRuntimeFactory:
             cache_root=Path(os.environ.get("BIRD_CACHE_ROOT", "/app/.cache/commerce-agent")),
             deepseek_base_url=os.environ.get("DEEPSEEK_API_BASE", "https://api.deepseek.com"),
             deepseek_api_key=api_key,
-            model=os.environ.get("SYSTEM_AGENT_MODEL", "deepseek-v4-flash"),
+            model=os.environ.get("SYSTEM_AGENT_MODEL", "deepseek-flash"),
             db_env_base_url=os.environ.get("DB_ENV_BASE_URL", "http://127.0.0.1:6002"),
             user_sim_base_url=os.environ.get("USER_SIM_BASE_URL", "http://127.0.0.1:6001"),
             experiment_id=os.environ.get("BIRD_EXPERIMENT_ID", "bird-system-agent"),
