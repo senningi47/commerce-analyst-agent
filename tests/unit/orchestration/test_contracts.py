@@ -283,7 +283,7 @@ def test_retail_request_accepts_only_the_safe_context_shape() -> None:
     assert request.confirmed_facts == (datum,)
 
 
-def test_bird_a_request_enforces_loop_budgets() -> None:
+def test_bird_a_request_enforces_official_loop_budgets() -> None:
     values = {
         "run_scope": bird_scope(mode="a"),
         "attempt_id": ATTEMPT_ID,
@@ -291,12 +291,18 @@ def test_bird_a_request_enforces_loop_budgets() -> None:
         "confirmed_facts": (),
         "evidence": (),
         "latest_error": None,
-        "max_model_calls": 6,
-        "max_tool_calls": 8,
+        "max_model_calls": 60,
+        "max_tool_calls": 60,
     }
-    assert BirdARunRequest(**values).max_tool_calls == 8
+    request = BirdARunRequest(**values)
+    assert request.max_model_calls == 60
+    assert request.max_tool_calls == 60
     with pytest.raises(ValidationError):
-        BirdARunRequest.model_validate(values | {"max_model_calls": 7})
+        BirdARunRequest.model_validate(values | {"max_model_calls": 61})
+    with pytest.raises(ValidationError):
+        BirdARunRequest.model_validate(values | {"max_tool_calls": 61})
+    with pytest.raises(ValidationError):
+        BirdARunRequest.model_validate(values | {"max_model_calls": 0})
 
 
 def test_bird_a_outcome_matches_its_terminal_status() -> None:

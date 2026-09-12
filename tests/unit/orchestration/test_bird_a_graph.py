@@ -27,7 +27,7 @@ from commerce_agent.model.contracts import (
 from commerce_agent.model.errors import ModelTransportError
 from commerce_agent.model.fake import FakeModel
 from commerce_agent.orchestration.bird_a_graph import BirdAGraph
-from commerce_agent.orchestration.contracts import BirdARunRequest
+from commerce_agent.orchestration.contracts import BirdARunRequest, StopOutcome
 from commerce_agent.orchestration.tools import SyntheticBirdAToolPort, ToolContractError
 
 CONFIG_ROOT = Path(__file__).parents[3] / "configs" / "model"
@@ -532,3 +532,96 @@ async def test_bird_a_clears_private_state_on_every_terminal_path(terminal: str)
             attempt_id=ATTEMPT_ID,
         )
     ]
+
+
+class _ScriptedGate:
+    """Structural `BirdAModelTurnGate` fake scripting per-turn stop decisions."""
+
+    def __init__(self, stops: list[StopOutcome | None]) -> None:
+        self._stops = list(stops)
+        self.calls = 0
+
+    async def stop_model_turn(self) -> StopOutcome | None:
+        self.calls += 1
+        if self._stops:
+            return self._stops.pop(0)
+        return None
+
+
+@pytest.mark.asyncio
+async def test_bird_a_gate_stops_attempt_before_first_model_call() -> None:
+    registry = ProfileRegistry.load(CONFIG_ROOT)
+    request = bird_a_request(registry)
+    gateway = FakeModel([])  # any model call would exhaust the script and fail
+    turn_store = RecordingTurnStore()
+    gate = _ScriptedGate(
+        [
+            StopOutcome(
+                kind="budget_exhausted",
+                reason_code="coin_budget_signal",
+                retryable=False,
+            )
+        ]
+    )
+    graph = BirdAGraph(
+        context_builder=context_builder(registry),
+        profile=registry.get("bird_a"),
+        gateway=gateway,
+        tool_port=SyntheticBirdAToolPort.from_fixture(SYNTHETIC_MANIFEST),
+        turn_store=turn_store,
+        model_turn_gate=gate,
+    )
+
+    outcome = await graph.run(request)
+
+    assert outcome.status == "stopped"
+    assert outcome.stop is not None
+    assert outcome.stop.kind == "budget_exhausted"
+    assert outcome.stop.reason_code == "coin_budget_signal"
+    assert outcome.model_calls == 0
+    assert outcome.tool_calls == 0
+    assert len(gateway.requests) == 0
+    assert [ref.attempt_id for ref in turn_store.deleted_attempts] == [ATTEMPT_ID]
+
+
+@pytest.mark.asyncio
+async def test_bird_a_gate_consulted_before_every_model_call() -> None:
+    registry = ProfileRegistry.load(CONFIG_ROOT)
+    request = bird_a_request(registry)
+    call = ToolCall(
+        call_id="bird_call_1",
+        name="synthetic_bird_a_observe_schema",
+        arguments_json='{"schema_ref":"synthetic:orders"}',
+    )
+    gateway = FakeModel(
+        [
+            model_response(
+                request.run_scope,
+                sequence=0,
+                output=ToolCallOutput(type="tool_calls", tool_calls=(call,)),
+                finish_reason="tool_calls",
+            ),
+            model_response(
+                request.run_scope,
+                sequence=1,
+                output=FinalOutput(
+                    type="final",
+                    content="SELECT status FROM synthetic_orders",
+                ),
+            ),
+        ]
+    )
+    gate = _ScriptedGate([])
+    graph = BirdAGraph(
+        context_builder=context_builder(registry),
+        profile=registry.get("bird_a"),
+        gateway=gateway,
+        tool_port=SyntheticBirdAToolPort.from_fixture(SYNTHETIC_MANIFEST),
+        turn_store=RecordingTurnStore(),
+        model_turn_gate=gate,
+    )
+
+    outcome = await graph.run(request)
+
+    assert outcome.status == "completed"
+    assert gate.calls == 2

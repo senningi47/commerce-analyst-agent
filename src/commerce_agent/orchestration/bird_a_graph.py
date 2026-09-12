@@ -2,6 +2,7 @@
 
 import json
 from hashlib import sha256
+from typing import Protocol
 
 from commerce_agent.context_builder.builder import ContextBuilder, scope_digest
 from commerce_agent.context_builder.contracts import BirdAProfile, ContextRequest, PromptBundle
@@ -38,6 +39,16 @@ def _canonical_json(value: object) -> str:
     )
 
 
+class BirdAModelTurnGate(Protocol):
+    """Pre-model-call veto seam (official `before_model_callback` analogue).
+
+    Implementations own the budget semantics and translate them into stop
+    primitives; the graph stays budget-agnostic and only relays the decision.
+    """
+
+    async def stop_model_turn(self) -> StopOutcome | None: ...
+
+
 class BirdAGraph:
     """Run one non-resumable BirdA attempt against the injected BirdToolPort."""
 
@@ -49,6 +60,7 @@ class BirdAGraph:
         gateway: ModelGateway,
         tool_port: BirdToolPort,
         turn_store: ProviderTurnStore,
+        model_turn_gate: BirdAModelTurnGate | None = None,
     ) -> None:
         if (profile.kind, profile.key) != ("bird_a", "bird_a"):
             raise ToolContractError("bird_a_profile_required")
@@ -57,6 +69,7 @@ class BirdAGraph:
         self._gateway = gateway
         self._tool_port = tool_port
         self._turn_store = turn_store
+        self._model_turn_gate = model_turn_gate
 
     async def run(self, request: BirdARunRequest) -> BirdARunOutcome:
         """Run one attempt and destroy its provider-private state on exit."""
@@ -111,6 +124,16 @@ class BirdAGraph:
                     history=tuple(history),
                 )
             )
+            if self._model_turn_gate is not None:
+                gate_stop = await self._model_turn_gate.stop_model_turn()
+                if gate_stop is not None:
+                    return self._stopped(
+                        request,
+                        bundle,
+                        gate_stop,
+                        model_calls=model_calls,
+                        tool_calls=tool_calls,
+                    )
             try:
                 response = await self._gateway.complete(bundle.model_request)
             except ModelGatewayError as error:

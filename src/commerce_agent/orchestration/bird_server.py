@@ -30,11 +30,14 @@ from pydantic import BaseModel, Field
 from commerce_agent.context_builder.contracts import ContextDatum
 from commerce_agent.evaluation.contracts import load_official_contract
 from commerce_agent.model.contracts import RunScope, ToolCall, ToolResult
+from commerce_agent.orchestration.bird_a_graph import BirdAModelTurnGate
 from commerce_agent.orchestration.contracts import (
     BirdARunOutcome,
     BirdARunRequest,
     BirdCRequest,
     BirdCResponse,
+    StopKind,
+    StopOutcome,
 )
 from commerce_agent.orchestration.tools import BirdToolPort
 
@@ -42,6 +45,8 @@ _MAX_MODEL_TURNS = 60  # official callbacks.py / callbacks_cinteract.py MAX_MODE
 _C_SUBMIT_FORCED_RESPONSE = "SQL submitted. Awaiting result."
 _C_MAX_TURNS_TEXT = "Maximum turns reached. Task ended."
 _A_MAX_TURNS_TEXT = "Maximum interaction turns reached. Task ended."
+_A_TASK_DONE_TEXT = "Task completed."  # official before_model_callback task_done branch
+_A_BUDGET_EXHAUSTED_TEXT = "Budget exhausted. Task ended."  # official budget<0 branch
 
 _INTERNAL_MODE: dict[str, Literal["a", "c"]] = {
     "a-interact": "a",
@@ -123,6 +128,7 @@ class BirdRuntimeFactory(Protocol):
         tool_port: BirdToolPort,
         max_model_calls: int,
         max_tool_calls: int,
+        model_turn_gate: BirdAModelTurnGate | None = None,
     ) -> BirdAHandler: ...
 
 
@@ -249,6 +255,35 @@ class BirdSessionStatePort:
         )
 
 
+class _BudgetStopGate:
+    """Official a-mode `before_model_callback` over shared session state.
+
+    Replicates the official gate ordering: `task_done` first, then the
+    exhausted-budget stop signal (`budget_remaining < 0`, set by the free
+    submit exit). Coin semantics stay here; the graph only relays the
+    resulting stop primitives.
+    """
+
+    def __init__(self, state: dict[str, object]) -> None:
+        self._state = state
+
+    async def stop_model_turn(self) -> StopOutcome | None:
+        if self._state.get("task_done") is True:
+            return StopOutcome(
+                kind=StopKind.COMPLETED,
+                reason_code="official_task_done",
+                retryable=False,
+            )
+        budget = self._state.get("budget_remaining")
+        if isinstance(budget, (int, float)) and budget < 0:
+            return StopOutcome(
+                kind=StopKind.BUDGET_EXHAUSTED,
+                reason_code="coin_budget_signal",
+                retryable=False,
+            )
+        return None
+
+
 def _phase_datum(source_ref: str, content: str) -> ContextDatum:
     return ContextDatum(
         kind="phase",
@@ -356,6 +391,8 @@ class _Session:
             current_input=_user_datum(
                 f"bird-session:{self.session_id}:turn", message
             ),
+            max_model_calls=_MAX_MODEL_TURNS,
+            max_tool_calls=_MAX_MODEL_TURNS,
         )
         handler = self._factory.build_a(
             run_scope=self._run_scope,
@@ -363,12 +400,21 @@ class _Session:
             tool_port=self._port,
             max_model_calls=request.max_model_calls,
             max_tool_calls=request.max_tool_calls,
+            model_turn_gate=_BudgetStopGate(self.state),
         )
         outcome = await handler.run(request)
         if outcome.status == "completed" and outcome.final_output is not None:
             return outcome.final_output.content
         if outcome.stop is not None:
-            if outcome.stop.kind == "budget_exhausted" and outcome.stop.reason_code == (
+            if outcome.stop.kind == StopKind.COMPLETED and outcome.stop.reason_code == (
+                "official_task_done"
+            ):
+                return _A_TASK_DONE_TEXT
+            if outcome.stop.kind == StopKind.BUDGET_EXHAUSTED and outcome.stop.reason_code == (
+                "coin_budget_signal"
+            ):
+                return _A_BUDGET_EXHAUSTED_TEXT
+            if outcome.stop.kind == StopKind.BUDGET_EXHAUSTED and outcome.stop.reason_code == (
                 "model_call_limit"
             ):
                 return _A_MAX_TURNS_TEXT

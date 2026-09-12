@@ -225,7 +225,7 @@ class HarnessFactory:
         return self._c_handler
 
     def build_a(self, **kwargs: object) -> StubAHandler:
-        del kwargs
+        self.build_a_kwargs = kwargs
         assert self._a_handler is not None, "harness factory requires an a handler"
         return self._a_handler
 
@@ -394,6 +394,73 @@ def test_a_run_stopped_max_turns_text() -> None:
     )
 
     assert response.response == "Maximum interaction turns reached. Task ended."
+
+
+def test_a_run_uses_official_turn_budget_and_forwards_gate() -> None:
+    handler = StubAHandler([stub_a_outcome("SELECT 1")])
+    factory = HarnessFactory(a_handler=handler, port=StubPort([]))
+    adapter = BirdSystemServerAdapter(
+        factory=factory, attempt_id_factory=lambda: KNOWN_ATTEMPT_ID
+    )
+
+    asyncio.run(
+        adapter.run_session(
+            BirdRunSessionRequest(task_id="task-1", mode="a-interact", message="solve")
+        )
+    )
+
+    request = handler.requests[0]
+    assert request.max_model_calls == 60
+    assert request.max_tool_calls == 60
+    assert factory.build_a_kwargs["model_turn_gate"] is not None
+
+
+def test_a_run_maps_task_done_gate_stop_to_official_text() -> None:
+    outcome = BirdARunOutcome(
+        status="stopped",
+        stop=StopOutcome(kind="completed", reason_code="official_task_done", retryable=False),
+        model_calls=3,
+        tool_calls=2,
+        prompt_policy_hash="a" * 64,
+        rendered_prompt_hash="b" * 64,
+        tool_hash="c" * 64,
+        context_hash="d" * 64,
+        config_hash="e" * 64,
+        attempt_id=uuid4(),
+    )
+    adapter = make_adapter(a_handler=StubAHandler([outcome]), port=StubPort([]))
+
+    response = asyncio.run(
+        adapter.run_session(
+            BirdRunSessionRequest(task_id="task-1", mode="a-interact", message="solve")
+        )
+    )
+
+    assert response.response == "Task completed."
+
+
+def test_a_run_maps_budget_signal_stop_to_official_text() -> None:
+    outcome = BirdARunOutcome(
+        status="stopped",
+        stop=StopOutcome(kind="budget_exhausted", reason_code="coin_budget_signal", retryable=False),
+        model_calls=4,
+        tool_calls=3,
+        prompt_policy_hash="a" * 64,
+        rendered_prompt_hash="b" * 64,
+        tool_hash="c" * 64,
+        context_hash="d" * 64,
+        config_hash="e" * 64,
+        attempt_id=uuid4(),
+    )
+    adapter = make_adapter(a_handler=StubAHandler([outcome]), port=StubPort([]))
+
+    response = asyncio.run(
+        adapter.run_session(
+            BirdRunSessionRequest(task_id="task-1", mode="a-interact", message="solve")
+        )
+    )
+
+    assert response.response == "Budget exhausted. Task ended."
 
 
 def test_budget_gate_blocks_non_submit_when_short() -> None:

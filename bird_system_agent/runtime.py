@@ -33,7 +33,7 @@ from commerce_agent.model._retry import RetryPolicy
 from commerce_agent.model._turn_store import InMemoryProviderTurnStore
 from commerce_agent.model.contracts import RunScope
 from commerce_agent.model.gateway import CapabilitySnapshot, DeepSeekModelGateway
-from commerce_agent.orchestration.bird_a_graph import BirdAGraph
+from commerce_agent.orchestration.bird_a_graph import BirdAGraph, BirdAModelTurnGate
 from commerce_agent.orchestration.bird_c_responder import BirdCResponder
 from commerce_agent.orchestration.bird_tools_http import (
     BirdHttpResponse,
@@ -193,6 +193,7 @@ class DeepSeekBirdRuntimeFactory:
         tool_port: HttpBirdToolPort,
         max_model_calls: int,
         max_tool_calls: int,
+        model_turn_gate: BirdAModelTurnGate | None = None,
     ) -> BirdAGraph:
         # per-attempt call budgets ride on BirdARunRequest (adapter-owned),
         # so the factory ignores them here by contract
@@ -203,4 +204,5 @@ class DeepSeekBirdRuntimeFactory:
             gateway=self._gateway,
             tool_port=tool_port,
             turn_store=self._turn_store,
+            model_turn_gate=model_turn_gate,
         )

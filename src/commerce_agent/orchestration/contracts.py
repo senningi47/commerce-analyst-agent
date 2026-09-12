@@ -255,8 +255,8 @@ class BirdARunRequest(BaseModel, frozen=True, extra="forbid"):
     confirmed_facts: tuple[ContextDatum, ...] = ()
     evidence: tuple[ContextDatum, ...] = ()
     latest_error: TypedErrorDatum | None = None
-    max_model_calls: int = Field(default=6, ge=1, le=6)
-    max_tool_calls: int = Field(default=8, ge=0, le=8)
+    max_model_calls: int = Field(default=6, ge=1, le=60)
+    max_tool_calls: int = Field(default=8, ge=0, le=60)
 
     @model_validator(mode="after")
     def validate_bird_a_scope(self) -> "BirdARunRequest":
