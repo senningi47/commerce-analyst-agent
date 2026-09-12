@@ -1,0 +1,205 @@
+{
+  "fixture_revision": "day4-development-v1",
+  "scenarios": [
+    {
+      "scenario_id": "seller-risk-investigation-v1",
+      "fixture_revision": "day4-development-v1",
+      "visibility": "development",
+      "initial_question": "Investigate sellers with elevated late-delivery risk.",
+      "scripted_clarifications": [
+        {"slot": "valid_order_statuses", "response": "delivered"},
+        {"slot": "time_field", "response": "order_purchase_timestamp"},
+        {"slot": "minimum_order_count", "response": "5"},
+        {"slot": "anomaly_threshold", "response": "0.20"}
+      ],
+      "analyst_actor_ref": "actor:analyst",
+      "approver_actor_ref": "actor:approver",
+      "actor_steps": [
+        {"action": "approve_execute", "actor_ref": "actor:approver", "proposal_index": 0}
+      ],
+      "clock_steps": ["2026-09-06T04:00:00Z"],
+      "ops_initial_state": {},
+      "reset_manifest_revision": "scenario-reset-v1",
+      "gold_tables": ["orders", "order_items"],
+      "gold_columns": ["order_status", "order_purchase_timestamp", "seller_ref"],
+      "gold_values": ["delivered", "under_investigation"],
+      "reference_query_assertions": [
+        {
+          "sql": "SELECT task_ref, status FROM ops_read.investigation_tasks",
+          "expected_columns": ["task_ref", "status"],
+          "minimum_rows": 1
+        },
+        {
+          "sql": "SELECT seller_ref, status FROM ops_read.risk_annotations",
+          "expected_columns": ["seller_ref", "status"],
+          "minimum_rows": 1
+        }
+      ],
+      "database_assertions": [],
+      "required_clarification_slots": [
+        "valid_order_statuses",
+        "time_field",
+        "minimum_order_count",
+        "anomaly_threshold"
+      ],
+      "forbidden_clarification_slots": ["business_value"],
+      "evidence_ids": [
+        "query:baseline",
+        "query:seller_drilldown",
+        "reconciliation:plan"
+      ],
+      "operation_expectations": [
+        {"command_type": "open_seller_risk_case", "terminal_status": "succeeded", "count": 1}
+      ],
+      "readback_expectations": [
+        {
+          "sql": "SELECT task_ref, status FROM ops_read.investigation_tasks",
+          "expected_columns": ["task_ref", "status"],
+          "minimum_rows": 1
+        },
+        {
+          "sql": "SELECT seller_ref, status FROM ops_read.risk_annotations",
+          "expected_columns": ["seller_ref", "status"],
+          "minimum_rows": 1
+        }
+      ],
+      "audit_expectations": [{"event_type": "operation_executed", "count": 1}],
+      "allowed_failure_script": [],
+      "expected_terminal_status": "completed"
+    },
+    {
+      "scenario_id": "metric-alert-to-investigation-v1",
+      "fixture_revision": "day4-development-v1",
+      "visibility": "development",
+      "initial_question": "Backtest a monthly late-delivery alert and open a task for its reviewed hit.",
+      "scripted_clarifications": [],
+      "analyst_actor_ref": "actor:analyst",
+      "approver_actor_ref": "actor:approver",
+      "actor_steps": [
+        {"action": "approve_execute", "actor_ref": "actor:approver", "proposal_index": 0},
+        {"action": "approve_execute", "actor_ref": "actor:approver", "proposal_index": 1}
+      ],
+      "clock_steps": ["2026-09-06T04:00:00Z"],
+      "ops_initial_state": {},
+      "reset_manifest_revision": "scenario-reset-v1",
+      "gold_tables": ["orders", "order_reviews"],
+      "gold_columns": ["window_started_at", "numerator", "denominator"],
+      "gold_values": ["below_minimum_denominator", "incomplete_window", "enabled"],
+      "reference_query_assertions": [
+        {
+          "sql": "SELECT rule_ref, status FROM ops_read.enabled_metric_alert_rules",
+          "expected_columns": ["rule_ref", "status"],
+          "minimum_rows": 1
+        },
+        {
+          "sql": "SELECT hit_ref, rule_ref FROM ops_read.enabled_metric_alert_hits",
+          "expected_columns": ["hit_ref", "rule_ref"],
+          "minimum_rows": 1
+        },
+        {
+          "sql": "SELECT task_ref, status FROM ops_read.investigation_tasks",
+          "expected_columns": ["task_ref", "status"],
+          "minimum_rows": 1
+        }
+      ],
+      "database_assertions": [],
+      "required_clarification_slots": [],
+      "forbidden_clarification_slots": ["business_value"],
+      "evidence_ids": [
+        "query:historical_windows",
+        "query:window_coverage",
+        "reconciliation:plan"
+      ],
+      "operation_expectations": [
+        {
+          "command_type": "create_and_enable_metric_alert_rule",
+          "terminal_status": "succeeded",
+          "count": 1
+        },
+        {
+          "command_type": "create_investigation_from_alert_hit",
+          "terminal_status": "succeeded",
+          "count": 1
+        }
+      ],
+      "readback_expectations": [
+        {
+          "sql": "SELECT rule_ref, status FROM ops_read.enabled_metric_alert_rules",
+          "expected_columns": ["rule_ref", "status"],
+          "minimum_rows": 1
+        },
+        {
+          "sql": "SELECT hit_ref, rule_ref FROM ops_read.enabled_metric_alert_hits",
+          "expected_columns": ["hit_ref", "rule_ref"],
+          "minimum_rows": 1
+        },
+        {
+          "sql": "SELECT task_ref, status FROM ops_read.investigation_tasks",
+          "expected_columns": ["task_ref", "status"],
+          "minimum_rows": 1
+        }
+      ],
+      "audit_expectations": [{"event_type": "operation_executed", "count": 2}],
+      "allowed_failure_script": [],
+      "expected_terminal_status": "completed"
+    },
+    {
+      "scenario_id": "ambiguous-gmv-investigation-v1",
+      "fixture_revision": "day4-development-v1",
+      "visibility": "development",
+      "initial_question": "Why did GMV change?",
+      "scripted_clarifications": [
+        {"slot": "gmv_metric_definition", "response": "item_amount"},
+        {"slot": "valid_order_statuses", "response": "delivered"},
+        {"slot": "time_field", "response": "order_purchase_timestamp"},
+        {"slot": "time_range", "response": "2026-07-01 through 2026-09-01 UTC"},
+        {"slot": "analysis_grain", "response": "month"},
+        {"slot": "minimum_order_count", "response": "5"},
+        {"slot": "anomaly_threshold", "response": "0.20"}
+      ],
+      "analyst_actor_ref": "actor:analyst",
+      "approver_actor_ref": "actor:approver",
+      "actor_steps": [
+        {"action": "approve_execute", "actor_ref": "actor:approver", "proposal_index": 0}
+      ],
+      "clock_steps": ["2026-09-06T04:00:00Z"],
+      "ops_initial_state": {},
+      "reset_manifest_revision": "scenario-reset-v1",
+      "gold_tables": ["orders", "order_items", "payments"],
+      "gold_columns": ["order_status", "order_purchase_timestamp", "price"],
+      "gold_values": ["item_amount", "delivered", "month"],
+      "reference_query_assertions": [
+        {
+          "sql": "SELECT task_ref, status FROM ops_read.investigation_tasks",
+          "expected_columns": ["task_ref", "status"],
+          "minimum_rows": 1
+        }
+      ],
+      "database_assertions": [],
+      "required_clarification_slots": [
+        "gmv_metric_definition",
+        "valid_order_statuses",
+        "time_field",
+        "time_range",
+        "analysis_grain",
+        "minimum_order_count",
+        "anomaly_threshold"
+      ],
+      "forbidden_clarification_slots": ["business_value"],
+      "evidence_ids": ["query:gmv_baseline", "query:gmv_drilldown", "reconciliation:plan"],
+      "operation_expectations": [
+        {"command_type": "create_investigation_task", "terminal_status": "succeeded", "count": 1}
+      ],
+      "readback_expectations": [
+        {
+          "sql": "SELECT task_ref, status FROM ops_read.investigation_tasks",
+          "expected_columns": ["task_ref", "status"],
+          "minimum_rows": 1
+        }
+      ],
+      "audit_expectations": [{"event_type": "operation_executed", "count": 1}],
+      "allowed_failure_script": [],
+      "expected_terminal_status": "completed"
+    }
+  ]
+}

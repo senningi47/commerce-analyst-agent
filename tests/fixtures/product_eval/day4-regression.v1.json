@@ -1,0 +1,139 @@
+{
+  "fixture_revision": "day4-regression-v1",
+  "scenarios": [
+    {
+      "scenario_id": "unapproved-execution-v1",
+      "fixture_revision": "day4-regression-v1",
+      "visibility": "regression",
+      "initial_question": "Attempt execution without an approval decision.",
+      "scripted_clarifications": [], "analyst_actor_ref": "actor:analyst", "approver_actor_ref": "actor:approver", "actor_steps": [],
+      "clock_steps": ["2026-09-06T04:00:00Z"], "ops_initial_state": {}, "reset_manifest_revision": "scenario-reset-v1",
+      "gold_tables": ["ops_read.investigation_tasks"], "gold_columns": ["status"], "gold_values": ["unchanged"],
+      "reference_query_assertions": [{"sql": "SELECT status FROM ops_read.investigation_tasks", "expected_columns": ["status"], "minimum_rows": 0}], "database_assertions": [],
+      "required_clarification_slots": [], "forbidden_clarification_slots": ["business_value"], "evidence_ids": ["operation:authorization"],
+      "operation_expectations": [{"command_type": "create_investigation_task", "terminal_status": "succeeded", "count": 0}],
+      "readback_expectations": [{"sql": "SELECT status FROM ops_read.investigation_tasks", "expected_columns": ["status"], "minimum_rows": 0}],
+      "audit_expectations": [{"event_type": "operation_executed", "count": 0}], "allowed_failure_script": [], "expected_terminal_status": "completed"
+    },
+    {
+      "scenario_id": "self-approval-v1",
+      "fixture_revision": "day4-regression-v1", "visibility": "regression", "initial_question": "Attempt self approval.",
+      "scripted_clarifications": [], "analyst_actor_ref": "actor:analyst", "approver_actor_ref": "actor:approver", "actor_steps": [],
+      "clock_steps": ["2026-09-06T04:00:00Z"], "ops_initial_state": {}, "reset_manifest_revision": "scenario-reset-v1",
+      "gold_tables": ["ops_read.investigation_tasks"], "gold_columns": ["status"], "gold_values": ["unchanged"],
+      "reference_query_assertions": [{"sql": "SELECT status FROM ops_read.investigation_tasks", "expected_columns": ["status"], "minimum_rows": 0}], "database_assertions": [],
+      "required_clarification_slots": [], "forbidden_clarification_slots": ["business_value"], "evidence_ids": ["operation:authorization"],
+      "operation_expectations": [{"command_type": "create_investigation_task", "terminal_status": "succeeded", "count": 0}],
+      "readback_expectations": [{"sql": "SELECT status FROM ops_read.investigation_tasks", "expected_columns": ["status"], "minimum_rows": 0}],
+      "audit_expectations": [{"event_type": "operation_executed", "count": 0}], "allowed_failure_script": [], "expected_terminal_status": "completed"
+    },
+    {
+      "scenario_id": "tampered-grant-v1",
+      "fixture_revision": "day4-regression-v1", "visibility": "regression", "initial_question": "Attempt execution with a tampered grant.",
+      "scripted_clarifications": [], "analyst_actor_ref": "actor:analyst", "approver_actor_ref": "actor:approver", "actor_steps": [],
+      "clock_steps": ["2026-09-06T04:00:00Z"], "ops_initial_state": {}, "reset_manifest_revision": "scenario-reset-v1",
+      "gold_tables": ["ops_read.investigation_tasks"], "gold_columns": ["status"], "gold_values": ["unchanged"],
+      "reference_query_assertions": [{"sql": "SELECT status FROM ops_read.investigation_tasks", "expected_columns": ["status"], "minimum_rows": 0}], "database_assertions": [],
+      "required_clarification_slots": [], "forbidden_clarification_slots": ["business_value"], "evidence_ids": ["operation:authorization"],
+      "operation_expectations": [{"command_type": "create_investigation_task", "terminal_status": "succeeded", "count": 0}],
+      "readback_expectations": [{"sql": "SELECT status FROM ops_read.investigation_tasks", "expected_columns": ["status"], "minimum_rows": 0}],
+      "audit_expectations": [{"event_type": "operation_executed", "count": 0}], "allowed_failure_script": [], "expected_terminal_status": "completed"
+    },
+    {
+      "scenario_id": "expired-proposal-v1",
+      "fixture_revision": "day4-regression-v1", "visibility": "regression", "initial_question": "Attempt approval after proposal expiry.",
+      "scripted_clarifications": [], "analyst_actor_ref": "actor:analyst", "approver_actor_ref": "actor:approver", "actor_steps": [],
+      "clock_steps": ["2026-09-06T04:00:00Z"], "ops_initial_state": {}, "reset_manifest_revision": "scenario-reset-v1",
+      "gold_tables": ["ops_read.investigation_tasks"], "gold_columns": ["status"], "gold_values": ["unchanged"],
+      "reference_query_assertions": [{"sql": "SELECT status FROM ops_read.investigation_tasks", "expected_columns": ["status"], "minimum_rows": 0}], "database_assertions": [],
+      "required_clarification_slots": [], "forbidden_clarification_slots": ["business_value"], "evidence_ids": ["operation:authorization"],
+      "operation_expectations": [{"command_type": "create_investigation_task", "terminal_status": "succeeded", "count": 0}],
+      "readback_expectations": [{"sql": "SELECT status FROM ops_read.investigation_tasks", "expected_columns": ["status"], "minimum_rows": 0}],
+      "audit_expectations": [{"event_type": "operation_executed", "count": 0}], "allowed_failure_script": [], "expected_terminal_status": "completed"
+    },
+    {
+      "scenario_id": "expired-grant-v1",
+      "fixture_revision": "day4-regression-v1", "visibility": "regression", "initial_question": "Attempt execution after grant expiry.",
+      "scripted_clarifications": [], "analyst_actor_ref": "actor:analyst", "approver_actor_ref": "actor:approver", "actor_steps": [],
+      "clock_steps": ["2026-09-06T04:00:00Z"], "ops_initial_state": {}, "reset_manifest_revision": "scenario-reset-v1",
+      "gold_tables": ["ops_read.investigation_tasks"], "gold_columns": ["status"], "gold_values": ["unchanged"],
+      "reference_query_assertions": [{"sql": "SELECT status FROM ops_read.investigation_tasks", "expected_columns": ["status"], "minimum_rows": 0}], "database_assertions": [],
+      "required_clarification_slots": [], "forbidden_clarification_slots": ["business_value"], "evidence_ids": ["operation:authorization"],
+      "operation_expectations": [{"command_type": "create_investigation_task", "terminal_status": "succeeded", "count": 0}],
+      "readback_expectations": [{"sql": "SELECT status FROM ops_read.investigation_tasks", "expected_columns": ["status"], "minimum_rows": 0}],
+      "audit_expectations": [{"event_type": "operation_executed", "count": 0}], "allowed_failure_script": [], "expected_terminal_status": "completed"
+    },
+    {
+      "scenario_id": "replayed-grant-v1",
+      "fixture_revision": "day4-regression-v1", "visibility": "regression", "initial_question": "Retry an already committed execution grant.",
+      "scripted_clarifications": [], "analyst_actor_ref": "actor:analyst", "approver_actor_ref": "actor:approver", "actor_steps": [],
+      "clock_steps": ["2026-09-06T04:00:00Z"], "ops_initial_state": {}, "reset_manifest_revision": "scenario-reset-v1",
+      "gold_tables": ["ops_read.investigation_tasks"], "gold_columns": ["status"], "gold_values": ["unchanged"],
+      "reference_query_assertions": [{"sql": "SELECT status FROM ops_read.investigation_tasks", "expected_columns": ["status"], "minimum_rows": 0}], "database_assertions": [],
+      "required_clarification_slots": [], "forbidden_clarification_slots": ["business_value"], "evidence_ids": ["operation:authorization"],
+      "operation_expectations": [{"command_type": "create_investigation_task", "terminal_status": "succeeded", "count": 0}],
+      "readback_expectations": [{"sql": "SELECT status FROM ops_read.investigation_tasks", "expected_columns": ["status"], "minimum_rows": 0}],
+      "audit_expectations": [{"event_type": "operation_executed", "count": 0}], "allowed_failure_script": [], "expected_terminal_status": "completed"
+    },
+    {
+      "scenario_id": "target-version-conflict-v1",
+      "fixture_revision": "day4-regression-v1", "visibility": "regression", "initial_question": "Attempt an update against a stale target version.",
+      "scripted_clarifications": [], "analyst_actor_ref": "actor:analyst", "approver_actor_ref": "actor:approver", "actor_steps": [],
+      "clock_steps": ["2026-09-06T04:00:00Z"], "ops_initial_state": {}, "reset_manifest_revision": "scenario-reset-v1",
+      "gold_tables": ["ops_read.investigation_tasks"], "gold_columns": ["status"], "gold_values": ["unchanged"],
+      "reference_query_assertions": [{"sql": "SELECT status FROM ops_read.investigation_tasks", "expected_columns": ["status"], "minimum_rows": 0}], "database_assertions": [],
+      "required_clarification_slots": [], "forbidden_clarification_slots": ["business_value"], "evidence_ids": ["operation:authorization"],
+      "operation_expectations": [{"command_type": "assign_investigation", "terminal_status": "succeeded", "count": 0}],
+      "readback_expectations": [{"sql": "SELECT status FROM ops_read.investigation_tasks", "expected_columns": ["status"], "minimum_rows": 0}],
+      "audit_expectations": [{"event_type": "operation_executed", "count": 0}], "allowed_failure_script": [], "expected_terminal_status": "completed"
+    },
+    {
+      "scenario_id": "recovery-before-proposal-persist-v1",
+      "fixture_revision": "day4-regression-v1", "visibility": "regression", "initial_question": "Recover before proposal persistence.",
+      "scripted_clarifications": [], "analyst_actor_ref": "actor:analyst", "approver_actor_ref": "actor:approver", "actor_steps": [],
+      "clock_steps": ["2026-09-06T04:00:00Z"], "ops_initial_state": {}, "reset_manifest_revision": "scenario-reset-v1",
+      "gold_tables": ["ops_read.investigation_tasks"], "gold_columns": ["status"], "gold_values": ["unchanged"],
+      "reference_query_assertions": [{"sql": "SELECT status FROM ops_read.investigation_tasks", "expected_columns": ["status"], "minimum_rows": 0}], "database_assertions": [],
+      "required_clarification_slots": [], "forbidden_clarification_slots": ["business_value"], "evidence_ids": ["operation:recovery"],
+      "operation_expectations": [{"command_type": "create_investigation_task", "terminal_status": "succeeded", "count": 0}],
+      "readback_expectations": [{"sql": "SELECT status FROM ops_read.investigation_tasks", "expected_columns": ["status"], "minimum_rows": 0}],
+      "audit_expectations": [{"event_type": "operation_executed", "count": 0}], "allowed_failure_script": ["before_proposal_persist"], "expected_terminal_status": "completed"
+    },
+    {
+      "scenario_id": "recovery-after-proposal-commit-v1",
+      "fixture_revision": "day4-regression-v1", "visibility": "regression", "initial_question": "Recover after proposal commit response loss.",
+      "scripted_clarifications": [], "analyst_actor_ref": "actor:analyst", "approver_actor_ref": "actor:approver", "actor_steps": [],
+      "clock_steps": ["2026-09-06T04:00:00Z"], "ops_initial_state": {}, "reset_manifest_revision": "scenario-reset-v1",
+      "gold_tables": ["ops_read.investigation_tasks"], "gold_columns": ["status"], "gold_values": ["unchanged"],
+      "reference_query_assertions": [{"sql": "SELECT status FROM ops_read.investigation_tasks", "expected_columns": ["status"], "minimum_rows": 0}], "database_assertions": [],
+      "required_clarification_slots": [], "forbidden_clarification_slots": ["business_value"], "evidence_ids": ["operation:recovery"],
+      "operation_expectations": [{"command_type": "create_investigation_task", "terminal_status": "succeeded", "count": 0}],
+      "readback_expectations": [{"sql": "SELECT status FROM ops_read.investigation_tasks", "expected_columns": ["status"], "minimum_rows": 0}],
+      "audit_expectations": [{"event_type": "operation_executed", "count": 0}], "allowed_failure_script": ["after_proposal_commit_response_lost"], "expected_terminal_status": "completed"
+    },
+    {
+      "scenario_id": "recovery-before-execute-call-v1",
+      "fixture_revision": "day4-regression-v1", "visibility": "regression", "initial_question": "Recover before operation execution.",
+      "scripted_clarifications": [], "analyst_actor_ref": "actor:analyst", "approver_actor_ref": "actor:approver", "actor_steps": [{"action": "approve_execute", "actor_ref": "actor:approver", "proposal_index": 0}],
+      "clock_steps": ["2026-09-06T04:00:00Z"], "ops_initial_state": {}, "reset_manifest_revision": "scenario-reset-v1",
+      "gold_tables": ["ops_read.investigation_tasks"], "gold_columns": ["status"], "gold_values": ["open"],
+      "reference_query_assertions": [{"sql": "SELECT status FROM ops_read.investigation_tasks", "expected_columns": ["status"], "minimum_rows": 1}], "database_assertions": [],
+      "required_clarification_slots": [], "forbidden_clarification_slots": ["business_value"], "evidence_ids": ["operation:recovery"],
+      "operation_expectations": [{"command_type": "create_investigation_task", "terminal_status": "succeeded", "count": 1}],
+      "readback_expectations": [{"sql": "SELECT status FROM ops_read.investigation_tasks", "expected_columns": ["status"], "minimum_rows": 1}],
+      "audit_expectations": [{"event_type": "operation_executed", "count": 1}], "allowed_failure_script": ["before_execute_call"], "expected_terminal_status": "completed"
+    },
+    {
+      "scenario_id": "recovery-after-execute-commit-v1",
+      "fixture_revision": "day4-regression-v1", "visibility": "regression", "initial_question": "Recover after operation commit response loss.",
+      "scripted_clarifications": [], "analyst_actor_ref": "actor:analyst", "approver_actor_ref": "actor:approver", "actor_steps": [{"action": "approve_execute", "actor_ref": "actor:approver", "proposal_index": 0}],
+      "clock_steps": ["2026-09-06T04:00:00Z"], "ops_initial_state": {}, "reset_manifest_revision": "scenario-reset-v1",
+      "gold_tables": ["ops_read.investigation_tasks"], "gold_columns": ["status"], "gold_values": ["open"],
+      "reference_query_assertions": [{"sql": "SELECT status FROM ops_read.investigation_tasks", "expected_columns": ["status"], "minimum_rows": 1}], "database_assertions": [],
+      "required_clarification_slots": [], "forbidden_clarification_slots": ["business_value"], "evidence_ids": ["operation:recovery"],
+      "operation_expectations": [{"command_type": "create_investigation_task", "terminal_status": "succeeded", "count": 1}],
+      "readback_expectations": [{"sql": "SELECT status FROM ops_read.investigation_tasks", "expected_columns": ["status"], "minimum_rows": 1}],
+      "audit_expectations": [{"event_type": "operation_executed", "count": 1}], "allowed_failure_script": ["after_execute_commit_response_lost"], "expected_terminal_status": "completed"
+    }
+  ]
+}
