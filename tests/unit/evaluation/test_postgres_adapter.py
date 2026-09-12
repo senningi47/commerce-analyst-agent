@@ -106,7 +106,7 @@ def test_register_attempt_binds_all_columns_and_telemetry(
     assert params[4] == "c"
     assert params[5] == 1
     assert params[6] == "pending"
-    assert params[9] == json.loads(AttemptTelemetry().model_dump_json())
+    assert params[9].obj == json.loads(AttemptTelemetry().model_dump_json())
 
 
 def test_register_attempt_maps_unique_violation_to_conflict() -> None:
@@ -174,7 +174,7 @@ def test_finish_attempt_writes_terminal_fields(monkeypatch: pytest.MonkeyPatch) 
     assert params is not None
     assert params[0] == "failed"
     assert params[1] == "evaluator_rejected"
-    assert params[2]["wall_clock_ms"] == 2500
+    assert params[2].obj["wall_clock_ms"] == 2500
 
 
 def test_completed_tasks_queries_terminal_statuses(

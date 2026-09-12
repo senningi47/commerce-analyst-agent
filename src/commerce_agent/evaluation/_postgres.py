@@ -14,6 +14,7 @@ from typing import Any
 from uuid import UUID
 
 import psycopg
+from psycopg.types.json import Jsonb
 
 from commerce_agent.evaluation.contracts import (
     AttemptRecord,
@@ -27,8 +28,10 @@ _TERMINAL_SQL = "('succeeded','failed')"
 _RETRYABLE_SQL = "('pending','running','infrastructure_error','interrupted')"
 
 
-def _telemetry_json(telemetry: AttemptTelemetry) -> dict[str, Any]:
-    return json.loads(telemetry.model_dump_json())
+def _telemetry_json(telemetry: AttemptTelemetry) -> Jsonb:
+    """Bind telemetry as a JSONB parameter (psycopg cannot adapt raw dicts)."""
+
+    return Jsonb(json.loads(telemetry.model_dump_json()))
 
 
 def _record_from_row(row: tuple[Any, ...]) -> AttemptRecord:

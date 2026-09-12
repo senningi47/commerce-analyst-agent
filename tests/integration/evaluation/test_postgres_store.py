@@ -52,7 +52,7 @@ def evaluation_store() -> PostgresEvaluationStore:
 
 
 @pytest.fixture
-def scoped_experiment() -> str:
+def scoped_experiment(evaluation_store: PostgresEvaluationStore) -> str:
     import os
 
     experiment_id = f"live-eval-test-{uuid.uuid4().hex[:12]}"
@@ -66,6 +66,11 @@ def scoped_experiment() -> str:
             )
             return int(cursor.fetchone()[0])
 
+    # the real flow always registers the experiment (Runner.run) before any
+    # attempt; the FK task_attempt_experiment_id_fkey enforces exactly this
+    evaluation_store.register_experiment(
+        experiment_id=experiment_id, purpose="pilot", config_hash="a" * 64
+    )
     assert count() == 0
     try:
         yield experiment_id
