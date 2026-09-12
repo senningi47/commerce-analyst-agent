@@ -4,7 +4,7 @@ import json
 from collections.abc import Mapping
 from hashlib import sha256
 from types import MappingProxyType
-from typing import Protocol
+from typing import Protocol, runtime_checkable
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
@@ -175,6 +175,17 @@ def _parse_arguments(model: type[BaseModel], call: ToolCall) -> BaseModel:
         if any(item.get("type") == "json_invalid" for item in error.errors()):
             raise ToolContractError("malformed_arguments_json") from error
         raise ToolContractError("invalid_tool_arguments") from error
+
+
+@runtime_checkable
+class BirdToolPort(Protocol):
+    """Outbound BirdA tool surface: one typed action per call, no raw HTTP leakage.
+
+    Implementations (synthetic fixture harness, production HTTP adapter) satisfy
+    this structurally; callers must never depend on a concrete port class.
+    """
+
+    async def execute(self, call: ToolCall) -> ToolResult: ...
 
 
 class SyntheticBirdAToolPort:

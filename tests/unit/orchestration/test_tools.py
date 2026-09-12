@@ -9,10 +9,11 @@ from commerce_agent.context_builder.contracts import PromptStep
 from commerce_agent.knowledge._store import StoredKnowledgeCatalog
 from commerce_agent.knowledge.contracts import KnowledgeEvidence, KnowledgeKind
 from commerce_agent.knowledge.module import KnowledgeModule
-from commerce_agent.model.contracts import RunScope, ToolCall
+from commerce_agent.model.contracts import RunScope, ToolCall, ToolResult
 from commerce_agent.operations.commands import CreateInvestigationTask
 from commerce_agent.operations.contracts import ActorContext, ActorRole, EvidenceRef
 from commerce_agent.orchestration.tools import (
+    BirdToolPort,
     RetailToolDispatcher,
     ToolContractError,
     ToolInfrastructureError,
@@ -447,3 +448,15 @@ async def test_catalog_tool_is_rejected_in_the_wrong_step() -> None:
         )
 
     assert caught.value.reason_code == "tool_not_allowed_for_step"
+
+
+def test_bird_tool_port_protocol_is_structural() -> None:
+    class _IndependentPort:
+        """Duck-typed port with no relationship to SyntheticBirdAToolPort."""
+
+        async def execute(self, call: ToolCall) -> ToolResult:
+            del call
+            raise AssertionError("no dispatch expected in this test")
+
+    port: BirdToolPort = _IndependentPort()
+    assert isinstance(port, BirdToolPort)
