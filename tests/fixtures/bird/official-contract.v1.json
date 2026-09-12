@@ -1,0 +1,279 @@
+{
+  "source_revision": "451fe2c3518ee1cf908d8139e2913483bd519381",
+  "frozen_by": "scripts/freeze_bird_official_contract.py",
+  "extracted_files": [
+    "BIRD-Interact-ADK/shared/models.py",
+    "BIRD-Interact-ADK/shared/config.py",
+    "BIRD-Interact-ADK/system_agent/server.py",
+    "BIRD-Interact-ADK/system_agent/tools.py",
+    "BIRD-Interact-ADK/system_agent/adk_runtime.py",
+    "BIRD-Interact-ADK/orchestrator/runner.py",
+    "BIRD-Interact-ADK/orchestrator/ainteract.py",
+    "BIRD-Interact-ADK/orchestrator/cinteract.py"
+  ],
+  "system_agent": {
+    "init_session": {
+      "endpoint": "/init_session",
+      "request_fields": [
+        "task_id",
+        "mode",
+        "state",
+        "reset"
+      ],
+      "response_fields": [
+        "adk_available",
+        "mode",
+        "session_id",
+        "task_id"
+      ]
+    },
+    "run_session": {
+      "endpoint": "/run_session",
+      "request_fields": [
+        "task_id",
+        "message",
+        "mode"
+      ],
+      "response_fields": [
+        "adk_available",
+        "mode",
+        "response",
+        "session_id",
+        "state",
+        "task_id"
+      ]
+    }
+  },
+  "actions": [
+    {
+      "name": "execute_sql",
+      "coin_cost": "1"
+    },
+    {
+      "name": "get_schema",
+      "coin_cost": "1"
+    },
+    {
+      "name": "get_all_column_meanings",
+      "coin_cost": "1"
+    },
+    {
+      "name": "get_column_meaning",
+      "coin_cost": "0.5"
+    },
+    {
+      "name": "get_all_external_knowledge_names",
+      "coin_cost": "0.5"
+    },
+    {
+      "name": "get_knowledge_definition",
+      "coin_cost": "0.5"
+    },
+    {
+      "name": "get_all_knowledge_definitions",
+      "coin_cost": "1"
+    },
+    {
+      "name": "ask_user",
+      "coin_cost": "2"
+    },
+    {
+      "name": "submit_sql",
+      "coin_cost": "3"
+    }
+  ],
+  "submit_sql_response_fields": [
+    "passed",
+    "message",
+    "reward",
+    "phase_completed",
+    "has_follow_up",
+    "follow_up_query"
+  ],
+  "outbound_endpoints": [
+    {
+      "action": "execute_sql",
+      "path": "/execute",
+      "request_fields": [
+        "task_id",
+        "sql"
+      ],
+      "response_keys": [
+        "error",
+        "result",
+        "success"
+      ]
+    },
+    {
+      "action": "get_schema",
+      "path": "/schema",
+      "request_fields": [
+        "task_id"
+      ],
+      "response_keys": [
+        "schema"
+      ]
+    },
+    {
+      "action": "get_all_column_meanings",
+      "path": "/all_column_meanings",
+      "request_fields": [
+        "task_id"
+      ],
+      "response_keys": [
+        "column_meanings"
+      ]
+    },
+    {
+      "action": "get_column_meaning",
+      "path": "/column_meaning",
+      "request_fields": [
+        "task_id",
+        "table_name",
+        "column_name"
+      ],
+      "response_keys": [
+        "meaning"
+      ]
+    },
+    {
+      "action": "get_all_external_knowledge_names",
+      "path": "/knowledge_names",
+      "request_fields": [
+        "task_id"
+      ],
+      "response_keys": [
+        "names"
+      ]
+    },
+    {
+      "action": "get_knowledge_definition",
+      "path": "/knowledge",
+      "request_fields": [
+        "task_id",
+        "knowledge_name"
+      ],
+      "response_keys": [
+        "knowledge"
+      ]
+    },
+    {
+      "action": "get_all_knowledge_definitions",
+      "path": "/knowledge",
+      "request_fields": [
+        "task_id"
+      ],
+      "response_keys": [
+        "knowledge"
+      ]
+    },
+    {
+      "action": "ask_user",
+      "path": "/ask",
+      "request_fields": [
+        "task_id",
+        "question"
+      ],
+      "response_keys": [
+        "answer"
+      ]
+    },
+    {
+      "action": "submit_sql",
+      "path": "/submit",
+      "request_fields": [
+        "task_id",
+        "sql"
+      ],
+      "response_keys": [
+        "follow_up_query",
+        "has_follow_up",
+        "message",
+        "passed",
+        "phase_completed",
+        "reward"
+      ]
+    },
+    {
+      "action": "submit_sql",
+      "path": "/phase_transition",
+      "request_fields": [
+        "task_id"
+      ],
+      "response_keys": []
+    }
+  ],
+  "orchestrator": {
+    "module": "orchestrator.runner",
+    "argv_pattern": [
+      "--mode",
+      "{mode}",
+      "--data",
+      "{data}",
+      "--output",
+      "{output}",
+      "--limit",
+      "{limit}",
+      "--concurrency",
+      "{concurrency}"
+    ],
+    "json_output_fields": [
+      "mode",
+      "metrics",
+      "results"
+    ],
+    "a_interact_result_fields": [
+      "task_id",
+      "instance_id",
+      "database",
+      "phase1_passed",
+      "phase2_passed",
+      "has_follow_up",
+      "total_reward",
+      "elapsed_seconds",
+      "budget_used",
+      "budget_remaining",
+      "dialogue_history",
+      "tool_trajectory",
+      "adk_events",
+      "final_response"
+    ],
+    "c_interact_result_fields": [
+      "task_id",
+      "instance_id",
+      "database",
+      "phase1_passed",
+      "phase2_passed",
+      "has_follow_up",
+      "total_reward",
+      "elapsed_seconds",
+      "tool_trajectory",
+      "dialogue_history",
+      "adk_events"
+    ],
+    "env_names": [
+      "LLM_PROVIDER",
+      "PG_HOST",
+      "PG_PORT",
+      "PG_USER",
+      "PG_PASSWORD",
+      "PG_MINCONN",
+      "PG_MAXCONN",
+      "SYSTEM_AGENT_PORT",
+      "USER_SIM_PORT",
+      "DB_ENV_PORT",
+      "USER_SIM_MODEL",
+      "SYSTEM_AGENT_MODEL",
+      "LITELLM_API_BASE",
+      "LITELLM_API_KEY",
+      "DATASET",
+      "PROMPT_VERSION",
+      "PATIENCE"
+    ],
+    "reviewed_annotations": {
+      "load_tasks_semantics": "head-truncation: runner.load_tasks parses the whole JSONL then slices tasks[:limit], so a single-task run requires a pre-split per-task data file",
+      "per_task_data_file_required": true,
+      "gt_surface": "the --data JSONL contains GT fields and may only be consumed by the official orchestrator process; the Runner and system agent never read it"
+    }
+  }
+}
