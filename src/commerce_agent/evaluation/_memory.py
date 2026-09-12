@@ -70,6 +70,7 @@ class InMemoryEvaluationStore:
         status: EvalTaskStatus,
         error_class: str | None,
         telemetry: AttemptTelemetry,
+        result: EpisodeResult | None = None,
     ) -> None:
         with self._lock:
             record = self._attempts.get(attempt_id)  # type: ignore[arg-type]
@@ -77,6 +78,10 @@ class InMemoryEvaluationStore:
                 raise EvalStateConflict("status_transition_conflict")
             if error_class is not None and status == EvalTaskStatus.SUCCEEDED:
                 raise EvalStateConflict("succeeded_requires_no_error_class")
+            if result is not None and status != EvalTaskStatus.SUCCEEDED:
+                raise EvalStateConflict("result_requires_succeeded_attempt")
+            if result is not None and attempt_id in self._results:  # type: ignore[arg-type]
+                raise EvalStateConflict("result_already_recorded")
             self._attempts[record.attempt_id] = record.model_copy(
                 update={
                     "status": status,
@@ -85,6 +90,8 @@ class InMemoryEvaluationStore:
                     "telemetry": telemetry,
                 }
             )
+            if result is not None:
+                self._results[attempt_id] = result  # type: ignore[arg-type]
 
     def completed_tasks(self, experiment_id: str) -> frozenset[tuple[str, str]]:
         with self._lock:

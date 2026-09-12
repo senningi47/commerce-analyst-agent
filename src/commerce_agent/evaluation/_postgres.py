@@ -141,15 +141,47 @@ class PostgresEvaluationStore:
         status: EvalTaskStatus,
         error_class: str | None,
         telemetry: AttemptTelemetry,
+        result: EpisodeResult | None = None,
     ) -> None:
-        rowcount = self._execute(
-            "UPDATE eval.task_attempt SET status = %s, error_class = %s, "
-            "finished_at = now(), telemetry = %s "
-            "WHERE attempt_id = %s AND status = 'running'",
-            (status.value, error_class, _telemetry_json(telemetry), attempt_id),
-        )
-        if rowcount != 1:
-            raise EvalStateConflict("status_transition_conflict")
+        """Terminal transition and optional result row inside ONE transaction."""
+
+        with (
+            psycopg.connect(self._dsn, autocommit=False) as connection,
+            connection.cursor() as cursor,
+        ):
+            cursor.execute(
+                "UPDATE eval.task_attempt SET status = %s, error_class = %s, "
+                "finished_at = now(), telemetry = %s "
+                "WHERE attempt_id = %s AND status = 'running'",
+                (status.value, error_class, _telemetry_json(telemetry), attempt_id),
+            )
+            if cursor.rowcount != 1:
+                connection.rollback()
+                raise EvalStateConflict("status_transition_conflict")
+            if result is not None:
+                cursor.execute(
+                    "INSERT INTO eval.task_result (attempt_id, reward, "
+                    "phase1_passed, phase2_passed, rounds, tool_calls, submit_count) "
+                    "SELECT %s, %s, %s, %s, %s, %s, %s FROM eval.task_attempt "
+                    "WHERE attempt_id = %s AND status = 'succeeded' "
+                    "ON CONFLICT (attempt_id) DO NOTHING",
+                    (
+                        attempt_id,
+                        result.reward
+                        if result.reward is None
+                        else Decimal(result.reward),
+                        result.phase1_passed,
+                        result.phase2_passed,
+                        result.rounds,
+                        result.tool_calls,
+                        result.submit_count,
+                        attempt_id,
+                    ),
+                )
+                if cursor.rowcount != 1:
+                    connection.rollback()
+                    raise EvalStateConflict("result_requires_succeeded_attempt")
+            connection.commit()
 
     def completed_tasks(self, experiment_id: str) -> frozenset[tuple[str, str]]:
         rows = self._execute_returning(

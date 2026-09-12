@@ -2,7 +2,9 @@
 
 Every method is a single atomic operation. Status transitions carry an
 expected-status guard so concurrent or stale workers fail closed through
-`EvalStateConflict` instead of overwriting each other.
+`EvalStateConflict` instead of overwriting each other. `finish_attempt`
+atomically applies the terminal transition and the public result when one is
+present, so a crash can never leave a succeeded attempt without its result.
 """
 
 from typing import Protocol
@@ -38,8 +40,9 @@ class EvaluationStore(Protocol):
         status: EvalTaskStatus,
         error_class: str | None,
         telemetry: AttemptTelemetry,
+        result: EpisodeResult | None = None,
     ) -> None:
-        """running -> terminal status; writes finished_at and telemetry."""
+        """running -> terminal status; atomically records `result` when given."""
         ...
 
     def completed_tasks(self, experiment_id: str) -> frozenset[tuple[str, str]]:
