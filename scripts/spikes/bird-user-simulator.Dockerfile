@@ -1,7 +1,9 @@
 # Throwaway-pattern runtime for the official BIRD user simulator (pinned source).
 # Built with scripts/spikes as the context; the official shared/ and
 # user_simulator/ sources are mounted read-only at runtime, never baked.
-FROM python:3.11-slim-bookworm
+# Base image digest pinned at the Task 12 preflight (2026-09-12, linux/amd64
+# via the daemon's registry mirrors).
+FROM python:3.11-slim-bookworm@sha256:528257d48c1da0dcecc2e725d1ae34498d60c965f1241e39cd6a85a8859bdf84
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1

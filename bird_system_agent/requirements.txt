@@ -2,8 +2,8 @@
 # keeps its own dependency set, outside the product lockfile). The pure-ASGI
 # server needs only uvicorn — no FastAPI in the product venv.
 #
-# HONEST STATUS: PyPI was unreachable when this file was authored, so exact
-# pins are deferred to the Task 12 preflight (`uv pip compile` on the build
-# machine, then replace this file with the resolved lock before any real
-# image build). Ranges below are the declared compatibility bounds, not a lock.
-uvicorn>=0.30,<1
+# FROZEN at the Task 12 preflight (2026-09-12) via `uv pip compile` on the
+# build machine (CPython 3.11); replace only with a new red-green change.
+click==8.5.0
+h11==0.16.0
+uvicorn==0.52.4

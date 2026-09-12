@@ -71,7 +71,10 @@ def test_dockerfile_copies_only_allowlisted_paths() -> None:
     }
     assert not any("data" in copy.lower() or "upstream" in copy.lower() for copy in copies)
     assert re.search(r"^USER\s+\S+", text, flags=re.MULTILINE), "image must drop root"
-    assert "MUST-PIN" in text, "base image digest pinning must stay visible until done"
+    from_lines = re.findall(r"^FROM\s+(\S+)", text, flags=re.MULTILINE)
+    assert from_lines and all("@sha256:" in line for line in from_lines), (
+        "base image digests must stay pinned (Task 12 preflight)"
+    )
 
 
 def _service_block(compose_text: str, service: str) -> str:

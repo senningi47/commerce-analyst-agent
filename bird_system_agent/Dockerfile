@@ -3,12 +3,12 @@
 # resolve; the root .dockerignore is the GT-isolation guarantee (never rely on
 # it alone — the Task 6 contract tests assert the file list too).
 #
-# MUST-PIN before any real build (Task 12 preflight): Docker Hub was
-# unreachable when this file was authored, so the base image tag is not yet
-# digest-pinned. Run `docker buildx imagetools inspect python:3.11-slim`,
-# replace the tag with python:3.11-slim@sha256:<digest>, and record it in the
-# run manifest. Never build for the Pilot with a floating tag.
-FROM python:3.11-slim
+# Base image digest pinned at the Task 12 preflight (2026-09-12): the digest
+# is the local pull digest for linux/amd64 resolved through the daemon's
+# registry mirrors (Docker Hub direct was unreachable); it pins the exact
+# base-image content this machine's Pilot builds against. Never build with a
+# floating tag.
+FROM python:3.11-slim@sha256:9534e5a8e315485d4061ed659af0fd78a284c015f9b73661b41d6bab25604534
 
 ENV PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \

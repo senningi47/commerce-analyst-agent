@@ -45,14 +45,16 @@ services:
     build:
       context: ./scripts/spikes
       dockerfile: bird-user-simulator.Dockerfile
-    # MUST-PIN base digests of both bird Dockerfiles at Task 12 preflight.
+    # Base digests of both bird Dockerfiles were pinned at the Task 12
+    # preflight (2026-09-12); tests/contract/test_bird_gt_isolation.py guards
+    # the agent Dockerfile's FROM lines.
     working_dir: /opt/bird-adk
     command: ["python", "-m", "user_simulator.server"]
     environment:
       USER_SIM_PORT: "6001"
       USER_SIM_MODEL: ${USER_SIM_MODEL:?set in .env}
       LITELLM_API_BASE: ${LITELLM_API_BASE:-}
-      LITELLM_API_KEY: ${LITELLM_API_KEY:?set in .env}
+      LITELLM_API_KEY: ${DEEPSEEK_API_KEY:?set in .env}
       PATIENCE: ${PATIENCE:-3}
       PROMPT_VERSION: ${PROMPT_VERSION:-v2}
     volumes:
