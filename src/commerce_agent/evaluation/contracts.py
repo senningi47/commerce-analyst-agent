@@ -10,15 +10,100 @@ field additions.
 from __future__ import annotations
 
 import json
+from datetime import datetime
 from decimal import Decimal
+from enum import StrEnum
 from pathlib import Path
 from typing import Literal
+from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
+
+from commerce_agent.model.contracts import Cost, ReportedUsage
 
 BIRD_SOURCE_REVISION = "451fe2c3518ee1cf908d8139e2913483bd519381"
 _FIXTURE_PATH = Path("tests/fixtures/bird/official-contract.v1.json")
 _FIXTURE_FILE = Path(__file__).resolve().parents[3] / _FIXTURE_PATH
+
+
+class EvalTaskStatus(StrEnum):
+    """Official §16.1 task-attempt states; terminal non-retryable pair: succeeded/failed."""
+
+    PENDING = "pending"
+    RUNNING = "running"
+    SUCCEEDED = "succeeded"
+    FAILED = "failed"
+    INFRASTRUCTURE_ERROR = "infrastructure_error"
+    INTERRUPTED = "interrupted"
+
+
+TERMINAL_STATUSES = frozenset({EvalTaskStatus.SUCCEEDED, EvalTaskStatus.FAILED})
+RETRYABLE_STATUSES = frozenset(
+    {
+        EvalTaskStatus.PENDING,
+        EvalTaskStatus.RUNNING,
+        EvalTaskStatus.INFRASTRUCTURE_ERROR,
+        EvalTaskStatus.INTERRUPTED,
+    }
+)
+
+ExperimentPurpose = Literal["pilot", "full", "ablation_repair", "rag_ab", "product"]
+
+
+class EvalStateConflict(RuntimeError):
+    """Raised when an optimistic status guard or identity constraint fails."""
+
+    def __init__(self, reason_code: str) -> None:
+        super().__init__(reason_code)
+        self.reason_code = reason_code
+
+
+class AttemptTelemetry(BaseModel, frozen=True, extra="forbid"):
+    """Per-attempt public telemetry (v0.3 §16.3); never carries GT content."""
+
+    model_config = ConfigDict(frozen=True)
+
+    agent_usage: ReportedUsage | None = None
+    simulator_usage: ReportedUsage | None = None
+    agent_cost: Cost | None = None
+    simulator_cost: Cost | None = None
+    retry_cost: Cost | None = None
+    wall_clock_ms: int | None = Field(default=None, ge=0)
+    rounds: int | None = Field(default=None, ge=0)
+    tool_calls: int | None = Field(default=None, ge=0)
+    submit_count: int | None = Field(default=None, ge=0)
+    cache_hit_ratio: float | None = Field(default=None, ge=0.0, le=1.0)
+    spool_path: str | None = Field(default=None, min_length=1, max_length=512)
+    spool_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+
+
+class AttemptRecord(BaseModel, frozen=True, extra="forbid"):
+    model_config = ConfigDict(frozen=True)
+
+    attempt_id: UUID
+    run_id: UUID
+    experiment_id: str = Field(min_length=1, max_length=128)
+    task_id: str = Field(min_length=1, max_length=128)
+    mode: Literal["c", "a"]
+    attempt_seq: int = Field(ge=1)
+    status: EvalTaskStatus = EvalTaskStatus.PENDING
+    error_class: str | None = Field(default=None, min_length=1, max_length=128)
+    started_at: datetime
+    finished_at: datetime | None = None
+    telemetry: AttemptTelemetry = AttemptTelemetry()
+
+
+class EpisodeResult(BaseModel, frozen=True, extra="forbid"):
+    """Public per-task result derived only from the official feedback whitelist."""
+
+    model_config = ConfigDict(frozen=True)
+
+    reward: Decimal | None = Field(default=None, ge=0)
+    phase1_passed: bool | None = None
+    phase2_passed: bool | None = None
+    rounds: int | None = Field(default=None, ge=0)
+    tool_calls: int | None = Field(default=None, ge=0)
+    submit_count: int | None = Field(default=None, ge=0)
 
 
 class BirdActionContract(BaseModel):
