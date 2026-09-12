@@ -4,9 +4,10 @@
 # preflight action (base image digests MUST be pinned first, see MUST-PIN
 # notes below; Docker Hub was unreachable when this file was authored).
 #
-# Isolation shape (v0.3 §5.1):
-# - bird-system-agent mounts NOTHING and receives no data/database env;
-#   it talks HTTP to the two official services and HTTPS to DeepSeek only.
+# Isolation shape (v0.3 §5.1, §18):
+# - bird-system-agent mounts exactly ONE volume: its own agent-visible JSONL
+#   spool (rw bind mount under outputs/); it receives no data/database env and
+#   talks HTTP to the two official services and HTTPS to DeepSeek only.
 # - The dataset JSONL (which carries GT fields) is consumed exclusively by
 #   the official orchestrator process that the EvaluationRunner launches on
 #   the host; it is never mounted into any container here.
@@ -25,10 +26,13 @@ services:
       SYSTEM_AGENT_MODEL: ${SYSTEM_AGENT_MODEL:-deepseek-v4-flash}
       BIRD_CONFIG_ROOT: /app/configs/model
       BIRD_CACHE_ROOT: /app/.cache/commerce-agent
+      BIRD_SPOOL_DIR: /app/spool
       DB_ENV_BASE_URL: http://bird-db-environment:6002
       USER_SIM_BASE_URL: http://bird-user-simulator:6001
       BIRD_EXPERIMENT_ID: ${BIRD_EXPERIMENT_ID:-bird-system-agent}
       DEEPSEEK_PROVIDER_USER_ID: ${DEEPSEEK_PROVIDER_USER_ID:-bird-system-agent000000000000000}
+    volumes:
+      - ./outputs/bird-agent-spool:/app/spool
     ports:
       - "127.0.0.1:6000:6000"
     networks: [bird_eval]

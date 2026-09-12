@@ -19,3 +19,4 @@ outputs/probes/*.redacted.json
 outputs/bird-pilot/task-data/
 outputs/bird-budget/
 outputs/bird-eval/
+outputs/bird-agent-spool/

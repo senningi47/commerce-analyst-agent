@@ -18,7 +18,7 @@ from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
 from typing import Any, Literal
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import httpx
 
@@ -26,12 +26,22 @@ from commerce_agent.context_builder._tokens import (
     ProvisionedDeepSeekTokenEstimator,
     TokenizerArtifactManifest,
 )
-from commerce_agent.context_builder.builder import ContextBuilder, compute_config_hash
+from commerce_agent.context_builder.builder import (
+    ContextBuilder,
+    compute_config_hash,
+    scope_digest,
+)
 from commerce_agent.context_builder.profiles import ProfileRegistry
+from commerce_agent.evaluation.spool import SpoolWriter
 from commerce_agent.model._pricing import PriceSnapshot
 from commerce_agent.model._retry import RetryPolicy
 from commerce_agent.model._turn_store import InMemoryProviderTurnStore
-from commerce_agent.model.contracts import RunScope
+from commerce_agent.model.contracts import (
+    ModelGateway,
+    ModelRequest,
+    ModelResponse,
+    RunScope,
+)
 from commerce_agent.model.gateway import CapabilitySnapshot, DeepSeekModelGateway
 from commerce_agent.orchestration.bird_a_graph import BirdAGraph, BirdAModelTurnGate
 from commerce_agent.orchestration.bird_c_responder import BirdCResponder
@@ -76,6 +86,46 @@ class HttpxBirdTransport:
         )
 
 
+class SpoolTraceGateway:
+    """ModelGateway decorator feeding the agent-visible JSONL spool (v0.3 §18).
+
+    One spool file per attempt under the mounted spool dir; one public event
+    per model turn carrying usage/cost and model identity. These fields never
+    enter responses — this channel is their only path off the agent process.
+    """
+
+    def __init__(self, inner: ModelGateway, spool_dir: Path) -> None:
+        self._inner = inner
+        self._spool_dir = spool_dir
+        self._writers: dict[UUID, SpoolWriter] = {}
+
+    async def complete(self, request: ModelRequest) -> ModelResponse:
+        response = await self._inner.complete(request)
+        self._record(request, response)
+        return response
+
+    def _record(self, request: ModelRequest, response: ModelResponse) -> None:
+        writer = self._writers.get(request.attempt_id)
+        if writer is None:
+            writer = SpoolWriter(self._spool_dir / f"{request.attempt_id}.jsonl")
+            self._writers[request.attempt_id] = writer
+        writer.append(
+            {
+                "run_scope_digest": scope_digest(request.run_scope),
+                "attempt_id": str(request.attempt_id),
+                "phase": "attempt",
+                "sequence": request.sequence,
+                "event_type": "model_turn",
+                "payload": {
+                    "actual_model": response.actual_model,
+                    "finish_reason": str(response.finish_reason),
+                    "usage": response.usage.model_dump(mode="json"),
+                    "cost": response.cost.model_dump(mode="json"),
+                },
+            }
+        )
+
+
 class DeepSeekBirdRuntimeFactory:
     """Concrete `BirdRuntimeFactory` for the real Pilot path."""
 
@@ -91,6 +141,7 @@ class DeepSeekBirdRuntimeFactory:
         user_sim_base_url: str,
         experiment_id: str,
         provider_user_id: str,
+        spool_dir: Path,
     ) -> None:
         self._registry = ProfileRegistry.load(config_root)
         self._model = model
@@ -116,15 +167,18 @@ class DeepSeekBirdRuntimeFactory:
             timeout=120.0,
             trust_env=False,
         )
-        self._gateway = DeepSeekModelGateway(
-            client=self._deepseek_client,
-            turn_store=self._turn_store,
-            capability=capability,
-            prices=prices,
-            retry_policy=RetryPolicy(),
-            clock=self._clock,
-            sleeper=_sleep_seconds,
-            jitter_rng=lambda: Decimal(repr(random.random())),
+        self._gateway = SpoolTraceGateway(
+            DeepSeekModelGateway(
+                client=self._deepseek_client,
+                turn_store=self._turn_store,
+                capability=capability,
+                prices=prices,
+                retry_policy=RetryPolicy(),
+                clock=self._clock,
+                sleeper=_sleep_seconds,
+                jitter_rng=lambda: Decimal(repr(random.random())),
+            ),
+            spool_dir=spool_dir,
         )
         self._bird_client = httpx.AsyncClient(trust_env=False)
         self._transport = HttpxBirdTransport(self._bird_client)
@@ -151,6 +205,7 @@ class DeepSeekBirdRuntimeFactory:
             provider_user_id=os.environ.get(
                 "DEEPSEEK_PROVIDER_USER_ID", "bird-system-agent" + "0" * 15
             ),
+            spool_dir=Path(os.environ["BIRD_SPOOL_DIR"]),  # fail fast when missing
         )
 
     async def aclose(self) -> None:

@@ -4,10 +4,10 @@ Three groups (v0.3 §5.1, §14.4):
 1. the system-agent build-context file list carries no GT/data tokens;
 2. the root .dockerignore is an allowlist that never re-includes restricted
    paths, and the Dockerfile copies only allowlisted paths;
-3. compose.bird.yaml gives the system agent no volumes and no data/database/
-   simulator-secret env names, while the db environment keeps its read-only
-   public-data mount; every env value is a ``${VAR}`` reference, never an
-   inline secret.
+3. compose.bird.yaml gives the system agent exactly one volume — its own
+   agent-visible JSONL spool (v0.3 §18) — and no data/database/simulator-secret
+   env names, while the db environment keeps its read-only public-data mount;
+   every env value is a ``${VAR}`` reference, never an inline secret.
 """
 
 import re
@@ -83,17 +83,39 @@ def _service_block(compose_text: str, service: str) -> str:
     return match.group(1)
 
 
-def test_system_agent_service_has_no_volumes_and_no_restricted_env() -> None:
+def _volume_entries(block: str) -> list[str]:
+    """Return the list entries of the block's `volumes:` subsection only."""
+
+    entries: list[str] = []
+    in_volumes = False
+    for line in block.splitlines():
+        if line.startswith("    ") and line[4:5] not in (" ", ""):
+            in_volumes = line.strip() == "volumes:"
+            continue
+        if in_volumes and line.strip().startswith("- "):
+            entries.append(line.strip()[2:].strip())
+    return entries
+
+
+def test_system_agent_mounts_only_agent_visible_spool() -> None:
     compose_text = (REPO_ROOT / "compose.bird.yaml").read_text(encoding="utf-8")
     block = _service_block(compose_text, "bird-system-agent")
 
-    assert not re.search(r"^    volumes:", block, flags=re.MULTILINE), (
-        "system agent must mount nothing"
+    assert _volume_entries(block) == ["./outputs/bird-agent-spool:/app/spool"], (
+        "system agent mounts exactly one rw volume: its own agent-visible spool (v0.3 §18)"
+    )
+    assert re.search(r"^\s+BIRD_SPOOL_DIR:", block, flags=re.MULTILINE), (
+        "system agent spool path env must be declared"
     )
     for name in AGENT_FORBIDDEN_ENV_NAMES:
         assert not re.search(rf"^\s+{name}:", block, flags=re.MULTILINE), (
             f"system agent must not receive {name}"
         )
+
+
+def test_agent_spool_host_dir_is_gitignored() -> None:
+    gitignore = (REPO_ROOT / ".gitignore").read_text(encoding="utf-8")
+    assert "outputs/bird-agent-spool/" in gitignore
 
 
 def test_compose_env_values_are_references_or_static_hosts() -> None:
