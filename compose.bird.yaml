@@ -1,0 +1,86 @@
+# BIRD evaluation topology (spec v0.3 §5) — source of record only.
+# Services are STARTED only by the Task 12 preflight with explicit
+# authorization; `docker compose -f compose.bird.yaml build` is likewise a
+# preflight action (base image digests MUST be pinned first, see MUST-PIN
+# notes below; Docker Hub was unreachable when this file was authored).
+#
+# Isolation shape (v0.3 §5.1):
+# - bird-system-agent mounts NOTHING and receives no data/database env;
+#   it talks HTTP to the two official services and HTTPS to DeepSeek only.
+# - The dataset JSONL (which carries GT fields) is consumed exclusively by
+#   the official orchestrator process that the EvaluationRunner launches on
+#   the host; it is never mounted into any container here.
+# - The db environment receives the public Full dataset read-only (official
+#   data_dir layout: /opt/bird-adk/bird-interact-full, DATASET=full).
+# tests/contract/test_bird_gt_isolation.py enforces this file's shape.
+
+services:
+  bird-system-agent:
+    build:
+      context: .
+      dockerfile: bird_system_agent/Dockerfile
+    environment:
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:?set in .env}
+      DEEPSEEK_API_BASE: ${DEEPSEEK_API_BASE:-https://api.deepseek.com}
+      SYSTEM_AGENT_MODEL: ${SYSTEM_AGENT_MODEL:-deepseek-v4-flash}
+      BIRD_CONFIG_ROOT: /app/configs/model
+      BIRD_CACHE_ROOT: /app/.cache/commerce-agent
+      DB_ENV_BASE_URL: http://bird-db-environment:6002
+      USER_SIM_BASE_URL: http://bird-user-simulator:6001
+      BIRD_EXPERIMENT_ID: ${BIRD_EXPERIMENT_ID:-bird-system-agent}
+      DEEPSEEK_PROVIDER_USER_ID: ${DEEPSEEK_PROVIDER_USER_ID:-bird-system-agent000000000000000}
+    ports:
+      - "127.0.0.1:6000:6000"
+    networks: [bird_eval]
+    depends_on:
+      - bird-db-environment
+      - bird-user-simulator
+    restart: "no"
+
+  bird-user-simulator:
+    build:
+      context: ./scripts/spikes
+      dockerfile: bird-user-simulator.Dockerfile
+    # MUST-PIN base digests of both bird Dockerfiles at Task 12 preflight.
+    working_dir: /opt/bird-adk
+    command: ["python", "-m", "user_simulator.server"]
+    environment:
+      USER_SIM_PORT: "6001"
+      USER_SIM_MODEL: ${USER_SIM_MODEL:?set in .env}
+      LITELLM_API_BASE: ${LITELLM_API_BASE:-}
+      LITELLM_API_KEY: ${LITELLM_API_KEY:?set in .env}
+      PATIENCE: ${PATIENCE:-3}
+      PROMPT_VERSION: ${PROMPT_VERSION:-v2}
+    volumes:
+      - ./_upstream/BIRD-Interact/BIRD-Interact-ADK/shared:/opt/bird-adk/shared:ro
+      - ./_upstream/BIRD-Interact/BIRD-Interact-ADK/user_simulator:/opt/bird-adk/user_simulator:ro
+    ports:
+      - "127.0.0.1:6001:6001"
+    networks: [bird_eval]
+    restart: "no"
+
+  bird-db-environment:
+    build:
+      context: ./scripts/spikes
+      dockerfile: bird-db-environment.Dockerfile
+    environment:
+      DB_ENV_PORT: "6002"
+      PG_HOST: ${BIRD_PG_HOST:-host.docker.internal}
+      PG_PORT: ${BIRD_PG_PORT:-5433}
+      PG_USER: ${BIRD_PG_USER:?set in .env}
+      PG_PASSWORD: ${BIRD_PG_PASSWORD:?set in .env}
+      DATASET: full
+    volumes:
+      - ./_upstream/BIRD-Interact/BIRD-Interact-ADK/shared:/opt/bird-adk/shared:ro
+      - ./_upstream/BIRD-Interact/BIRD-Interact-ADK/db_environment:/opt/bird-adk/db_environment:ro
+      - ${BIRD_PUBLIC_DATA_DIR:?set public Full data dir in .env}:/opt/bird-adk/bird-interact-full:ro
+    ports:
+      - "127.0.0.1:6002:6002"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks: [bird_eval]
+    restart: "no"
+
+networks:
+  bird_eval:
+    name: commerce_analyst_bird_eval
