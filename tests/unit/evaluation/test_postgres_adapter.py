@@ -51,6 +51,12 @@ class FakeConnection:
     def cursor(self) -> FakeCursor:
         return self._cursor
 
+    def commit(self) -> None:
+        return None
+
+    def rollback(self) -> None:
+        return None
+
 
 def make_store(cursor: FakeCursor) -> PostgresEvaluationStore:
     store = PostgresEvaluationStore(dsn="postgresql://evaluation_writer@127.0.0.1/db")
@@ -139,8 +145,15 @@ def test_mark_running_guard_fails_closed(monkeypatch: pytest.MonkeyPatch) -> Non
     assert excinfo.value.reason_code == "status_transition_conflict"
     statement, params = cursor.statements[0]
     assert "SET status = 'running'" in statement
-    assert "AND status = %s" in statement
-    assert params == (cursor.statements[0][1][0], "pending")
+    assert "AND status = 'pending'" in statement
+    assert params == (cursor.statements[0][1][0],)
+
+
+def test_mark_running_rejects_non_pending_expected_status() -> None:
+    store = PostgresEvaluationStore(dsn="postgresql://evaluation_writer@127.0.0.1/db")
+    with pytest.raises(EvalStateConflict) as excinfo:
+        store.mark_running(uuid4(), expected_status=EvalTaskStatus.INTERRUPTED)
+    assert excinfo.value.reason_code == "status_transition_conflict"
 
 
 def test_finish_attempt_writes_terminal_fields(monkeypatch: pytest.MonkeyPatch) -> None:
