@@ -1,0 +1,17 @@
+# Root build-context allowlist for the bird system agent image.
+# Everything is excluded by default; only the entries below enter the image
+# layer. No data/, no _upstream/, no tests/, no evaluator-only content —
+# enforced structurally here and by tests/contract/test_bird_gt_isolation.py.
+**
+!src
+!src/**
+!configs
+!configs/model
+!configs/model/**
+!bird_system_agent
+!bird_system_agent/**
+!pyproject.toml
+!.cache
+!.cache/commerce-agent
+!.cache/commerce-agent/deepseek-tokenizer
+!.cache/commerce-agent/deepseek-tokenizer/**

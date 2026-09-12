@@ -1,0 +1,9 @@
+# Container-only runtime dependencies (spec v0.3 §21: the bird system agent
+# keeps its own dependency set, outside the product lockfile). The pure-ASGI
+# server needs only uvicorn — no FastAPI in the product venv.
+#
+# HONEST STATUS: PyPI was unreachable when this file was authored, so exact
+# pins are deferred to the Task 12 preflight (`uv pip compile` on the build
+# machine, then replace this file with the resolved lock before any real
+# image build). Ranges below are the declared compatibility bounds, not a lock.
+uvicorn>=0.30,<1
