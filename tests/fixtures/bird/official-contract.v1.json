@@ -93,6 +93,7 @@
   "outbound_endpoints": [
     {
       "action": "execute_sql",
+      "service": "db_env",
       "path": "/execute",
       "request_fields": [
         "task_id",
@@ -102,30 +103,36 @@
         "error",
         "result",
         "success"
-      ]
+      ],
+      "timeout_seconds": 120.0
     },
     {
       "action": "get_schema",
+      "service": "db_env",
       "path": "/schema",
       "request_fields": [
         "task_id"
       ],
       "response_keys": [
         "schema"
-      ]
+      ],
+      "timeout_seconds": 30.0
     },
     {
       "action": "get_all_column_meanings",
+      "service": "db_env",
       "path": "/all_column_meanings",
       "request_fields": [
         "task_id"
       ],
       "response_keys": [
         "column_meanings"
-      ]
+      ],
+      "timeout_seconds": 30.0
     },
     {
       "action": "get_column_meaning",
+      "service": "db_env",
       "path": "/column_meaning",
       "request_fields": [
         "task_id",
@@ -134,20 +141,24 @@
       ],
       "response_keys": [
         "meaning"
-      ]
+      ],
+      "timeout_seconds": 30.0
     },
     {
       "action": "get_all_external_knowledge_names",
+      "service": "db_env",
       "path": "/knowledge_names",
       "request_fields": [
         "task_id"
       ],
       "response_keys": [
         "names"
-      ]
+      ],
+      "timeout_seconds": 30.0
     },
     {
       "action": "get_knowledge_definition",
+      "service": "db_env",
       "path": "/knowledge",
       "request_fields": [
         "task_id",
@@ -155,20 +166,24 @@
       ],
       "response_keys": [
         "knowledge"
-      ]
+      ],
+      "timeout_seconds": 30.0
     },
     {
       "action": "get_all_knowledge_definitions",
+      "service": "db_env",
       "path": "/knowledge",
       "request_fields": [
         "task_id"
       ],
       "response_keys": [
         "knowledge"
-      ]
+      ],
+      "timeout_seconds": 30.0
     },
     {
       "action": "ask_user",
+      "service": "user_sim",
       "path": "/ask",
       "request_fields": [
         "task_id",
@@ -176,10 +191,12 @@
       ],
       "response_keys": [
         "answer"
-      ]
+      ],
+      "timeout_seconds": 60.0
     },
     {
       "action": "submit_sql",
+      "service": "db_env",
       "path": "/submit",
       "request_fields": [
         "task_id",
@@ -192,15 +209,18 @@
         "passed",
         "phase_completed",
         "reward"
-      ]
+      ],
+      "timeout_seconds": 120.0
     },
     {
       "action": "submit_sql",
+      "service": "user_sim",
       "path": "/phase_transition",
       "request_fields": [
         "task_id"
       ],
-      "response_keys": []
+      "response_keys": [],
+      "timeout_seconds": 120.0
     }
   ],
   "orchestrator": {

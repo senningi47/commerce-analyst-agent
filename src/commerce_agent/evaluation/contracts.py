@@ -12,6 +12,7 @@ from __future__ import annotations
 import json
 from decimal import Decimal
 from pathlib import Path
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict
 
@@ -27,6 +28,19 @@ class BirdActionContract(BaseModel):
 
     name: str
     coin_cost: Decimal
+
+
+class BirdEndpointContract(BaseModel):
+    """One frozen outbound official endpoint bound to an action."""
+
+    model_config = ConfigDict(frozen=True)
+
+    action: str
+    service: Literal["db_env", "user_sim"]
+    path: str
+    request_fields: frozenset[str]
+    response_keys: frozenset[str]
+    timeout_seconds: float
 
 
 class OrchestratorCliContract(BaseModel):
@@ -51,6 +65,7 @@ class BirdOfficialContract(BaseModel):
     run_session_response_fields: frozenset[str]
     submit_sql_response_fields: frozenset[str]
     actions: tuple[BirdActionContract, ...]
+    outbound_endpoints: tuple[BirdEndpointContract, ...]
     orchestrator_cli: OrchestratorCliContract
     orchestrator_env_names: frozenset[str]
 
@@ -81,6 +96,17 @@ def load_official_contract() -> BirdOfficialContract:
         actions=tuple(
             BirdActionContract(name=entry["name"], coin_cost=Decimal(str(entry["coin_cost"])))
             for entry in payload["actions"]
+        ),
+        outbound_endpoints=tuple(
+            BirdEndpointContract(
+                action=entry["action"],
+                service=entry["service"],
+                path=entry["path"],
+                request_fields=frozenset(entry["request_fields"]),
+                response_keys=frozenset(entry["response_keys"]),
+                timeout_seconds=entry["timeout_seconds"],
+            )
+            for entry in payload["outbound_endpoints"]
         ),
         orchestrator_cli=OrchestratorCliContract(
             module=orchestrator["module"],

@@ -146,10 +146,30 @@ def _action_cost(tree: ast.Module, action_name: str) -> str:
     raise SystemExit(f"action function not found: {action_name}")
 
 
+_SERVICE_BY_URL_HELPER = {"_db_url": "db_env", "_user_url": "user_sim"}
+
+
+def _action_timeout(function_node: ast.FunctionDef) -> float:
+    for item in ast.walk(function_node):
+        if not isinstance(item, ast.With):
+            continue
+        for with_item in item.items:
+            context = with_item.context_expr
+            if not (isinstance(context, ast.Call) and isinstance(context.func, ast.Attribute)):
+                continue
+            if context.func.attr != "Client":
+                continue
+            for keyword in context.keywords:
+                if keyword.arg == "timeout" and isinstance(keyword.value, ast.Constant):
+                    return float(keyword.value.value)
+    raise SystemExit("no httpx.Client timeout found in action function")
+
+
 def _post_endpoints(tree: ast.Module, action_name: str) -> list[dict[str, Any]]:
     for node in tree.body:
         if not (isinstance(node, ast.FunctionDef) and node.name == action_name):
             continue
+        timeout_seconds = _action_timeout(node)
         endpoints: list[dict[str, Any]] = []
         for item in ast.walk(node):
             if not (isinstance(item, ast.Call) and isinstance(item.func, ast.Attribute)):
@@ -158,8 +178,12 @@ def _post_endpoints(tree: ast.Module, action_name: str) -> list[dict[str, Any]]:
                 continue
             url_node = item.args[0]
             path: str | None = None
-            if isinstance(url_node, ast.Call) and url_node.args:
-                if isinstance(url_node.args[0], ast.Constant):
+            service: str | None = None
+            if isinstance(url_node, ast.Call) and isinstance(url_node.func, ast.Name):
+                service = _SERVICE_BY_URL_HELPER.get(url_node.func.id)
+                if service is None:
+                    raise SystemExit(f"unknown url helper in action: {action_name}")
+                if url_node.args and isinstance(url_node.args[0], ast.Constant):
                     path = str(url_node.args[0].value)
             elif isinstance(url_node, ast.JoinedStr) and url_node.values:
                 tail = url_node.values[-1]
@@ -179,9 +203,11 @@ def _post_endpoints(tree: ast.Module, action_name: str) -> list[dict[str, Any]]:
             endpoints.append(
                 {
                     "action": action_name,
+                    "service": service,
                     "path": path,
                     "request_fields": request_fields,
                     "response_keys": response_keys,
+                    "timeout_seconds": timeout_seconds,
                 }
             )
         if not endpoints:
