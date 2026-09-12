@@ -31,6 +31,7 @@ PRODUCT_APPLICATION_NAMES = (
     "commerce_operation_execute",
     "commerce_product_trace",
     "commerce_product_scenario_reset",
+    "commerce_evaluation_runner",
 )
 
 

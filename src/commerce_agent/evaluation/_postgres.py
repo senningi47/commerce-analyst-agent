@@ -126,10 +126,12 @@ class PostgresEvaluationStore:
             raise EvalStateConflict("attempt_identity_conflict") from error
 
     def mark_running(self, attempt_id: UUID, *, expected_status: EvalTaskStatus) -> None:
+        if expected_status != EvalTaskStatus.PENDING:
+            raise EvalStateConflict("status_transition_conflict")
         rowcount = self._execute(
             "UPDATE eval.task_attempt SET status = 'running' "
-            "WHERE attempt_id = %s AND status = %s",
-            (attempt_id, expected_status.value),
+            "WHERE attempt_id = %s AND status = 'pending'",
+            (attempt_id,),
         )
         if rowcount != 1:
             raise EvalStateConflict("status_transition_conflict")
@@ -228,3 +230,21 @@ class PostgresEvaluationStore:
         )
         if rowcount != 1:
             raise EvalStateConflict("result_requires_succeeded_attempt")
+
+    def result(self, attempt_id: UUID) -> EpisodeResult | None:
+        rows = self._execute_returning(
+            "SELECT reward, phase1_passed, phase2_passed, rounds, tool_calls, submit_count "
+            "FROM eval.task_result WHERE attempt_id = %s",
+            (attempt_id,),
+        )
+        if not rows:
+            return None
+        reward, phase1, phase2, rounds, tool_calls, submit_count = rows[0]
+        return EpisodeResult(
+            reward=reward,
+            phase1_passed=phase1,
+            phase2_passed=phase2,
+            rounds=rounds,
+            tool_calls=tool_calls,
+            submit_count=submit_count,
+        )

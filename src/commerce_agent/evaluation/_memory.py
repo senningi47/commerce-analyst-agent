@@ -57,7 +57,12 @@ class InMemoryEvaluationStore:
     def mark_running(self, attempt_id: object, *, expected_status: EvalTaskStatus) -> None:
         with self._lock:
             record = self._attempts.get(attempt_id)  # type: ignore[arg-type]
-            if record is None or record.status != expected_status:
+            if (
+                record is None
+                or record.status != EvalTaskStatus.PENDING
+                or expected_status != EvalTaskStatus.PENDING
+            ):
+                # pending -> running is the ONLY legal entry into execution
                 raise EvalStateConflict("status_transition_conflict")
             self._attempts[record.attempt_id] = record.model_copy(
                 update={"status": EvalTaskStatus.RUNNING}
