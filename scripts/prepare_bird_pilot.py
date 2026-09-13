@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import random
 import re
 import subprocess
@@ -37,12 +38,35 @@ FORBIDDEN_PATH_TOKENS = ("evaluator_only", "sol_sql", "test_cases")
 DEFAULT_PILOT_COUNT = 20
 DEFAULT_LEDGER_CEILING_YUAN = 180.0
 DEFAULT_LEDGER_RESERVE_YUAN = 20.0
+DEFAULT_ADK_ROOT = Path("_upstream/BIRD-Interact")
 
+# Runtime-only allowlist for the official checker subprocess: uv and Python
+# need these on Windows (temp/cache resolution, SYSTEMROOT for the runtime);
+# everything else — secrets above all — stays out of the child environment.
+CHECKER_RUNTIME_ENV_NAMES = (
+    "PATH",
+    "TEMP",
+    "TMP",
+    "USERPROFILE",
+    "HOME",
+    "HOMEDRIVE",
+    "HOMEPATH",
+    "LOCALAPPDATA",
+    "APPDATA",
+    "SYSTEMROOT",
+    "SYSTEMDRIVE",
+    "UV_CACHE_DIR",
+    "XDG_CACHE_HOME",
+)
+
+# Anchored to the checker's own summary lines ("📈 Total Databases: 22") —
+# unanchored matching false-positives on "database metadata for 127.0.0.1"
+# in the output header.
 _METADATA_BASELINE_PATTERNS = {
-    "databases": re.compile(r"databases?\D{0,20}?(\d[\d,]*)", re.IGNORECASE),
-    "tables": re.compile(r"tables?\D{0,20}?(\d[\d,]*)", re.IGNORECASE),
-    "columns": re.compile(r"columns?\D{0,20}?(\d[\d,]*)", re.IGNORECASE),
-    "rows": re.compile(r"rows?\D{0,20}?(\d[\d,]*)", re.IGNORECASE),
+    "databases": re.compile(r"total databases\s*:\s*(\d[\d,]*)", re.IGNORECASE),
+    "tables": re.compile(r"total tables\s*:\s*(\d[\d,]*)", re.IGNORECASE),
+    "columns": re.compile(r"total columns\s*:\s*(\d[\d,]*)", re.IGNORECASE),
+    "rows": re.compile(r"total rows\s*:\s*(\d[\d,]*)", re.IGNORECASE),
 }
 
 
@@ -100,7 +124,18 @@ def compare_metadata_baseline(checker_output: str) -> dict[str, object]:
     }
 
 
-def run_metadata_checker(adk_root: Path, port: int = 5433) -> dict[str, object]:
+def _checker_env() -> dict[str, str]:
+    """Runtime-only environment for the official checker subprocess."""
+
+    env = {"PYTHONIOENCODING": "utf-8"}
+    for name in CHECKER_RUNTIME_ENV_NAMES:
+        value = os.environ.get(name)
+        if value:
+            env[name] = value
+    return env
+
+
+def run_metadata_checker(adk_root: Path = DEFAULT_ADK_ROOT, port: int = 5433) -> dict[str, object]:
     """Re-run the official checker (Day 1E command) and compare to the baseline."""
 
     completed = subprocess.run(
@@ -123,7 +158,7 @@ def run_metadata_checker(adk_root: Path, port: int = 5433) -> dict[str, object]:
         check=False,
         encoding="utf-8",
         errors="replace",
-        env={"PYTHONIOENCODING": "utf-8", "PATH": __import__("os").environ["PATH"]},
+        env=_checker_env(),
     )
     return {
         "returncode": completed.returncode,
@@ -289,7 +324,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--count", type=int, default=DEFAULT_PILOT_COUNT)
     parser.add_argument("--seed", type=int, default=7)
     parser.add_argument("--run-db-check", action="store_true")
-    parser.add_argument("--adk-root", type=Path, default=Path("_upstream/BIRD-Interact/BIRD-Interact-ADK"))
+    parser.add_argument("--adk-root", type=Path, default=DEFAULT_ADK_ROOT)
     parser.add_argument("--out-dir", type=Path, default=Path("outputs/bird-pilot"))
     args = parser.parse_args(argv)
 

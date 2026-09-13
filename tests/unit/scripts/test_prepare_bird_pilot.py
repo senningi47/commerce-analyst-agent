@@ -4,12 +4,43 @@ from pathlib import Path
 import pytest
 
 from scripts.prepare_bird_pilot import (
+    DEFAULT_ADK_ROOT,
+    _checker_env,
     _gitignore_covers,
     compare_metadata_baseline,
     select_pilot_tasks,
     verify_frozen_revisions,
     write_ledger_seed,
 )
+
+
+def test_checker_env_allowlists_runtime_vars_and_strips_secrets(monkeypatch) -> None:
+    monkeypatch.setenv("PATH", "C:/fake-bin")
+    monkeypatch.setenv("TEMP", "C:/fake-temp")
+    monkeypatch.setenv("TMP", "C:/fake-temp")
+    monkeypatch.setenv("USERPROFILE", "C:/fake-user")
+    monkeypatch.setenv("LOCALAPPDATA", "C:/fake-local")
+    monkeypatch.setenv("SYSTEMROOT", "C:/fake-windows")
+    monkeypatch.setenv("DEEPSEEK_API_KEY", "sk-fake-secret")
+    monkeypatch.setenv("UNRELATED_VAR", "noise")
+
+    env = _checker_env()
+
+    assert env["PATH"] == "C:/fake-bin"
+    assert env["TEMP"] == "C:/fake-temp"
+    assert env["TMP"] == "C:/fake-temp"
+    assert env["USERPROFILE"] == "C:/fake-user"
+    assert env["LOCALAPPDATA"] == "C:/fake-local"
+    assert env["SYSTEMROOT"] == "C:/fake-windows"
+    assert env["PYTHONIOENCODING"] == "utf-8"
+    assert "DEEPSEEK_API_KEY" not in env
+    assert "UNRELATED_VAR" not in env
+
+
+def test_default_adk_root_matches_official_checker_location() -> None:
+    assert (DEFAULT_ADK_ROOT / "env" / "check_db_metadata.py").as_posix() == (
+        "_upstream/BIRD-Interact/env/check_db_metadata.py"
+    )
 
 
 def _dataset(tmp_path: Path, count: int) -> Path:
@@ -47,20 +78,47 @@ def test_verify_frozen_revisions_reports_fixture_and_digest() -> None:
     } or str(report["image_digest_state"]).startswith("mismatch:")
 
 
-def test_metadata_baseline_comparison_matches_day1e_report() -> None:
-    output = (
-        "Expected databases: 22\n"
-        "Present databases: 22\n"
-        "Tables: 244\n"
-        "Columns: 2,011\n"
-        "Rows: 273,571\n"
-    )
-    report = compare_metadata_baseline(output)
+_REAL_CHECKER_OUTPUT_SAMPLE = (
+    "🔍 Checking database metadata for 127.0.0.1:5433\n"
+    "✅ Found 22 databases: archeology_scan, sports_events\n"
+    "\n"
+    "📊 Database Metadata Summary for 127.0.0.1:5433\n"
+    "============================================================\n"
+    "📈 Total Databases: 22\n"
+    "📋 Total Tables: 244\n"
+    "📋 Tables with Data: 244\n"
+    "🔢 Total Columns: 2011\n"
+    "📊 Total Rows: 273,571\n"
+    "📈 Avg Rows per Table: 1,121.19\n"
+    "💾 Total Size: 273.95 MB\n"
+    "\n"
+    "🎯 Expected Database Check:\n"
+    "   Expected: 22\n"
+    "   Present: 22 ✅\n"
+)
+
+
+def test_metadata_baseline_comparison_matches_real_checker_output() -> None:
+    report = compare_metadata_baseline(_REAL_CHECKER_OUTPUT_SAMPLE)
+
+    assert report["parsed"] == {
+        "databases": 22,
+        "tables": 244,
+        "columns": 2011,
+        "rows": 273571,
+    }
     assert report["all_match"] is True
 
 
+def test_metadata_baseline_comparison_ignores_host_ip_in_header() -> None:
+    report = compare_metadata_baseline(_REAL_CHECKER_OUTPUT_SAMPLE)
+
+    # "database metadata for 127.0.0.1" must not be parsed as the db count
+    assert report["parsed"]["databases"] != 127
+
+
 def test_metadata_baseline_comparison_detects_drift() -> None:
-    output = "Expected databases: 22\nTables: 243\nColumns: 2,011\nRows: 273,571\n"
+    output = _REAL_CHECKER_OUTPUT_SAMPLE.replace("Total Tables: 244", "Total Tables: 243")
     report = compare_metadata_baseline(output)
     assert report["all_match"] is False
     assert report["parsed"]["tables"] == 243

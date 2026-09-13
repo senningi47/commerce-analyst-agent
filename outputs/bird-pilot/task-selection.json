@@ -1,0 +1,188 @@
+{
+  "generated_at": "2026-09-13T04:42:49.876478+00:00",
+  "strategy": "database+ambiguity-fallback (v0.3 §16.3 fallback; no BI/DM labels assumed)",
+  "count": 20,
+  "seed": 7,
+  "selections": [
+    {
+      "task_id": "archeology_scan_M_1",
+      "mode": "c",
+      "basis": {
+        "strategy": "database+ambiguity-fallback",
+        "selected_database": "archeology_scan",
+        "ambiguity_count": 5
+      }
+    },
+    {
+      "task_id": "cold_chain_pharma_compliance_3",
+      "mode": "c",
+      "basis": {
+        "strategy": "database+ambiguity-fallback",
+        "selected_database": "cold_chain_pharma_compliance",
+        "ambiguity_count": 2
+      }
+    },
+    {
+      "task_id": "cross_border_M_8",
+      "mode": "c",
+      "basis": {
+        "strategy": "database+ambiguity-fallback",
+        "selected_database": "cross_border",
+        "ambiguity_count": 2
+      }
+    },
+    {
+      "task_id": "crypto_exchange_9",
+      "mode": "c",
+      "basis": {
+        "strategy": "database+ambiguity-fallback",
+        "selected_database": "crypto_exchange",
+        "ambiguity_count": 2
+      }
+    },
+    {
+      "task_id": "cybermarket_pattern_6",
+      "mode": "c",
+      "basis": {
+        "strategy": "database+ambiguity-fallback",
+        "selected_database": "cybermarket_pattern",
+        "ambiguity_count": 3
+      }
+    },
+    {
+      "task_id": "disaster_relief_3",
+      "mode": "c",
+      "basis": {
+        "strategy": "database+ambiguity-fallback",
+        "selected_database": "disaster_relief",
+        "ambiguity_count": 4
+      }
+    },
+    {
+      "task_id": "exchange_traded_funds_M_3",
+      "mode": "c",
+      "basis": {
+        "strategy": "database+ambiguity-fallback",
+        "selected_database": "exchange_traded_funds",
+        "ambiguity_count": 4
+      }
+    },
+    {
+      "task_id": "fake_account_6",
+      "mode": "c",
+      "basis": {
+        "strategy": "database+ambiguity-fallback",
+        "selected_database": "fake_account",
+        "ambiguity_count": 2
+      }
+    },
+    {
+      "task_id": "households_4",
+      "mode": "c",
+      "basis": {
+        "strategy": "database+ambiguity-fallback",
+        "selected_database": "households",
+        "ambiguity_count": 4
+      }
+    },
+    {
+      "task_id": "hulushows_19",
+      "mode": "c",
+      "basis": {
+        "strategy": "database+ambiguity-fallback",
+        "selected_database": "hulushows",
+        "ambiguity_count": 5
+      }
+    },
+    {
+      "task_id": "archeology_scan_6",
+      "mode": "a",
+      "basis": {
+        "strategy": "database+ambiguity-fallback",
+        "selected_database": "archeology_scan",
+        "ambiguity_count": 3
+      }
+    },
+    {
+      "task_id": "cold_chain_pharma_compliance_8",
+      "mode": "a",
+      "basis": {
+        "strategy": "database+ambiguity-fallback",
+        "selected_database": "cold_chain_pharma_compliance",
+        "ambiguity_count": 2
+      }
+    },
+    {
+      "task_id": "cross_border_M_5",
+      "mode": "a",
+      "basis": {
+        "strategy": "database+ambiguity-fallback",
+        "selected_database": "cross_border",
+        "ambiguity_count": 5
+      }
+    },
+    {
+      "task_id": "crypto_exchange_11",
+      "mode": "a",
+      "basis": {
+        "strategy": "database+ambiguity-fallback",
+        "selected_database": "crypto_exchange",
+        "ambiguity_count": 2
+      }
+    },
+    {
+      "task_id": "cybermarket_pattern_12",
+      "mode": "a",
+      "basis": {
+        "strategy": "database+ambiguity-fallback",
+        "selected_database": "cybermarket_pattern",
+        "ambiguity_count": 3
+      }
+    },
+    {
+      "task_id": "disaster_relief_7",
+      "mode": "a",
+      "basis": {
+        "strategy": "database+ambiguity-fallback",
+        "selected_database": "disaster_relief",
+        "ambiguity_count": 3
+      }
+    },
+    {
+      "task_id": "exchange_traded_funds_M_1",
+      "mode": "a",
+      "basis": {
+        "strategy": "database+ambiguity-fallback",
+        "selected_database": "exchange_traded_funds",
+        "ambiguity_count": 4
+      }
+    },
+    {
+      "task_id": "fake_account_7",
+      "mode": "a",
+      "basis": {
+        "strategy": "database+ambiguity-fallback",
+        "selected_database": "fake_account",
+        "ambiguity_count": 2
+      }
+    },
+    {
+      "task_id": "households_M_2",
+      "mode": "a",
+      "basis": {
+        "strategy": "database+ambiguity-fallback",
+        "selected_database": "households",
+        "ambiguity_count": 4
+      }
+    },
+    {
+      "task_id": "hulushows_2",
+      "mode": "a",
+      "basis": {
+        "strategy": "database+ambiguity-fallback",
+        "selected_database": "hulushows",
+        "ambiguity_count": 4
+      }
+    }
+  ]
+}
