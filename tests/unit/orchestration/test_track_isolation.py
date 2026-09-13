@@ -262,8 +262,8 @@ async def test_three_public_entries_keep_profiles_and_topologies_isolated(
     bird_c_scope, bird_c_attempt = scope_and_attempt(registry, "bird_c", mode="c", identity=1_003)
     bird_a_call = ToolCall(
         call_id="a_call",
-        name="synthetic_bird_a_observe_schema",
-        arguments_json='{"schema_ref":"synthetic:orders"}',
+        name="get_schema",
+        arguments_json="{}",
     )
     bird_c_call = ToolCall(
         call_id="c_call",
@@ -363,11 +363,11 @@ async def test_three_public_entries_keep_profiles_and_topologies_isolated(
         {tool.name for tool in gateway.requests[0].tools}
         for gateway in (retail_gateway, bird_a_gateway, bird_c_gateway)
     ]
-    assert all(
-        left.isdisjoint(right)
-        for index, left in enumerate(tool_sets)
-        for right in tool_sets[index + 1 :]
-    )
+    # Track isolation: the product track must share no tools with either BIRD
+    # profile. bird_a/bird_c intentionally share the official ask_user and
+    # submit_sql tools (official c-interact is a 2-tool subset of a-interact).
+    assert tool_sets[0].isdisjoint(tool_sets[1])
+    assert tool_sets[0].isdisjoint(tool_sets[2])
     namespace_sets = [
         {namespace.value for namespace in registry.get(key).allowed_namespaces}
         for key in ("retail", "bird_a", "bird_c")

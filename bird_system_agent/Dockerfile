@@ -23,6 +23,7 @@ COPY pyproject.toml /app/pyproject.toml
 COPY src/commerce_agent /app/src/commerce_agent
 COPY configs/model /app/configs/model
 COPY bird_system_agent /app/bird_system_agent
+COPY tests/fixtures/bird/official-contract.v1.json /app/tests/fixtures/bird/official-contract.v1.json
 COPY .cache/commerce-agent/deepseek-tokenizer /app/.cache/commerce-agent/deepseek-tokenizer
 
 RUN useradd --uid 10001 --create-home bird

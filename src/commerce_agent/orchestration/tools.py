@@ -154,6 +154,10 @@ class _SyntheticSchemaArguments(BaseModel):
     schema_ref: str = Field(min_length=1, max_length=512)
 
 
+class _EmptyArguments(BaseModel):
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+
 class _SyntheticSchemaFixture(BaseModel):
     model_config = ConfigDict(frozen=True, extra="forbid")
 
@@ -273,6 +277,12 @@ class SyntheticBirdAToolPort:
         if call.name == "synthetic_bird_a_observe_schema":
             arguments = _parse_arguments(_SyntheticSchemaArguments, call)
             result = self._schemas.get(arguments.schema_ref)
+        elif call.name == "get_schema":
+            # official-catalog name; serves the same canned schema fixture
+            _parse_arguments(_EmptyArguments, call)
+            result = next(iter(self._schemas.values()), None)
+            if result is not None:
+                result = result.model_copy(update={"call_id": call.call_id, "name": "get_schema"})
         elif call.name == "synthetic_bird_a_execute_readonly_sql":
             arguments = _parse_arguments(_SqlArguments, call)
             result = self._queries.get(arguments.sql)

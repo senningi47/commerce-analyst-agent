@@ -14,6 +14,7 @@ import asyncio
 import json
 import os
 import random
+import re
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -24,7 +25,6 @@ import httpx
 
 from commerce_agent.context_builder._tokens import (
     ProvisionedDeepSeekTokenEstimator,
-    TokenizerArtifactManifest,
 )
 from commerce_agent.context_builder.builder import (
     ContextBuilder,
@@ -33,7 +33,6 @@ from commerce_agent.context_builder.builder import (
 )
 from commerce_agent.context_builder.profiles import ProfileRegistry
 from commerce_agent.evaluation.spool import SpoolWriter
-from commerce_agent.model._pricing import PriceSnapshot
 from commerce_agent.model._retry import RetryPolicy
 from commerce_agent.model._turn_store import InMemoryProviderTurnStore
 from commerce_agent.model.contracts import (
@@ -42,7 +41,12 @@ from commerce_agent.model.contracts import (
     ModelResponse,
     RunScope,
 )
-from commerce_agent.model.gateway import CapabilitySnapshot, DeepSeekModelGateway
+from commerce_agent.model.gateway import DeepSeekModelGateway
+from commerce_agent.model.snapshots import (
+    SnapshotInvalid,
+    load_reviewed_model_snapshots,
+    to_tokenizer_artifact_manifest,
+)
 from commerce_agent.orchestration.bird_a_graph import BirdAGraph, BirdAModelTurnGate
 from commerce_agent.orchestration.bird_c_responder import BirdCResponder
 from commerce_agent.orchestration.bird_tools_http import (
@@ -50,14 +54,6 @@ from commerce_agent.orchestration.bird_tools_http import (
     BirdToolEndpoint,
     HttpBirdToolPort,
 )
-
-CAPABILITY_SNAPSHOT = "deepseek-flash-capability.v1.json"
-PRICE_SNAPSHOT = "deepseek-flash-price.2026-09-12.json"
-TOKENIZER_MANIFEST = "deepseek-tokenizer-artifact.v1.json"
-
-
-def _read_json(path: Path) -> Any:
-    return json.loads(path.read_text(encoding="utf-8"))
 
 
 class SystemClock:
@@ -143,21 +139,31 @@ class DeepSeekBirdRuntimeFactory:
         provider_user_id: str,
         spool_dir: Path,
     ) -> None:
+        if not re.fullmatch(r"[0-9a-f]{32}", provider_user_id):
+            # ModelRequest.provider_user_id enforces this pattern; failing here
+            # beats a ValidationError surfacing inside the first model turn.
+            raise ValueError("provider_user_id must be exactly 32 hexadecimal characters")
         self._registry = ProfileRegistry.load(config_root)
         self._model = model
         self._experiment_id = experiment_id
         self._config_root = config_root
         self._db_env = BirdToolEndpoint(base_url=db_env_base_url)
         self._user_sim = BirdToolEndpoint(base_url=user_sim_base_url)
-        capability = CapabilitySnapshot.model_validate(
-            _read_json(config_root / CAPABILITY_SNAPSHOT)
-        )
-        prices = PriceSnapshot.model_validate(_read_json(config_root / PRICE_SNAPSHOT))
-        manifest = TokenizerArtifactManifest.model_validate(
-            _read_json(config_root / TOKENIZER_MANIFEST)
-        )
+        snapshots = load_reviewed_model_snapshots(config_root)
+        capability = snapshots.capability
+        prices = snapshots.prices
+        tokenizer = snapshots.tokenizer
+        if tokenizer.archive_sha256 is None:
+            raise SnapshotInvalid("reviewed tokenizer archive is not installed")
+        artifact_root = cache_root / "deepseek-tokenizer" / tokenizer.archive_sha256
+        marker = json.loads((artifact_root / ".complete.json").read_text(encoding="utf-8"))
+        if marker != {
+            "archive_sha256": tokenizer.archive_sha256,
+            "entries": len(tokenizer.entries),
+        }:
+            raise SnapshotInvalid("tokenizer install mismatch")
         estimator = ProvisionedDeepSeekTokenEstimator(
-            cache_root / "deepseek-tokenizer", manifest
+            artifact_root, to_tokenizer_artifact_manifest(tokenizer)
         )
         self._clock = SystemClock()
         self._turn_store = InMemoryProviderTurnStore(clock=self._clock)
@@ -202,9 +208,7 @@ class DeepSeekBirdRuntimeFactory:
             db_env_base_url=os.environ.get("DB_ENV_BASE_URL", "http://127.0.0.1:6002"),
             user_sim_base_url=os.environ.get("USER_SIM_BASE_URL", "http://127.0.0.1:6001"),
             experiment_id=os.environ.get("BIRD_EXPERIMENT_ID", "bird-system-agent"),
-            provider_user_id=os.environ.get(
-                "DEEPSEEK_PROVIDER_USER_ID", "bird-system-agent" + "0" * 15
-            ),
+            provider_user_id=os.environ.get("DEEPSEEK_PROVIDER_USER_ID", "0" * 32),
             spool_dir=Path(os.environ["BIRD_SPOOL_DIR"]),  # fail fast when missing
         )
 

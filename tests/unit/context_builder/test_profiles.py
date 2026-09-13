@@ -48,8 +48,15 @@ def test_profiles_expose_only_the_exact_registered_tools(
         "submit_investigation_report",
     }
     assert registry.tool_names("bird_a") == {
-        "synthetic_bird_a_observe_schema",
-        "synthetic_bird_a_execute_readonly_sql",
+        "execute_sql",
+        "get_schema",
+        "get_all_column_meanings",
+        "get_column_meaning",
+        "get_all_external_knowledge_names",
+        "get_knowledge_definition",
+        "get_all_knowledge_definitions",
+        "ask_user",
+        "submit_sql",
     }
     assert registry.tool_names("bird_c") == {"ask_user", "submit_sql"}
     assert all(
@@ -132,7 +139,6 @@ def test_synthetic_runtime_manifest_matches_fixture_and_is_isolated() -> None:
     for forbidden in (
         "olist",
         "retail",
-        "knowledge",
         "resolver",
         "5432",
         "6002",

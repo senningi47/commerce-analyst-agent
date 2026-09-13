@@ -156,16 +156,16 @@ class BirdSessionStatePort:
         self._costs = dict(costs)
 
     async def execute(self, call: ToolCall) -> ToolResult:
-        name = call.name
         if self._mode == "a":
-            gated = self._gate_budget(name)
+            gated = self._gate_budget(call)
             if gated is not None:
                 return gated
         result = await self._inner.execute(call)
         self._after_tool(call, result)
         return result
 
-    def _gate_budget(self, name: str) -> ToolResult | None:
+    def _gate_budget(self, call: ToolCall) -> ToolResult | None:
+        name = call.name
         cost = self._costs.get(name)
         if cost is None:
             return None
@@ -179,7 +179,9 @@ class BirdSessionStatePort:
                 f"Budget exhausted ({budget:.1f} remaining). "
                 "You MUST call submit_sql now with your best SQL."
             )
-            return self._text_result(name, text)
+            # the rejection rides the model's own tool-call identity: the next
+            # turn's ToolExchangeGroup requires matching ids and names
+            return self._text_result(call, text)
         remaining = budget - float(cost)
         if name == "submit_sql" and remaining <= 0:
             remaining = -1  # official stop signal
@@ -239,12 +241,12 @@ class BirdSessionStatePort:
                 self._state["task_done"] = True
         self._state["_last_submit_raw"] = body.get("message", "")
 
-    def _text_result(self, name: str, text: str) -> ToolResult:
+    def _text_result(self, call: ToolCall, text: str) -> ToolResult:
         content_json = _canonical_json({"text": text})
         digest = sha256(content_json.encode("utf-8")).hexdigest()
         return ToolResult(
-            call_id="budget_gate",
-            name=name,
+            call_id=call.call_id,
+            name=call.name,
             status="success",
             content_json=content_json,
             deterministic_summary=_canonical_json(

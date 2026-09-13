@@ -15,3 +15,5 @@
 !.cache/commerce-agent
 !.cache/commerce-agent/deepseek-tokenizer
 !.cache/commerce-agent/deepseek-tokenizer/**
+# runtime seam only: the frozen official contract (no other tests/ content)
+!tests/fixtures/bird/official-contract.v1.json

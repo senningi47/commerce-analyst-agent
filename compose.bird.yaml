@@ -30,7 +30,7 @@ services:
       DB_ENV_BASE_URL: http://bird-db-environment:6002
       USER_SIM_BASE_URL: http://bird-user-simulator:6001
       BIRD_EXPERIMENT_ID: ${BIRD_EXPERIMENT_ID:-bird-system-agent}
-      DEEPSEEK_PROVIDER_USER_ID: ${DEEPSEEK_PROVIDER_USER_ID:-bird-system-agent000000000000000}
+      DEEPSEEK_PROVIDER_USER_ID: ${DEEPSEEK_PROVIDER_USER_ID:-00000000000000000000000000000000}
     volumes:
       - ./outputs/bird-agent-spool:/app/spool
     ports:

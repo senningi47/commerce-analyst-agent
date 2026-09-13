@@ -5,12 +5,14 @@ Three endpoints only: `GET /healthz`, `POST /init_session`, `POST /run_session`
 tests). The app is a plain ASGI callable so the product lockfile stays
 untouched; uvicorn (container-only dependency) serves it unchanged. Error
 responses carry a sanitized reason code only — never provider or server
-detail (HANDOFF pitfall 4).
+detail (HANDOFF pitfall 4). Boundary logs carry exception type/loc metadata
+only — never payload values — so live failures stay diagnosable.
 """
 
 from __future__ import annotations
 
 import json
+import logging
 import os
 from typing import Any, Protocol
 
@@ -23,6 +25,8 @@ from commerce_agent.orchestration.bird_server import (
     BirdSystemServerAdapter,
 )
 from commerce_agent.orchestration.tools import ToolContractError, ToolInfrastructureError
+
+logger = logging.getLogger("bird_system_agent")
 
 _MAX_BODY_BYTES = 1_048_576
 _JSON_HEADERS = [(b"content-type", b"application/json")]
@@ -64,17 +68,33 @@ class BirdSystemAgentApp:
         try:
             await self._dispatch(scope, receive, send)
         except ValidationError as error:
+            logger.warning(
+                "boundary 400 invalid_request ValidationError errors=%s",
+                [
+                    # loc + type + the validator's static message; payload
+                    # values (item["input"]) are deliberately excluded
+                    f"{'/'.join(str(loc) for loc in item.get('loc', ()))}:"
+                    f"{item.get('type')}:{str(item.get('msg'))[:160]}"
+                    for item in error.errors()
+                ],
+            )
             await _send_json(send, 400, {"error": {"reason_code": "invalid_request"}})
-            del error
         except ValueError as error:
             # malformed JSON / oversized / empty body
+            logger.warning("boundary 400 invalid_request ValueError msg=%.200s", error)
             await _send_json(send, 400, {"error": {"reason_code": "invalid_request"}})
-            del error
         except ToolContractError as error:
+            logger.warning("boundary 400 ToolContractError reason=%s", _reason_code(error))
             await _send_json(send, 400, {"error": {"reason_code": _reason_code(error)}})
         except (ToolInfrastructureError, ModelGatewayError) as error:
+            logger.warning(
+                "boundary 503 type=%s reason=%s",
+                type(error).__name__,
+                _reason_code(error),
+            )
             await _send_json(send, 503, {"error": {"reason_code": _reason_code(error)}})
-        except Exception:  # noqa: BLE001 -- last-resort sanitized 500 boundary
+        except Exception:
+            logger.exception("boundary 500 internal_error")
             await _send_json(send, 500, {"error": {"reason_code": "internal_error"}})
 
     async def _lifespan(self, receive: ASGIReceive, send: ASGISend) -> None:

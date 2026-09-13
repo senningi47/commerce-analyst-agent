@@ -475,6 +475,10 @@ def test_budget_gate_blocks_non_submit_when_short() -> None:
     assert inner.calls == []
     assert "Budget exhausted (0.5 remaining)" in result.content_json
     assert state["budget_remaining"] == 0.5
+    # the rejection rides the model's own tool-call identity: the closed
+    # ToolExchangeGroup on the next turn requires matching ids and names
+    assert result.call_id == "call_1"
+    assert result.name == "get_schema"
 
 
 def test_budget_gate_submit_free_exit_and_state_update() -> None:

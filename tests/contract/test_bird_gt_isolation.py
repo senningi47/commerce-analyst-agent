@@ -54,7 +54,15 @@ def test_dockerignore_is_allowlist_without_restricted_unexcludes() -> None:
     negations = {line[1:] for line in lines if line.startswith("!")}
     for restricted in ("data", "_upstream", "tests", "data/", "_upstream/", "tests/"):
         assert restricted not in negations, f".dockerignore re-includes {restricted}"
-    for required in ("src", "configs", "bird_system_agent", "pyproject.toml"):
+    for required in (
+        "src",
+        "configs",
+        "bird_system_agent",
+        "pyproject.toml",
+        # the frozen contract is a runtime dependency of the server (coin
+        # costs, wire field sets); only this exact file leaves tests/
+        "tests/fixtures/bird/official-contract.v1.json",
+    ):
         assert required in negations, f".dockerignore must allow {required}"
 
 
@@ -68,6 +76,9 @@ def test_dockerfile_copies_only_allowlisted_paths() -> None:
         "configs/model",
         "bird_system_agent",
         ".cache/commerce-agent/deepseek-tokenizer",
+        # runtime seam: load_official_contract() resolves the fixture against
+        # the image's /app root, so the server cannot serve sessions without it
+        "tests/fixtures/bird/official-contract.v1.json",
     }
     assert not any("data" in copy.lower() or "upstream" in copy.lower() for copy in copies)
     assert re.search(r"^USER\s+\S+", text, flags=re.MULTILINE), "image must drop root"

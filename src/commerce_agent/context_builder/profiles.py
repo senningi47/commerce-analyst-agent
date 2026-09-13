@@ -68,7 +68,9 @@ _POLICY_REVISIONS = {
 _FORBIDDEN_SYNTHETIC = (
     "olist",
     "retail",
-    "knowledge",
+    # "knowledge" is intentionally absent: the official BIRD actions
+    # (get_knowledge_definition et al.) legitimately use the word; the tokens
+    # below guard against Product-track vocabulary leaking into BIRD configs.
     "resolver",
     "5432",
     "6002",
@@ -248,9 +250,12 @@ class ProfileRegistry:
                 _tool_definition(item, synthetic_revision) for item in synthetic_profiles["bird_c"]
             ),
         }
-        all_names = [tool.name for group in tools.values() for tool in group]
-        if len(set(all_names)) != len(all_names):
-            raise RevisionMismatch()
+        # Official a/c modes share tool names (ask_user, submit_sql); uniqueness
+        # is enforced per profile, not globally across profiles.
+        for group in tools.values():
+            names = [tool.name for tool in group]
+            if len(set(names)) != len(names):
+                raise RevisionMismatch()
         synthetic_text = _canonical_json(synthetic_document).lower()
         if "synthetic" not in synthetic_text or any(
             token in synthetic_text for token in _FORBIDDEN_SYNTHETIC
