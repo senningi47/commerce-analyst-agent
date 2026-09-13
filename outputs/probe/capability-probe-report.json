@@ -1,0 +1,69 @@
+{
+ "probe_id": "capability-probe-20260913T172338Z",
+ "requested_model": "deepseek-flash",
+ "actual_model": "deepseek-flash",
+ "usage": {
+  "status": "reported",
+  "prompt_tokens": 273,
+  "cache_hit_tokens": 128,
+  "cache_miss_tokens": 145,
+  "completion_tokens": 22,
+  "reasoning_tokens": 0,
+  "total_tokens": 295
+ },
+ "cost": {
+  "status": "estimated",
+  "price_snapshot_id": "deepseek-flash-usd-2026-09-12",
+  "currency": "USD",
+  "amount": "0.000035334",
+  "price_band": "off_peak"
+ },
+ "checks": [
+  {
+   "name": "model_echo",
+   "passed": true,
+   "detail": {
+    "actual_model": "deepseek-flash",
+    "requested_model": "deepseek-flash"
+   }
+  },
+  {
+   "name": "tool_call_emitted",
+   "passed": true,
+   "detail": {
+    "finish_reason": "tool_calls",
+    "tool_call_count": 1,
+    "tool_names": [
+     "get_schema"
+    ]
+   }
+  },
+  {
+   "name": "usage_identities",
+   "passed": true,
+   "detail": {
+    "status": "reported"
+   }
+  },
+  {
+   "name": "cost_recalculation",
+   "passed": true,
+   "detail": {
+    "reported_amount": "0.000035334",
+    "recalculated_amount": "0.000035334",
+    "band": "off_peak",
+    "sent_at_utc": "2026-09-13T17:23:38.791848+00:00",
+    "sent_weekday": "Sunday"
+   }
+  },
+  {
+   "name": "attempt_accounting",
+   "passed": true,
+   "detail": {
+    "attempt_count": 1,
+    "first_outcome": "success"
+   }
+  }
+ ],
+ "all_passed": true
+}
