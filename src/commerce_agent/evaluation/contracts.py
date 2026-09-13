@@ -75,6 +75,9 @@ class AttemptTelemetry(BaseModel, frozen=True, extra="forbid"):
     cache_hit_ratio: float | None = Field(default=None, ge=0.0, le=1.0)
     spool_path: str | None = Field(default=None, min_length=1, max_length=512)
     spool_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    # Day 6 spool-import bindings (agent-side session identity + turn count)
+    agent_turns: int | None = Field(default=None, ge=0)
+    agent_session_id: str | None = Field(default=None, min_length=1, max_length=64)
 
 
 class AttemptRecord(BaseModel, frozen=True, extra="forbid"):

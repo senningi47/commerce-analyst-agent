@@ -196,6 +196,22 @@ class PostgresEvaluationStore:
         )
         return frozenset((str(task_id), str(mode)) for task_id, mode in rows)
 
+    def merge_telemetry(self, attempt_id: UUID, patch: dict[str, object]) -> None:
+        """Day 6 spool import: jsonb-merge usage/cost into existing telemetry."""
+        with (
+            psycopg.connect(self._dsn, autocommit=False) as connection,
+            connection.cursor() as cursor,
+        ):
+            cursor.execute(
+                "UPDATE eval.task_attempt SET telemetry = telemetry || %s "
+                "WHERE attempt_id = %s",
+                (Jsonb(patch), attempt_id),
+            )
+            if cursor.rowcount != 1:
+                connection.rollback()
+                raise EvalStateConflict("attempt_not_found")
+            connection.commit()
+
     def unfinished_attempts(self, experiment_id: str) -> tuple[AttemptRecord, ...]:
         rows = self._execute_returning(
             "SELECT DISTINCT ON (task_id, mode) attempt_id, run_id, experiment_id, "

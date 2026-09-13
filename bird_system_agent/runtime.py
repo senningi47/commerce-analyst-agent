@@ -112,6 +112,13 @@ class SpoolTraceGateway:
                 "phase": "attempt",
                 "sequence": request.sequence,
                 "event_type": "model_turn",
+                # Day 6 import binding: identity stamps let the host-side
+                # importer join sessions to eval attempts; recorded_at drives
+                # the time-window tiebreak for retried attempts.
+                "task_id": request.run_scope.subject_id,
+                "mode": request.run_scope.mode,
+                "experiment_id": request.run_scope.experiment_id,
+                "recorded_at": datetime.now(UTC).isoformat(),
                 "payload": {
                     "actual_model": response.actual_model,
                     "finish_reason": str(response.finish_reason),

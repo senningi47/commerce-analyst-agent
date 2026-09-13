@@ -49,6 +49,10 @@ class EvaluationStore(Protocol):
         """(task_id, mode) pairs with a terminal succeeded/failed attempt."""
         ...
 
+    def merge_telemetry(self, attempt_id: UUID, patch: dict[str, object]) -> None:
+        """Day 6 spool import: jsonb-merge agent usage/cost into telemetry."""
+        ...
+
     def unfinished_attempts(self, experiment_id: str) -> tuple[AttemptRecord, ...]:
         """Latest non-terminal attempt per (task_id, mode) not yet completed."""
         ...

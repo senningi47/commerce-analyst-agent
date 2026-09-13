@@ -107,6 +107,16 @@ class InMemoryEvaluationStore:
                 and record.status in TERMINAL_STATUSES
             )
 
+    def merge_telemetry(self, attempt_id: UUID, patch: dict[str, object]) -> None:
+        with self._lock:
+            record = self._attempts.get(attempt_id)
+            if record is None:
+                raise EvalStateConflict("attempt_not_found")
+            merged = record.telemetry.model_dump() | patch
+            self._attempts[attempt_id] = record.model_copy(
+                update={"telemetry": AttemptTelemetry.model_validate(merged)}
+            )
+
     def unfinished_attempts(self, experiment_id: str) -> tuple[AttemptRecord, ...]:
         completed = self.completed_tasks(experiment_id)
         with self._lock:
