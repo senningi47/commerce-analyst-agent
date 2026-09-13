@@ -8,21 +8,21 @@
 
 ## 0. 一句话状态
 
-项目由 Codex 推进 12 天（2026-08-24 → 09-07），Claude Code 于 09-11 接手并完成 Task 18，09-12 继续推进。
+项目由 Codex 推进 12 天（2026-08-24 → 09-07），Claude Code 于 09-11 接手，09-13 完成 Task 13 Pilot 主运行。
 
-**精确状态（2026-09-12 深夜更新，以 `HANDOFF.md` 为准）：**
+**精确状态（2026-09-13 深夜更新，以 `HANDOFF.md` 为准）：**
 
 ```text
-Day 4 overall: PASS（Task 16/D、17/W、18 全 PASS）
-Gate G: PASS（累计 20 commits @ a2ef27f，未 push）
-Day 5: 计划批准；Phase A（Task 1–12）完成；Gate P 已裁定（30 元上限）
-Gate P preflight: 全部完成——①②③⑤ + ④ 能力验证（探针门判据过时，Day 6 重设计）
-         + 09-13 零付费收尾三项全 PASS（20 题选取 / db-check 22/244/2011/273571 基线一致 / GT 拒绝检查）
-外部事实: DeepSeek 退役 deepseek-v4-flash（2026-09-10 起 DeepSeek-V4.1-Flash 服务）
-         → 快照/配置已全面切换 deepseek-flash（capability/price v4）
-终态证据: 离线 818 passed / live -m postgres 127 passed / Ruff 全绿 / 三镜像已 build
-当前边界: Task 13 主运行（20 题付费，需新会话明确授权）；起真实栈前处置 6002 spike 容器
-         （09-13 有未入库改动：prepare_bird_pilot.py 三缺陷修复 + 选取产物，见 HANDOFF §8）
+Day 4 overall: PASS；Day 5 Phase A + Gate P preflight 全 PASS（模型已切 deepseek-flash）
+Task 13 Pilot: 完成（experiment pilot-day5-20260913d：20 集 = 18 succeeded + 1 failed + 1 unfinished；
+         rewards 全 0 为合法评测结果；agent 侧 1.4932 元 / 30 元上限；simulator 侧待用户余额核对）
+六活体缺陷: 全部红绿修复（镜像依赖×2 / 快照加载缝 / 契约 fixture 入镜像 / provider_user_id / 工具目录+预算门）；
+         离线 829 passed；Ruff 全绿；边界消毒日志已就位
+当前边界: ① commit 授权（HANDOFF §8 清单，两主题 commit 已获裁定待执行）
+         ② 用户余额交叉核对 ③ Pilot 报告（§16.4 Full 判据外推，Full 启动需另行批准）
+         ④ cybermarket_pattern_12 可按 §8.5.3 恢复（需授权）
+外部事实: DeepSeek 已退役 deepseek-v4-flash → 全配置面 deepseek-flash（capability/price v4）
+终态证据: 离线 829 passed / 128 skipped；Ruff 全绿；执行日志 docs/reports/2026-09-13-task13-pilot-main-run.md
 ```
 
 ---

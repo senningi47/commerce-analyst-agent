@@ -1,16 +1,16 @@
-# CommerceAnalyst 项目交接：Gate P preflight 零付费项全部完成，停在 Task 13 主运行（付费，待新授权）前
+# CommerceAnalyst 项目交接：Task 13 Pilot 主运行完成（18/20 有效终态，agent 侧 1.49 元），待 commit 授权与 Pilot 报告期
 
 > 更新时间：2026-09-13（Asia/Shanghai），更新者：Claude Code（Opus 5 1M）  
 > 工作区：`D:\git-projects\commerce-analyst-agent`  
-> 当前分支状态：`main` @ `a2ef27f`（20 个 commit，未 push；09-13 有未入库 preflight 修复与产物，见第 8 节）  
+> 当前分支状态：`main` @ `9f4df34`（23 commits，未 push；Task 13 Pilot 完成，六缺陷修复与收尾文档已按用户裁定分两个主题 commit 入库）  
 > 交接状态：`continuable`  
 > PowerContext scope：`git:github.com/senningi47/commerce-analyst-agent`  
-> Durable Handoff：PowerContext `handoff/handoff#18`（2026-09-13 提交，exact revision=18）
+> Durable Handoff：PowerContext `handoff/handoff#19`（2026-09-13 提交，exact revision=19）
 
 ## 0. 新会话先做什么
 
-1. 完整阅读本文件、`docs/reports/2026-09-12-gate-p-preflight-execution-log.md`（Gate P preflight 执行日志）、`docs/project/research/2026-09-12-deepseek-flash-rename-capability.md`（模型更名证据）。把它们当作需要现场核验的历史交接，不要把历史授权当作新会话授权。
-2. 先向用户报告准确状态：**Gate P 已裁定（30 元上限，熔断双条款，preflight+Pilot 一并授权，逐项核验失败即停）；preflight 全部完成——①②③⑤ + ④ 能力验证（PASS-with-documented-limitation）+ 09-13 零付费收尾三项（20 题选取 / db-check / GT 拒绝检查）全 PASS；DeepSeek 已退役 `deepseek-v4-flash`（2026-09-10 起由 DeepSeek-V4.1-Flash 服务），快照/配置已全面切换 `deepseek-flash`；下一步是 Task 13 主运行（20 题付费，需用户新会话明确授权）。**
+1. 完整阅读本文件、`docs/reports/2026-09-13-task13-pilot-main-run.md`（Task 13 主运行执行日志）。把它们当作需要现场核验的历史交接，不要把历史授权当作新会话授权。
+2. 先向用户报告准确状态：**Task 13 Pilot 主运行已完成（experiment `pilot-day5-20260913d`：20 集 = 18 succeeded + 1 failed + 1 unfinished，rewards 全 0 为合法评测结果；agent 侧 1.4932 元 / 30 元上限；simulator 侧待用户余额核对）→ 用户余额交叉核对 → Pilot 报告（§16.4 Full 启动判据外推）→ Day 6**。本会话修复了六个「首次真实栈」活体缺陷（全部红绿、829 passed），改动未 commit（§8 清单，待逐项授权）。
 3. **外部事实（关键）**：模型更名证据链与全部实测数字见研究笔记；价格快照已双源核对（用户读数 = 页面提取）；探针累计花费 ~$0.008。
 4. preflight 三项零付费已于 2026-09-13 完成（执行入口备查：`scripts/prepare_bird_pilot.py --dataset <公开数据集路径>`、`--run-db-check`、GT 拒绝检查见执行日志 §4）。Task 13 主运行**需要用户新会话明确授权**（一次正向运行 = 一次授权额度）。
 5. 根目录 `.env` 只能由已审核脚本或 `uv run --env-file .env ...` 消费。不要手工读取、打印、搜索、hash 或统计它。（本日已追加 Day 5 变量与 `USER_SIM_MODEL=openai/deepseek-flash`，均经用户授权。）
@@ -107,15 +107,19 @@ security/transaction gate `9 passed in 5.59s`；唯一正向 seller-risk scenari
 
 **遗留提醒：`commerce_analyst_bird_db_spike`（Day 1 遗留）占 127.0.0.1:6002，与 compose `bird-db-environment` 端口冲突——Task 13 起真实栈前必须处置。**
 
+### 2.9 Task 13 主运行与六个活体缺陷（Claude Code，2026-09-13 本会话）
+
+用户开场授权「下一步」后：commit `4ff1195`（6 文件）→ .env 追加 15 个 orchestrator 变量（3 个未知值经官方 shared/config.py AST 提取；LITELLM_API_KEY=${DEEPSEEK_API_KEY} 引用）→ `docker stop` spike 容器 → task-list 派生 → compose 栈起动即暴露**六个活体缺陷**（全部红绿修复，详见执行日志 §2）：①agent 镜像 requirements 重冻结 45 包 ②user-sim 全钉 + sqlglot ③快照评审格式加载缝上移 `src/commerce_agent/model/snapshots.py` ④契约 fixture 入镜像 ⑤provider_user_id fail-fast + 32 零默认 ⑥bird_a 官方工具目录 + 预算门身份保持；另加 server 边界消毒日志。四轮尝试史（a/b/c/d）与两个付费诊断集见执行日志 §3。**终态：d 实验 18 succeeded + 1 failed + 1 unfinished；agent 侧 1.4932 元/30 元上限；离线 829 passed；Ruff 全绿。** 账本已写 `outputs/bird-budget/pilot-ledger.json`。spike 容器已 stop。
+
 ## 3. 当前卡在哪里
 
-**没有技术阻塞。** 工作停在授权边界：
+**没有技术阻塞。** 工作停在授权与报告边界：
 
-- **Task 13 主运行（付费）**：preflight 三项零付费已全 PASS（2026-09-13），只差用户新会话明确授权。一次正向运行 = 一次授权额度；30 元上限、熔断双条款不变。
-- **起真实栈前置**：`commerce_analyst_bird_db_spike` 占 6002 端口，Task 13 前需处置（停用/移除，待用户指示）。
-- **Gate P 材料过时提示**：`2026-09-12-day5-gate-p-pilot-authorization-request.md` 写于模型更名之前——其中 `deepseek-v4-flash` 应读作 `deepseek-flash`，价格已下降（OFF-PEAK 未命中 $0.15/输出 $0.6），30 元上限维持。
-- Day 6 技术债三项（探针重设计、decide 工具名单与图白名单不一致、spool 导入侧）见执行日志 §6.5。
-- Day 6（UI/SSE/E2E）与 Day 7（产品 50 题 / §17 三组实验 / 收尾材料）各自需要独立计划。
+- **用户动作**：DeepSeek 余额交叉核对（agent 侧实测 $0.2112；simulator 侧 invisible）。
+- **Pilot 报告期**：§16.4 Full 启动判据外推（Full 剩余 bootstrap 95% 上界按 d 实验实测单价计算）+ rewards 全 0 的能力解读 → Full 启动需用户另行批准。
+- `cybermarket_pattern_12 [a]` unfinished：可按 §8.5.3 同 experiment（d）新 attempt 恢复（需授权）；`crypto_exchange_9 [c]` failed 为有效结果不重跑。
+- Day 6 技术债（探针重设计、spool 导入接线、v2 decide 工具名单）见 `docs/reports/2026-09-12-gate-p-preflight-execution-log.md` §6.5 + 本会话执行日志 §5。
+- Day 6（UI/SSE/E2E）与 Day 7 各自需要独立计划。
 
 ## 4. 当前验证证据（2026-09-11 Task 18 测试数字 + 2026-09-12 Gate G/清理现场，最终源码状态，Claude Code）
 
@@ -135,7 +139,10 @@ security/transaction gate `9 passed in 5.59s`；唯一正向 seller-risk scenari
 | 20 题选取（09-13） | `uv run python scripts/prepare_bird_pilot.py --dataset data/raw/bird-interact-full/public/bird_interact_data.jsonl` | 20 题（c10/a10，seed 7，10 库）；公开清单零 GT token；拆分 20 文件仅落 gitignored 目录 |
 | 官方 db-check（09-13） | 同脚本 `--run-db-check`（checker 在 `_upstream/BIRD-Interact/env/`，5433） | `returncode 0`；22/244/2,011/273,571 与 Day 1E 基线 `all_match: true` |
 | GT 拒绝检查（09-13） | `docker compose --env-file .env -f compose.bird.yaml run --rm --no-deps bird-system-agent python -c <零字节读探测>` | GT 路径与 db-env 挂载点均 `FileNotFoundError`；env 零 GT/凭据名；exit 0 |
-| 修复后终态（09-13） | `uv run pytest -q --tb=line` + `uv run ruff check src tests scripts db/migrations` | **818 passed, 128 skipped, 1 warning**；Ruff 全绿 |
+| 修复后终态（09-13 preflight） | `uv run pytest -q --tb=line` + `uv run ruff check src tests scripts db/migrations` | **818 passed, 128 skipped, 1 warning**；Ruff 全绿 |
+| Task 13 终态 suite（09-13 晚） | `uv run pytest -q --tb=line` + Ruff（含 bird_system_agent） | **829 passed, 128 skipped, 1 warning**；All checks passed |
+| **Task 13 Pilot d（09-13 晚）** | `uv run --env-file .env python -m commerce_agent.evaluation --experiment pilot-day5-20260913d --purpose pilot --config-hash b1889777…9017 --task-list outputs/bird-pilot/task-list.jsonl --events outputs/bird-eval/events-pilot-day5-20260913d.jsonl --executor official --store postgres --adk-root _upstream/BIRD-Interact/BIRD-Interact-ADK --task-data-dir outputs/bird-pilot/task-data --episode-output-dir outputs/bird-eval/episodes` | **20 attempted：18 succeeded + 1 failed（crypto_exchange_9，episode 中段 503）+ 1 unfinished（cybermarket_pattern_12，official_process_failed）**；rewards 全 0（合法评测结果）；exit 0 |
+| Pilot d 账本（§16.4） | spool 窗口聚合（600 文件/675 轮）+ PG attempts/results | prompt 1,747,080 / completion 253,547（reasoning 184,852）/ total 2,000,627 tokens；**agent 侧 $0.211203192 ≈ 1.4932 元**；写入 `outputs/bird-budget/pilot-ledger.json`；simulator 侧待用户余额核对 |
 
 历史数字保留日期边界：Gate D `17 passed in 3.07s`（09-07）；Gate W `9 passed in 5.59s` + `1 passed in 2.77s`（09-07，本轮 121 内复确认）。更早的 `595 passed` 与 `70 passed` 为旧源码状态数字，不得作为当前证据。
 
@@ -143,11 +150,11 @@ security/transaction gate `9 passed in 5.59s`；唯一正向 seller-risk scenari
 
 ## 5. 下一步计划
 
-1. **Task 13 主运行（付费，需新授权）**：preflight 已全 PASS。20 题（c×10 + a×10，Semaphore 2），30 元上限、熔断双条款；实验身份 `pilot-day5-<执行日>`；拆分已就位（`outputs/bird-pilot/task-data/`）。**起真实栈前先处置 6002 端口上的 spike 容器**。
-2. **§16.4 账本评估**：Pilot 报告期直接从宿主 `outputs/bird-agent-spool/` 聚合 usage（spool 导入接线留 Day 6）；余额交叉核对由用户人工执行。
-3. **Day 6 技术债**：探针重设计、decide 工具名单与图白名单一致性、spool 导入接线。
-4. **Day 6 / Day 7**：各自独立计划，走「计划 Gate → 批准 → 实施」。
-5. **每次任务完成的收尾三件套**（2026-09-11 起的长期规则，用户明示）：① 更新本文件；② 提交 PowerContext handoff 并返回 exact revision；③ 在 `docs/reports/` 写当次执行日志，供 Codex 验收。
+1. **用户余额交叉核对**：DeepSeek 官方余额前后差 vs agent 侧实测 $0.2112（simulator 侧差额即 sim 用量，一并记录）。
+2. **Pilot 报告**：§16.4 Full 启动判据外推（`已实际花费 + Full 剩余 1180 集 bootstrap 95% 上界 + 产品 50 题与实验上界 ≤ 180 元`）+ rewards 全 0 的能力/配置解读 + **Full 启动需用户另行批准**。
+3. **恢复未完成集（可选，需授权）**：`cybermarket_pattern_12 [a]` 按 §8.5.3 同 experiment（d）新 attempt 恢复。
+4. **Day 6 计划**（独立计划 Gate）：探针重设计、spool 导入接线（每集成本归属）、v2 decide 工具名单一致性、UI/SSE/E2E。
+5. **收尾三件套**（长期规则）：① 更新本文件；② PowerContext handoff 并返回 exact revision；③ `docs/reports/` 执行日志。
 
 ## 6. 踩过的坑，绝对不要再踩
 
@@ -218,6 +225,14 @@ security/transaction gate `9 passed in 5.59s`；唯一正向 seller-risk scenari
 52. **凡解析外部工具输出的代码，其测试样本必须来自该工具的一手真实输出。** 本次 db-check 解析正则被输出头部 `127.0.0.1` 假阳性（databases=127），且单测合成输出格式（`Expected databases: 22`）与真实输出（`Total Databases: 22`）完全不符——双缺陷叠加、离线全绿，只有 live 实跑暴露。坑 2/坑 50 的又一变体。
 53. **Windows 下子进程 env 白名单必须包含 TEMP/TMP/USERPROFILE/LOCALAPPDATA/SYSTEMROOT 等运行时变量**，否则 uv/Python 把临时目录解析到 `C:\WINDOWS\`（os error 5），报错完全不指向真实根因。白名单按「运行时需要什么」设计（`_checker_env()`），并用假密钥注入测试锁定剔除语义。
 
+### 6.8 Task 13 主运行本轮新增（2026-09-13 晚，Claude Code）
+
+54. **build 成功 ≠ 镜像可运行；服务起动 ≠ 服务可用；起动可用 ≠ 首轮可用。** 本轮六个缺陷分布在这三层的每一层，且全部「离线全绿、首次真实暴露」。凡「首次真实 X」前先落可观测性（如 server 边界消毒日志），否则每个缺陷多烧一轮授权。
+55. **严格 DTO 加载共享配置目录是错的形状。** 评审格式文件（含 evidence 元数据）与运行时窄模型是两个合法层：上移 Config 类作规范加载缝（子类实例即基类实例），不要放松运行时模型、也不要手剥字段。
+56. **模型工具目录必须与端口允许名单同源校验。** 合成目录/替身与官方契约重名是巧合不是契约——新守卫 `tests/contract/test_bird_tool_catalog.py` 钉死 BIRD 目录 ⊆ 冻结契约 actions。工具名跨 profile 共享是官方设计（a/c 共用 ask_user/submit_sql），唯一性按 profile 查重；禁词表对官方词汇（knowledge）让位并留注释。
+57. **拒绝/降级路径必须携带原调用身份（call_id/name）。** 官方 before_tool_callback 语义是"替换该调用的结果"；另发一条无主结果（`call_id="budget_gate"`）会让 ToolExchangeGroup 封闭校验炸成 400。
+58. **Windows 下停止父进程不保证杀尽 detached 子进程；付费运行的止血验证 = 双时点快照对比**（文件计数/成本两拍），不能凭停止回执当已止血。另：按文件名 glob 得到的是字符串，`Path.glob` 才是 Path；监控/聚合脚本先对历史窗口做边界过滤。
+
 ## 7. 关键文件与 SHA-256
 
 哈希用于发现意外变化。入库状态（2026-09-12 晚）：§7 全部所列源码/测试/文档**均已随 14 个 commit 入库**（Day 4 allowlist → checkpoint 补录 → Day 5 Phase A 十二连）；`HANDOFF.md`、`CLAUDE.md` 本身为收尾更新、保持未跟踪。2026-09-11 由 Claude Code 现场计算并机械复核（15 组报告哈希对 + HANDOFF 交叉核对全部一致）；2026-09-12 复验 11/11 MATCH。
@@ -246,13 +261,33 @@ security/transaction gate `9 passed in 5.59s`；唯一正向 seller-risk scenari
 | `scripts/prepare_bird_pilot.py` | `471b4c3997de9fb9e53abed4899fe834e63c9fb7d770b964bb75b8d2e322762e` | **修改（2026-09-13，三缺陷红绿修复；未 commit）** |
 | `tests/unit/scripts/test_prepare_bird_pilot.py` | `93a0c188e99646189765fe137635f4ff6dc4cbbd750f1b5b59dd1f458d95f91f` | **修改（2026-09-13，+2 测试与真实输出样本；未 commit）** |
 | `outputs/bird-pilot/task-selection.json` | `b18897771f773cd5e025d9876673b3ba95044add33fe8e590669f38ffb5f9017` | **新建（2026-09-13，20 题公开选取清单）** |
-| `docs/reports/2026-09-13-preflight-zero-cost-completion.md` | `3e826a54cc9ac6a03ce5af38bfe008f00e4b051d6159ca02c64bbfa9494a008f` | **新建（2026-09-13，§2.8 执行日志）** |
+| `docs/reports/2026-09-13-preflight-zero-cost-completion.md` | `666fbf2399d1980c05810844591c595c5a0a352305ff549a74a5c64bc78bc800` | **入库（4ff1195；§7 原记 3e826a54… 为收尾期后补编辑前的旧值，已核实现值与内容自洽）** |
+| `src/commerce_agent/model/snapshots.py` | `7383a2e593d3e59dbb403912ce3976a5475c1047df47bc8e3e762f857af574df` | **新建（2026-09-13 晚，评审快照加载缝）** |
+| `configs/model/run-profiles.v2.json` | `f9cd5558570890b9d12d642bf85d30cc185d925518e50681ad676d4266af8191` | **修改（2026-09-13 晚，bird_a 规则换官方 9 工具）** |
+| `configs/model/bird-tools.synthetic.v1.json` | `d9b3590f05a8f75bee26fd6472c4c0c3cbe1d7ca8d0a7cca05e8cbcbfee37306` | **修改（2026-09-13 晚，bird_a 目录换官方 9 工具；bird_c 不变）** |
+| `bird_system_agent/requirements.txt` | `e1c4095d13619170a04e1bbe224c11701543a070930817c3e0b711461337b5ab` | **修改（2026-09-13 晚，重冻结 45 包）** |
+| `docs/reports/2026-09-13-task13-pilot-main-run.md` | `4bc8b33711d21378fafc73922def64abc32ea7a1664a68f3eaff04a35d8cc023` | **新建（2026-09-13 晚，Task 13 执行日志）** |
+| `outputs/bird-pilot/task-list.jsonl` | `f722e671a7afc4d91a358e655c212b336d766b797930368f2e21b1eaa5b634f2` | **新建（2026-09-13 晚，Runner 任务清单，公开字段）** |
 
 不要覆盖或回退这些文件。若现场哈希不同，先确认是否是用户或其他会话的新修改，再继续工作。
 
-## 8. 本轮（Preflight 零付费收尾，2026-09-13，Claude Code）实际修改文件
+## 8. 本轮（Task 13 主运行会话，2026-09-13 晚，Claude Code）实际修改文件
 
-- **源码/测试修改（未 commit，待授权）**：`scripts/prepare_bird_pilot.py`（三缺陷红绿修复：`_checker_env()` 运行时白名单、`DEFAULT_ADK_ROOT` 修正、基线正则锚定）；`tests/unit/scripts/test_prepare_bird_pilot.py`（+2 测试，解析组测试换真实 checker 一手输出样本）。
-- **工作区产出**：`outputs/bird-pilot/task-selection.json`（公开，建议随下一 commit 入库）；`outputs/bird-pilot/task-data/`（20 个 GT 拆分，gitignored）；`outputs/bird-budget/pilot-ledger.json`（gitignored）。
-- **未入库（收尾文档）**：`docs/reports/2026-09-13-preflight-zero-cost-completion.md`（执行日志）、`HANDOFF.md`（本文件）、`CLAUDE.md`（§0 刷新）。
-- **外部状态变化**：compose 网络 `commerce_analyst_bird_eval` 已创建；一次性 GT 检查容器已自清理；`uv` 缓存新增 psycopg2-binary（checker 依赖，已缓存离线可跑）。未 commit、未 push；spike 容器（6002）未动；零付费 API；未触碰 evaluator-only 与 BIRD evaluation data。
+**已入库（均经用户裁定；未 push）**：
+- 开场 Gate G `4ff1195`：`scripts/prepare_bird_pilot.py`、`tests/unit/scripts/test_prepare_bird_pilot.py`、`outputs/bird-pilot/task-selection.json`、`docs/reports/2026-09-13-preflight-zero-cost-completion.md`、`HANDOFF.md`、`CLAUDE.md`（6 文件，+1150/−17）。
+- `4530cb5`（26 文件，+1767/−237）——六活体缺陷修复（红绿，829 passed / Ruff 全绿）：
+- `bird_system_agent/requirements.txt`（重冻结 45 包；psycopg[binary]）
+- `scripts/spikes/bird-user-simulator.Dockerfile`（官方栈实测 freeze 全钉 + sqlglot==30.17.0）
+- `src/commerce_agent/model/snapshots.py`（**新建**：评审快照加载缝）、`scripts/snapshot_deepseek_model_config.py`（导入再导出）、`bird_system_agent/runtime.py`（加载缝 + marker 校验 + provider_user_id fail-fast + `"0"*32` 默认）
+- `bird_system_agent/Dockerfile` + `.dockerignore`（契约 fixture 入镜像）+ `tests/contract/test_bird_gt_isolation.py`（守卫同步）
+- `configs/model/bird-tools.synthetic.v1.json`（bird_a 官方 9 工具）+ `configs/model/run-profiles.v2.json`（规则同步）+ `tests/contract/test_bird_tool_catalog.py`（**新建守卫**）
+- `src/commerce_agent/context_builder/profiles.py`（按 profile 查重 + 禁词调整）、`src/commerce_agent/orchestration/tools.py`（替身 get_schema 分支）、`tests/unit/context_builder/test_profiles.py`、`tests/unit/orchestration/test_track_isolation.py`、`tests/fixtures/orchestration/bird-tools.synthetic.v1.json`（同步）
+- `src/commerce_agent/orchestration/bird_server.py`（预算门身份保持）+ `tests/contract/test_bird_system_server_adapter.py`（断言补强）
+- `bird_system_agent/server.py`（边界消毒日志）+ `tests/unit/bird_runtime/`（**新建**：__init__、test_bird_runtime_factory.py、test_server_boundary_logging.py）、`tests/unit/model/test_reviewed_snapshots.py`（**新建**）
+- `pyproject.toml` + `uv.lock`（python-dotenv==1.2.3、pydantic-settings==2.15.0——宿主侧 orchestrator 子进程依赖）
+- `compose.bird.yaml`（provider_user_id 默认 32 零）
+
+**未入库（Pilot 产物与收尾文档）→ 已随 `9f4df34` 入库（4 文件，+171/−35）**：`outputs/bird-pilot/task-list.jsonl`（公开）；`docs/reports/2026-09-13-task13-pilot-main-run.md`（执行日志）；本文件与 `CLAUDE.md`（§0/§2.9/§3-§8 刷新）。
+**gitignored 产物（不入库）**：`outputs/bird-pilot/task-data/`（GT 拆分）、`outputs/bird-budget/pilot-ledger.json`（已写实测值）、`outputs/bird-agent-spool/`（agent 侧用量原始证据）、`outputs/bird-eval/`（events JSONL、episode 输出、诊断输出——agent 可见内容，非 GT）。
+
+**外部状态**：spike 容器已 stop（6002 释放）；compose 栈三服务 running；eval 库含 a/b/c/d 四实验身份数据；官方 db（5433）与产品 db（5432）未动。未 push。
