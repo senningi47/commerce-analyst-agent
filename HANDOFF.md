@@ -9,8 +9,8 @@
 
 ## 0. 新会话先做什么
 
-1. 完整阅读本文件、`docs/reports/2026-09-13-task13-pilot-main-run.md`（Task 13 主运行执行日志）。把它们当作需要现场核验的历史交接，不要把历史授权当作新会话授权。
-2. 先向用户报告准确状态：**Task 13 Pilot 主运行已完成（experiment `pilot-day5-20260913d`：20 集 = 18 succeeded + 1 failed + 1 unfinished，rewards 全 0 为合法评测结果；agent 侧 1.4932 元 / 30 元上限；simulator 侧待用户余额核对）→ 用户余额交叉核对 → Pilot 报告（§16.4 Full 启动判据外推）→ Day 6**。本会话修复了六个「首次真实栈」活体缺陷（全部红绿、829 passed），改动未 commit（§8 清单，待逐项授权）。
+1. 完整阅读本文件、`docs/reports/2026-09-13-task13-pilot-main-run.md`（Task 13 主运行执行日志）与 `docs/reports/2026-09-13-task13-pilot-report.md`（Pilot 报告：§16.4 外推 + rewards 全 0 解读）。把它们当作需要现场核验的历史交接，不要把历史授权当作新会话授权。
+2. 先向用户报告准确状态：**Pilot 报告期与预算门终裁均已完成**——用户余额核对报来 09-13 平台消费 6.43 元，simulator 侧隐含 $0.6288（agent 的 2.24×），计入后 §16.4 总账外推 **457.6 元 vs 160 元预算线 = FAIL（2.86×）**，且 a-mode Full 剩余单项即 210 元超线（Full 全量数学上不可行）；能力门亦 FAIL（rewards 全 0：c-mode ask_user 539 次/9 集澄清失控、a-mode 预算挤占提交且已提交 SQL 未过评审）。**综合裁定：Full 不启动**，两门修复路径进 Day 6 议程。待用户：① Pilot 报告 commit 授权；② Day 6 计划 Gate 批准；③ cybermarket_pattern_12 恢复与否。
 3. **外部事实（关键）**：模型更名证据链与全部实测数字见研究笔记；价格快照已双源核对（用户读数 = 页面提取）；探针累计花费 ~$0.008。
 4. preflight 三项零付费已于 2026-09-13 完成（执行入口备查：`scripts/prepare_bird_pilot.py --dataset <公开数据集路径>`、`--run-db-check`、GT 拒绝检查见执行日志 §4）。Task 13 主运行**需要用户新会话明确授权**（一次正向运行 = 一次授权额度）。
 5. 根目录 `.env` 只能由已审核脚本或 `uv run --env-file .env ...` 消费。不要手工读取、打印、搜索、hash 或统计它。（本日已追加 Day 5 变量与 `USER_SIM_MODEL=openai/deepseek-flash`，均经用户授权。）
@@ -111,14 +111,29 @@ security/transaction gate `9 passed in 5.59s`；唯一正向 seller-risk scenari
 
 用户开场授权「下一步」后：commit `4ff1195`（6 文件）→ .env 追加 15 个 orchestrator 变量（3 个未知值经官方 shared/config.py AST 提取；LITELLM_API_KEY=${DEEPSEEK_API_KEY} 引用）→ `docker stop` spike 容器 → task-list 派生 → compose 栈起动即暴露**六个活体缺陷**（全部红绿修复，详见执行日志 §2）：①agent 镜像 requirements 重冻结 45 包 ②user-sim 全钉 + sqlglot ③快照评审格式加载缝上移 `src/commerce_agent/model/snapshots.py` ④契约 fixture 入镜像 ⑤provider_user_id fail-fast + 32 零默认 ⑥bird_a 官方工具目录 + 预算门身份保持；另加 server 边界消毒日志。四轮尝试史（a/b/c/d）与两个付费诊断集见执行日志 §3。**终态：d 实验 18 succeeded + 1 failed + 1 unfinished；agent 侧 1.4932 元/30 元上限；离线 829 passed；Ruff 全绿。** 账本已写 `outputs/bird-budget/pilot-ledger.json`。spike 容器已 stop。
 
+### 2.10 Pilot 报告期（Claude Code，2026-09-13 报告会话，零付费）
+
+用户指示「阅读HANDOFF.md，开始项目推进」后，按 §5.2 完成 Pilot 报告（`docs/reports/2026-09-13-task13-pilot-report.md`，零付费、零 GT 读取、未 commit）：
+
+1. **三源对账**：spool 785 文件逐行解析（12 个多行 JSONL 是关键——按文件单对象解析会漏 84 turn）得 883 turn；d 窗口（mtime ≥ 08:20:59.687Z）675 turn / **$0.211203** / prompt 1,747,080 / total 2,000,627 与执行日志**精确一致**；`eval.task_attempt` 只读查询 20 attempt 终态一致。
+2. **新披露——诊断期成本**：d 窗口之前另有 208 turn / $0.069457（c 轮实验 $0.008 + 付费诊断 ~$0.0615）——诊断授权上限 $0.05，实测超 ~$0.012，属追溯计量披露。诚实口径已实际花费 $0.2807 ≈ 1.98 元。
+3. **§16.4 外推**：分层 bootstrap（seed 7，N=20000）——c 集 = 60 small turn、a 集 = 9 small + 9 big；结构配平 c 8×60 + 33(failed) + a 9×18 = 675 turn 与实测精确相等。Full 剩余 1180 集 p95 $17.38、产品 90 集 + 消融 120 集 p95 $2.73；**合计 p95 144.2 元 ≤ 160 元预算线（agent 侧口径，simulator 侧 invisible 待用户余额核对终裁）**。账本 JSON 已更新（gitignored）。
+4. **rewards 全 0 机制（episode tool_trajectory 聚合，报告 §2）**：c-mode 9 集 `ask_user` 539 次 + `submit_sql` 仅 1 次（澄清循环失控）；a-mode 7/9 集发生 `submit_sql`（共 10 次）但 SQL 未过评审，bird-coin = 工具调用次数（18 coin ≈ 19 次调用耗尽）。**结论：策略层系统性问题，非基础设施故障；待排查提交语义对齐（替代假设）。**
+5. **Full 启动建议：暂缓**——预算门有条件通过、能力门不通过；前置：提交语义排查（零付费）→ c/a 策略修复 → 2–4 集小样本重跑（需授权）。
+
+**本轮改动**：新建上述报告、更新 `outputs/bird-budget/pilot-ledger.json`（gitignored）、本文件刷新。零源码改动、零付费调用、零 GT 读取。commit 待用户授权。
+
+**同会话终裁追加（余额核对闭环）**：用户报来 09-13 平台 deepseek-flash 消费 **6.43 元** → 拆分 sim 侧 $0.6288（4.45 元，agent 的 2.24×；band 疑点查证排除——周日运行 off_peak 正确，`_pricing.py:46` weekday 门 + 快照 evidence "weekdays"）→ 计入后 §16.4 总账 **457.6 元 vs 160 元线 = FAIL（2.86×）**；结构性发现：a-mode Full 剩余单项（agent p95 + sim）= 210 元即超线，Full 全量 1200 集数学上不可行。**预算门终裁 FAIL（与能力门独立成立）→ 综合裁定 Full 不启动**；报告 §0/§3.5/§4/§5/§7 与账本（`balance_cross_check`、`projected_total_upper_bound_yuan=457.6`、`budget_gate_decision=FAIL`）已同步，HANDOFF §0/§3/§5 已刷新。
+
 ## 3. 当前卡在哪里
 
-**没有技术阻塞。** 工作停在授权与报告边界：
+**没有技术阻塞。** 工作停在用户裁定边界（Pilot 报告与预算门终裁均已完成，2026-09-13 报告会话）：
 
-- **用户动作**：DeepSeek 余额交叉核对（agent 侧实测 $0.2112；simulator 侧 invisible）。
-- **Pilot 报告期**：§16.4 Full 启动判据外推（Full 剩余 bootstrap 95% 上界按 d 实验实测单价计算）+ rewards 全 0 的能力解读 → Full 启动需用户另行批准。
-- `cybermarket_pattern_12 [a]` unfinished：可按 §8.5.3 同 experiment（d）新 attempt 恢复（需授权）；`crypto_exchange_9 [c]` failed 为有效结果不重跑。
-- Day 6 技术债（探针重设计、spool 导入接线、v2 decide 工具名单）见 `docs/reports/2026-09-12-gate-p-preflight-execution-log.md` §6.5 + 本会话执行日志 §5。
+- **§16.4 预算门已终裁 FAIL**：用户余额核对报来 2026-09-13 平台消费 6.43 元 → simulator 侧隐含 $0.6288（agent 的 2.24×）→ 计入后总账外推 **457.6 元 vs 160 元预算线（2.86×）**；且 a-mode Full 剩余单项（agent+sim）即 210 元超线——Full 全量 1200 集在实测单价下数学上不可行。按规格 §16.4 安全暂停，由用户决定。
+- **能力门 FAIL**（rewards 全 0，策略层系统性问题）。
+- **综合状态：Full 不启动**；两门的修复路径全部进 Day 6 议程：① 提交语义对齐排查（零付费）；② c-mode 澄清策略 + a-mode 提交质量修复；③ Full 范围/成本结构重设计（压缩范围、sim 模型选型降本、或修规格上限——均需用户批准，且须以修复后实测单价重跑 §16.4 外推）。
+- **用户动作**：① Pilot 报告（含终裁）+ HANDOFF 刷新的 commit 授权；② Day 6 计划 Gate 的启动批准；③ `cybermarket_pattern_12 [a]` unfinished 恢复与否（需授权；`crypto_exchange_9 [c]` failed 有效不重跑）。
+- Day 6 技术债（探针重设计、spool 导入接线、v2 decide 工具名单）见 `docs/reports/2026-09-12-gate-p-preflight-execution-log.md` §6.5 + 执行日志 §5。
 - Day 6（UI/SSE/E2E）与 Day 7 各自需要独立计划。
 
 ## 4. 当前验证证据（2026-09-11 Task 18 测试数字 + 2026-09-12 Gate G/清理现场，最终源码状态，Claude Code）
@@ -150,10 +165,10 @@ security/transaction gate `9 passed in 5.59s`；唯一正向 seller-risk scenari
 
 ## 5. 下一步计划
 
-1. **用户余额交叉核对**：DeepSeek 官方余额前后差 vs agent 侧实测 $0.2112（simulator 侧差额即 sim 用量，一并记录）。
-2. **Pilot 报告**：§16.4 Full 启动判据外推（`已实际花费 + Full 剩余 1180 集 bootstrap 95% 上界 + 产品 50 题与实验上界 ≤ 180 元`）+ rewards 全 0 的能力/配置解读 + **Full 启动需用户另行批准**。
-3. **恢复未完成集（可选，需授权）**：`cybermarket_pattern_12 [a]` 按 §8.5.3 同 experiment（d）新 attempt 恢复。
-4. **Day 6 计划**（独立计划 Gate）：探针重设计、spool 导入接线（每集成本归属）、v2 decide 工具名单一致性、UI/SSE/E2E。
+1. **Pilot 报告 commit 授权**：`docs/reports/2026-09-13-task13-pilot-report.md`（含 §3.5 预算门终裁 FAIL）+ 本文件刷新（账本 JSON 为 gitignored 产物不入库）。
+2. **Full 前置（报告 §5，待用户按序批准）**：① 提交语义对齐排查（零付费）；② c/a 策略修复 + 2–4 集小样本重跑（需授权）；③ Full 范围/成本结构重设计（预算门结构性越线，方向：压缩范围 / sim 模型选型 / 修规格上限）。
+3. **Day 6 计划**（独立计划 Gate）：探针重设计、spool 导入接线（每集成本归属）、v2 decide 工具名单一致性、UI/SSE/E2E + Full 重设计分析。
+4. **恢复未完成集（可选，需授权）**：`cybermarket_pattern_12 [a]` 按 §8.5.3 同 experiment（d）新 attempt 恢复。
 5. **收尾三件套**（长期规则）：① 更新本文件；② PowerContext handoff 并返回 exact revision；③ `docs/reports/` 执行日志。
 
 ## 6. 踩过的坑，绝对不要再踩
@@ -268,6 +283,7 @@ security/transaction gate `9 passed in 5.59s`；唯一正向 seller-risk scenari
 | `bird_system_agent/requirements.txt` | `e1c4095d13619170a04e1bbe224c11701543a070930817c3e0b711461337b5ab` | **修改（2026-09-13 晚，重冻结 45 包）** |
 | `docs/reports/2026-09-13-task13-pilot-main-run.md` | `4bc8b33711d21378fafc73922def64abc32ea7a1664a68f3eaff04a35d8cc023` | **新建（2026-09-13 晚，Task 13 执行日志）** |
 | `outputs/bird-pilot/task-list.jsonl` | `f722e671a7afc4d91a358e655c212b336d766b797930368f2e21b1eaa5b634f2` | **新建（2026-09-13 晚，Runner 任务清单，公开字段）** |
+| `docs/reports/2026-09-13-task13-pilot-report.md` | 待 commit 时现场计算 | **新建（2026-09-13 报告会话，§16.4 外推 + rewards 全 0 解读；未 commit）** |
 
 不要覆盖或回退这些文件。若现场哈希不同，先确认是否是用户或其他会话的新修改，再继续工作。
 
