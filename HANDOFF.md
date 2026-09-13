@@ -9,8 +9,8 @@
 
 ## 0. 新会话先做什么
 
-1. 完整阅读本文件、`docs/reports/2026-09-13-task13-pilot-main-run.md`（Task 13 主运行执行日志）与 `docs/reports/2026-09-13-task13-pilot-report.md`（Pilot 报告：§16.4 外推 + rewards 全 0 解读）。把它们当作需要现场核验的历史交接，不要把历史授权当作新会话授权。
-2. 先向用户报告准确状态：**Pilot 报告期与预算门终裁均已完成**——用户余额核对报来 09-13 平台消费 6.43 元，simulator 侧隐含 $0.6288（agent 的 2.24×），计入后 §16.4 总账外推 **457.6 元 vs 160 元预算线 = FAIL（2.86×）**，且 a-mode Full 剩余单项即 210 元超线（Full 全量数学上不可行）；能力门亦 FAIL（rewards 全 0：c-mode ask_user 539 次/9 集澄清失控、a-mode 预算挤占提交且已提交 SQL 未过评审）。**综合裁定：Full 不启动**，两门修复路径进 Day 6 议程。待用户：① Pilot 报告 commit 授权；② Day 6 计划 Gate 批准；③ cybermarket_pattern_12 恢复与否。
+1. 完整阅读本文件、`docs/reports/2026-09-14-day6-phase-a-execution-log.md`（Day 6 Phase A 前段执行日志）与 `docs/superpowers/plans/2026-09-14-day6-capability-restore-runner-and-ui.md`（Day 6 计划）。把它们当作需要现场核验的历史交接，不要把历史授权当作新会话授权。
+2. 先向用户报告准确状态：**Day 6 Phase A 前段（Task 1–3）已完成并 commit**——Task 1 提交语义排查（根因 = prompt 缺官方策略，通道无缺陷）、Task 2 spool 导入接线（回填能力就绪，d 旧格式不可回填）、Task 3 探针重设计（**探针门翻转为 PASS**，付费 $0.000035334×2 次调用）。**下一步 = Task 4（v2 decide 三方一致性守卫）→ Task 5（c/a 策略修复）→ Task 6（Runner SIGINT 演练）→ Task 7–9（SSE/UI/E2E）→ Task 10（小样本付费验证，上会话已预授权 ≤$0.10）→ Task 11（Full 重设计对比）**。用户已预授权：逐 Task commit、付费 Gate、PG 写入；决策按推荐执行、日志记录即可。
 3. **外部事实（关键）**：模型更名证据链与全部实测数字见研究笔记；价格快照已双源核对（用户读数 = 页面提取）；探针累计花费 ~$0.008。
 4. preflight 三项零付费已于 2026-09-13 完成（执行入口备查：`scripts/prepare_bird_pilot.py --dataset <公开数据集路径>`、`--run-db-check`、GT 拒绝检查见执行日志 §4）。Task 13 主运行**需要用户新会话明确授权**（一次正向运行 = 一次授权额度）。
 5. 根目录 `.env` 只能由已审核脚本或 `uv run --env-file .env ...` 消费。不要手工读取、打印、搜索、hash 或统计它。（本日已追加 Day 5 变量与 `USER_SIM_MODEL=openai/deepseek-flash`，均经用户授权。）
@@ -125,16 +125,33 @@ security/transaction gate `9 passed in 5.59s`；唯一正向 seller-risk scenari
 
 **同会话终裁追加（余额核对闭环）**：用户报来 09-13 平台 deepseek-flash 消费 **6.43 元** → 拆分 sim 侧 $0.6288（4.45 元，agent 的 2.24×；band 疑点查证排除——周日运行 off_peak 正确，`_pricing.py:46` weekday 门 + 快照 evidence "weekdays"）→ 计入后 §16.4 总账 **457.6 元 vs 160 元线 = FAIL（2.86×）**；结构性发现：a-mode Full 剩余单项（agent p95 + sim）= 210 元即超线，Full 全量 1200 集数学上不可行。**预算门终裁 FAIL（与能力门独立成立）→ 综合裁定 Full 不启动**；报告 §0/§3.5/§4/§5/§7 与账本（`balance_cross_check`、`projected_total_upper_bound_yuan=457.6`、`budget_gate_decision=FAIL`）已同步，HANDOFF §0/§3/§5 已刷新。
 
+### 2.11 Day 6 计划 Gate（Claude Code，2026-09-14 会话）
+
+用户双重授权（「授权进行下一步并批准启动Day6计划」）后：commit `3a71357`（Pilot 报告终裁 + HANDOFF）；产出 Day 6 计划（11 Task 三线：能力门修复 / 技术债三项 / Day 6 规格 DoD；付费 Gate 仅 Task 3 ≤$0.01 与 Task 10 ≤$0.10；Global Constraints 继承 Day 5 十一条 + 新增冻结契约不可动、UI 收窄、两门 FAIL 为输入基线）；现状确认 `api/`、`web/`、`tests/e2e/` 全新范围 + 官方 `init_session` 契约含 `session_id`。随后用户批准计划并打包授权（见 §2.12）。
+
+### 2.12 Day 6 Phase A 前段：Task 1–3（Claude Code，2026-09-14 会话）
+
+用户打包授权（计划批准 + 逐 Task commit + 付费 Gate + PG 写入预授权）后，执行至上下文收尾阈值（细节见 `docs/reports/2026-09-14-day6-phase-a-execution-log.md`）：
+
+1. **计划入库** `b1c9a4e`。
+2. **Task 1**（`1bdcf78`）：提交语义排查——评审在 db_env `/submit`；11 次 submit 全部到达、0 次 exec_err_flg（全部「可执行但结果不匹配」）；**根因 = bird-a/bird-c prompt policy 缺官方策略**（成本清单/探索 tips/澄清上限）。Task 5 形状：prompt-policies v3 + c-mode 澄清预算闸。
+3. **Task 2**（`4ceab5c`）：spool 导入接线——`spool_importer.py`（scan/assign/patch，(experiment,task,mode)+时间窗 join，歧义 fail-closed）；agent 事件加 task_id/mode/experiment_id/recorded_at；`AttemptTelemetry` +agent_turns/agent_session_id；`merge_telemetry`（PG jsonb 合并 + 内存实现）。**d 旧格式 785 文件不可回填**（聚合已在账本），回填对新 run 生效。
+4. **测试环境修复（授权披露）**：PG 套件 17 个失败 = 漏设 `LANGGRAPH_STRICT_MSGPACK=true`（非缺陷）；`model_state.provider_turn` 删除 1 行 2026-09-06 Day 4 测试种子残留（合成常量，只读查证后精确 DELETE）。
+5. **Task 3**（`636129c`）：探针重设计——`probe_model_capability.py` 5 判据（每项对应真实踩坑）+ 7 离线测试；付费执行 2 次合计 <$0.001（授权 ≤$0.01），**5/5 PASS，探针门从 FAIL 翻转为 PASS**。新坑实证：探针离线全绿、真实运行连爆 3 个装配缺陷（clock 协议/turn_store 构造/窄快照 vs 全文件）——坑 54 再验。
+
+终态：离线 **846 passed, 129 skipped**；Ruff 全绿；PG **128 passed**。commit 链：`3a71357`→`b1c9a4e`→`1bdcf78`→`4ceab5c`→`636129c`→`de66c21`（未 push）。
+
+**新会话任务**：Task 4 → 5 → 6 → 7→8→9 → 10（付费已预授权）→ 11，按计划文档顺序与判据执行；每 Task 红绿 + owning tests + 全量 suite + Ruff 后 commit（已打包授权）。
+
 ## 3. 当前卡在哪里
 
-**没有技术阻塞。** 工作停在用户裁定边界（Pilot 报告与预算门终裁均已完成，2026-09-13 报告会话）：
+**没有技术阻塞。** Day 6 Phase A 前段（Task 1–3）完成，新会话从 Task 4 继续：
 
-- **§16.4 预算门已终裁 FAIL**：用户余额核对报来 2026-09-13 平台消费 6.43 元 → simulator 侧隐含 $0.6288（agent 的 2.24×）→ 计入后总账外推 **457.6 元 vs 160 元预算线（2.86×）**；且 a-mode Full 剩余单项（agent+sim）即 210 元超线——Full 全量 1200 集在实测单价下数学上不可行。按规格 §16.4 安全暂停，由用户决定。
-- **能力门 FAIL**（rewards 全 0，策略层系统性问题）。
-- **综合状态：Full 不启动**；两门的修复路径全部进 Day 6 议程：① 提交语义对齐排查（零付费）；② c-mode 澄清策略 + a-mode 提交质量修复；③ Full 范围/成本结构重设计（压缩范围、sim 模型选型降本、或修规格上限——均需用户批准，且须以修复后实测单价重跑 §16.4 外推）。
-- **用户动作**：① Pilot 报告（含终裁）+ HANDOFF 刷新的 commit 授权；② Day 6 计划 Gate 的启动批准；③ `cybermarket_pattern_12 [a]` unfinished 恢复与否（需授权；`crypto_exchange_9 [c]` failed 有效不重跑）。
-- Day 6 技术债（探针重设计、spool 导入接线、v2 decide 工具名单）见 `docs/reports/2026-09-12-gate-p-preflight-execution-log.md` §6.5 + 执行日志 §5。
-- Day 6（UI/SSE/E2E）与 Day 7 各自需要独立计划。
+- **用户已预授权（2026-09-14 深夜）**：① 剩余决策按执行者推荐行使；② 付费 Gate（Task 3 探针已用毕、Task 10 小样本 ≤$0.10 含 sim 侧）与 PG 写入；③ 逐 Task commit 打包授权；④ 只要求日志记录与上下文收尾。以上授权覆盖 Day 6 计划范围，**不含 push、不含 Day 7 计划、不含 Full 启动**（Task 11 仍只产出方案对比）。
+- **下一步顺序**：Task 4（v2 decide 三方一致性守卫）→ Task 5（c/a 策略修复：prompt-policies v3 + 澄清预算闸；Task 1 结论已给形状）→ Task 6（Runner SIGINT 演练，双开关）→ Task 7→8→9（SSE/UI/E2E，`api/`、`web/`、`tests/e2e/` 全新）→ Task 10（小样本验证，新 experiment，须在 Task 5 红绿后）→ Task 11（Full 重设计方案对比，交用户裁定）。
+- 关键输入：Task 1 研究笔记（`docs/project/research/2026-09-14-submit-semantics-alignment.md`）已定 Task 5 修复形状；PG 测试需双开关 `COMMERCE_AGENT_RUN_POSTGRES_TESTS=1` + `LANGGRAPH_STRICT_MSGPACK=true`。
+- `cybermarket_pattern_12 [a]` unfinished 恢复（可选，需新会话向用户确认）；`crypto_exchange_9 [c]` failed 有效不重跑。
+- Day 7（产品 50 题、实验、Full 进度/收尾、README/面试材料）需独立计划；Full 启动与否在 Task 11 后由用户裁定。
 
 ## 4. 当前验证证据（2026-09-11 Task 18 测试数字 + 2026-09-12 Gate G/清理现场，最终源码状态，Claude Code）
 
@@ -165,11 +182,12 @@ security/transaction gate `9 passed in 5.59s`；唯一正向 seller-risk scenari
 
 ## 5. 下一步计划
 
-1. **Pilot 报告 commit 授权**：`docs/reports/2026-09-13-task13-pilot-report.md`（含 §3.5 预算门终裁 FAIL）+ 本文件刷新（账本 JSON 为 gitignored 产物不入库）。
-2. **Full 前置（报告 §5，待用户按序批准）**：① 提交语义对齐排查（零付费）；② c/a 策略修复 + 2–4 集小样本重跑（需授权）；③ Full 范围/成本结构重设计（预算门结构性越线，方向：压缩范围 / sim 模型选型 / 修规格上限）。
-3. **Day 6 计划**（独立计划 Gate）：探针重设计、spool 导入接线（每集成本归属）、v2 decide 工具名单一致性、UI/SSE/E2E + Full 重设计分析。
-4. **恢复未完成集（可选，需授权）**：`cybermarket_pattern_12 [a]` 按 §8.5.3 同 experiment（d）新 attempt 恢复。
-5. **收尾三件套**（长期规则）：① 更新本文件；② PowerContext handoff 并返回 exact revision；③ `docs/reports/` 执行日志。
+1. **Task 4–11 按 Day 6 计划顺序执行**（新会话）：Task 4 v2 decide 守卫 → Task 5 策略修复 → Task 6 Runner 演练 → Task 7/8/9 SSE/UI/E2E → Task 10 小样本（付费已预授权，≤$0.10）→ Task 11 Full 重设计对比。
+2. **每 Task 纪律**：TDD 红绿 → owning tests → 全量 suite + Ruff → commit（打包授权范围内）。
+3. **收尾三件套**（长期规则）：① 更新本文件；② PowerContext handoff 并返回 exact revision；③ `docs/reports/` 执行日志。
+4. **可选（需向用户确认）**：`cybermarket_pattern_12 [a]` 按 §8.5.3 同 experiment（d）恢复。
+5. **Day 7 计划**（独立计划 Gate）：产品 50 题、实验、Full 进度/收尾、README/面试材料——Full 启动与否在 Task 11 方案对比后由用户裁定。
+6. **收尾三件套**（长期规则）：① 更新本文件；② PowerContext handoff 并返回 exact revision；③ `docs/reports/` 执行日志。
 
 ## 6. 踩过的坑，绝对不要再踩
 
@@ -283,7 +301,12 @@ security/transaction gate `9 passed in 5.59s`；唯一正向 seller-risk scenari
 | `bird_system_agent/requirements.txt` | `e1c4095d13619170a04e1bbe224c11701543a070930817c3e0b711461337b5ab` | **修改（2026-09-13 晚，重冻结 45 包）** |
 | `docs/reports/2026-09-13-task13-pilot-main-run.md` | `4bc8b33711d21378fafc73922def64abc32ea7a1664a68f3eaff04a35d8cc023` | **新建（2026-09-13 晚，Task 13 执行日志）** |
 | `outputs/bird-pilot/task-list.jsonl` | `f722e671a7afc4d91a358e655c212b336d766b797930368f2e21b1eaa5b634f2` | **新建（2026-09-13 晚，Runner 任务清单，公开字段）** |
-| `docs/reports/2026-09-13-task13-pilot-report.md` | 待 commit 时现场计算 | **新建（2026-09-13 报告会话，§16.4 外推 + rewards 全 0 解读；未 commit）** |
+| `docs/reports/2026-09-13-task13-pilot-report.md` | 待 commit 时现场计算 | **已入库（3a71357）** |
+| `docs/superpowers/plans/2026-09-14-day6-capability-restore-runner-and-ui.md` | 待现场计算 | **已入库（b1c9a4e，已批准）** |
+| `docs/project/research/2026-09-14-submit-semantics-alignment.md` | 待现场计算 | **已入库（1bdcf78）** |
+| `src/commerce_agent/evaluation/spool_importer.py` | 待现场计算 | **新建（4ceab5c）** |
+| `scripts/probe_model_capability.py` | 待现场计算 | **新建（636129c）** |
+| `docs/reports/2026-09-14-day6-phase-a-execution-log.md` | 待现场计算 | **新建（de66c21，本会话执行日志）** |
 
 不要覆盖或回退这些文件。若现场哈希不同，先确认是否是用户或其他会话的新修改，再继续工作。
 
