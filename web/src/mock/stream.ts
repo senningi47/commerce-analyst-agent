@@ -205,19 +205,6 @@ export function eventsForStage(stage: LoopStage): RunEvent[] {
   return SCRIPT.slice(0, STAGE_CUTS[stage]);
 }
 
-export function stageOf(events: RunEvent[]): LoopStage {
-  if (events.length === 0) return "empty";
-  const last = events[events.length - 1];
-  if (last.eventType === "report_completed") return "completed";
-  if (last.eventType === "recovery_applied") return "resumed";
-  if (last.decisionSummary?.code === "changes_requested") return "approval_rejected";
-  if (last.eventType === "proposal_created") return "awaiting_approval";
-  if (last.demo?.conclusion?.startsWith("证据不足")) return "insufficient";
-  if (last.eventType === "sql_repaired") return "sql_repaired";
-  if (last.eventType === "sql_generated") return "sql_rejected";
-  return "clarifying";
-}
-
 /** 快速上手：建议问题（点击即从空状态推进到对应阶段）。 */
 export const SUGGESTED_QUESTIONS: { question: string; stage: LoopStage }[] = [
   { question: "上周华北 GMV 为什么下滑？", stage: "clarifying" },

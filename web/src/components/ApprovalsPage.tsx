@@ -7,7 +7,7 @@ export function ApprovalsPage({
   proposal,
   decision,
 }: {
-  stage: LoopStage;
+  stage: LoopStage | null;
   proposal: ViewModel["proposal"];
   decision: ViewModel["decision"];
 }) {

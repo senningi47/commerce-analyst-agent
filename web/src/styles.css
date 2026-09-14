@@ -585,6 +585,13 @@ body {
   white-space: pre-wrap;
 }
 
+.sql-fingerprints {
+  padding: 10px 14px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
 .reject-reason {
   padding: 6px 14px;
   color: var(--red-ink);

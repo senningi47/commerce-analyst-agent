@@ -26,7 +26,9 @@ export interface RunEvent {
   decisionSummary?: { code: string; text: string } | null;
   proposalRef?: string | null;
   executionRef?: string | null;
+  auditRef?: string | null;
   evidence?: { kind: string; ref: string; digest: string }[];
+  queryFingerprints?: string[];
   /** Demo-only rich payload; the real SSE surface stays summary-only. */
   demo?: DemoPayload;
 }
@@ -58,8 +60,7 @@ export const STAGE_LABELS: Record<LoopStage, string> = {
 };
 
 /** 演示载荷：真实 SSE 是 summary-only，SQL/表格/图表由只读工件 API 提供。 */
-export interface DemoPayload {
-  question?: string;
+export interface DemoPayload {  question?: string;
   clarification?: { question: string; answer: string };
   planStep?: { id: string; title: string; status: "done" | "pending" };
   metrics?: { label: string; value: string; delta?: string; tone?: Tone }[];

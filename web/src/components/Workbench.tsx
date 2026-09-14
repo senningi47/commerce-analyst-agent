@@ -25,10 +25,12 @@ export function Workbench({
   stage,
   view,
   events,
+  stageLabel,
 }: {
-  stage: LoopStage;
+  stage: LoopStage | null;
   view: ViewModel;
   events: RunEvent[];
+  stageLabel?: string;
 }) {
   const [traceOpen, setTraceOpen] = useState(
     stage === "sql_rejected" || stage === "sql_repaired",
@@ -40,7 +42,7 @@ export function Workbench({
   return (
     <div className="workbench">
       <div className="main-col">
-        {STAGE_HINTS[stage] && <div className="stage-note">{STAGE_HINTS[stage]}</div>}
+        {stage && STAGE_HINTS[stage] && <div className="stage-note">{STAGE_HINTS[stage]}</div>}
 
         {view.conclusion && !view.insufficient && (
           <section className="card verdict">
@@ -86,7 +88,9 @@ export function Workbench({
         {view.proposal && (
           <section className="card proposal-strip">
             <div className="card-head">
-              <div className="card-label">运营动作提案 · {view.proposal.meta?.title}</div>
+              <div className="card-label">
+                运营动作提案{view.proposal.meta?.title ? ` · ${view.proposal.meta.title}` : ""}
+              </div>
               <a
                 className="go-link"
                 href="#approvals"
@@ -99,9 +103,15 @@ export function Workbench({
               </a>
             </div>
             <div className="prop-meta">
-              <span>{view.proposal.meta?.requester}</span>
-              <span>{view.proposal.meta?.kind}</span>
-              <span>预算影响 {view.proposal.meta?.budgetImpact}</span>
+              {view.proposal.meta ? (
+                <>
+                  <span>{view.proposal.meta.requester}</span>
+                  <span>{view.proposal.meta.kind}</span>
+                  <span>预算影响 {view.proposal.meta.budgetImpact}</span>
+                </>
+              ) : (
+                <span className="mono">{view.proposal.ref}</span>
+              )}
             </div>
           </section>
         )}
@@ -116,7 +126,7 @@ export function Workbench({
               {view.clarifications.map((item, index) => (
                 <div key={index} className="qa">
                   <div className="qa-q">向您确认：{item.question}</div>
-                  <div className="qa-a">您的回答：{item.answer}</div>
+                  {item.answer && <div className="qa-a">您的回答：{item.answer}</div>}
                 </div>
               ))}
               {view.clarifications.length === 0 && (
@@ -151,7 +161,20 @@ export function Workbench({
                     </span>
                     {item.source && <span className="mono src">{item.source}</span>}
                   </div>
-                  <pre>{item.sql}</pre>
+                  {item.sql ? (
+                    <pre>{item.sql}</pre>
+                  ) : (
+                    <div className="sql-fingerprints mono">
+                      {(item.fingerprints ?? []).map((print) => (
+                        <span key={print} className="evidence-chip" title="SQL 双指纹（摘要面，不含 SQL 文本）">
+                          指纹 {print.slice(0, 12)}…
+                        </span>
+                      ))}
+                      {(item.fingerprints ?? []).length === 0 && (
+                        <span className="muted">查询已生成（摘要面）。</span>
+                      )}
+                    </div>
+                  )}
                   {item.rejected && <div className="reject-reason">{item.rejected}</div>}
                 </div>
               ))}
@@ -208,7 +231,7 @@ export function Workbench({
       <aside className="side-col">
         <section className="card">
           <div className="card-label">运行状态</div>
-          <div className="stage-line">{stage}</div>
+          <div className="stage-line">{stageLabel ?? stage}</div>
           <ul className="audit">
             {events.slice(-6).map((item) => (
               <li key={item.cursor}>
