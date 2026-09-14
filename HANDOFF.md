@@ -125,6 +125,8 @@ security/transaction gate `9 passed in 5.59s`；唯一正向 seller-risk scenari
 
 **同会话终裁追加（余额核对闭环）**：用户报来 09-13 平台 deepseek-flash 消费 **6.43 元** → 拆分 sim 侧 $0.6288（4.45 元，agent 的 2.24×；band 疑点查证排除——周日运行 off_peak 正确，`_pricing.py:46` weekday 门 + 快照 evidence "weekdays"）→ 计入后 §16.4 总账 **457.6 元 vs 160 元线 = FAIL（2.86×）**；结构性发现：a-mode Full 剩余单项（agent p95 + sim）= 210 元即超线，Full 全量 1200 集数学上不可行。**预算门终裁 FAIL（与能力门独立成立）→ 综合裁定 Full 不启动**；报告 §0/§3.5/§4/§5/§7 与账本（`balance_cross_check`、`projected_total_upper_bound_yuan=457.6`、`budget_gate_decision=FAIL`）已同步，HANDOFF §0/§3/§5 已刷新。
 
+**Band 修正（2026-09-14 续会话，用户输入，详见 Pilot 报告 §8 与执行日志 §8）**：用户澄清 **6.43 元为高峰时段计费**、此前价格表为空闲时段档，并提供完整 CNY 价格表（off-peak ¥0.02/¥1/¥4 每百万、peak 恰 2×）→ §3.5 的 band 排查结论被推翻。按平台 CNY 列/快照 USD 列 = 6.6667 重拆：**agent 实际 3.74 元 / sim 实际 2.69 元（比例 0.72×，原 2.24× 反转）**；sim 单价修正 $0.01008/集（off-peak 基准，取代计划约束 #9 的 $0.03144）。外推两档**均 FAIL**：peak-run **461.4 元**（2.88×）/ off-peak-run **233.9 元**（1.46×）——**off-peak 调度成为 Task 11 首要降本杠杆**；「a-mode 单项超线」仅 peak 档成立（off-peak 档 113.6 元）。**band 模型缺陷待修**（`_pricing.py` weekday 门 + 快照 evidence 与平台不符；需用户提供真实峰值窗口后重冻结 v5）；**Task 10 ≤$0.10 在 peak 档下 4 集预估 ~$0.20 越限、off-peak 档贴线 ~$0.098——执行前须定档或重确认上限**。账本与报告已更新（历史数字保留作审计痕迹）。
+
 ### 2.11 Day 6 计划 Gate（Claude Code，2026-09-14 会话）
 
 用户双重授权（「授权进行下一步并批准启动Day6计划」）后：commit `3a71357`（Pilot 报告终裁 + HANDOFF）；产出 Day 6 计划（11 Task 三线：能力门修复 / 技术债三项 / Day 6 规格 DoD；付费 Gate 仅 Task 3 ≤$0.01 与 Task 10 ≤$0.10；Global Constraints 继承 Day 5 十一条 + 新增冻结契约不可动、UI 收窄、两门 FAIL 为输入基线）；现状确认 `api/`、`web/`、`tests/e2e/` 全新范围 + 官方 `init_session` 契约含 `session_id`。随后用户批准计划并打包授权（见 §2.12）。
@@ -151,6 +153,7 @@ security/transaction gate `9 passed in 5.59s`；唯一正向 seller-risk scenari
 2. **旧探针退役**：`scripts/probe_deepseek_gateway.py`（928 行）+ 其单测（16 项）git rm；未跟踪的 deepseek live 测试磁盘删除。依据：`636129c` 已宣布替代 + Gate P 正式退役 Day 3 固定 SQL 链判据 + fake 路径与新 allowlist 结构性冲突（全量 suite 首跑 3 failed 抓到）。
 3. **披露**：`bird_c_responder.py` 为未跟踪文件（Day 2 时代、非 gitignore、从未入 allowlist；同状态含 context_builder/builder.py、model/* 等核心模块）——本次未卷入窄主题 commit，是否入库待用户裁定。
 4. 终态：离线 **834 passed, 128 skipped**（846+4−16 / 129−1）；Ruff 全绿；PG **128 passed**。PowerContext 服务本会话开场起动（端口 8000）。
+5. **Band 修正（用户输入，零付费）**：用户澄清 Pilot 6.43 元为高峰计费并给出完整 CNY 价格表 → 对账重拆（agent 3.74 / sim 2.69，比例 0.72×）+ 两档外推均 FAIL（peak 461.4 / off-peak 233.9 元）+ band 模型缺陷记录（待用户供给峰值窗口后修 `_pricing.py` + 重冻结快照 v5）+ Task 10 上限重估提醒。账本（gitignored）、Pilot 报告 §8、HANDOFF §2.10、执行日志 §8 已同步。
 
 ## 3. 当前卡在哪里
 

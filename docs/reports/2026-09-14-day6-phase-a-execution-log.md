@@ -86,3 +86,17 @@
 - commit 链：`3a71357` → `b1c9a4e` → `1bdcf78` → `4ceab5c` → `636129c` → `de66c21` → `abb3beb` → **`84180e2`**（未 push）。
 - 终态：离线 **834 passed, 128 skipped**；Ruff 全绿；PG **128 passed**。PowerContext 已由用户要求在本会话开场起动（端口 8000，`live: ok`）。
 - **下一步**：Task 5（c/a 策略修复：prompt-policies v3 + c-mode 澄清预算闸 + a-mode 提交预留；Task 1 结论已定形状）→ Task 6（Runner SIGINT 演练）→ Task 7→8→9（SSE/UI/E2E）→ Task 10（付费 ≤$0.10 已预授权）→ Task 11（Full 重设计对比）。
+
+## 8. Band 修正（用户输入，零付费，docs commit）
+
+**用户澄清**：Pilot 余额核对的 6.43 元是**高峰时段计费**；此前用户转录的价格表是**空闲时段档**；并给出完整 CNY 价格表——off-peak 命中 ¥0.02 / 未命中 ¥1 / 输出 ¥4 每百万 tokens，peak 恰 2×（¥0.04/¥2/¥8）。
+
+**核算链**：
+1. §3.5（Pilot 报告）的「band 疑点查证排除」被推翻——`_pricing.py:46` weekday 门（周末硬编码 off-peak）+ 快照 evidence「01:00-04:00,06:00-10:00 weekdays」与平台实际计费不符（周日晚间按 peak 计费）。**band 模型缺陷成立**。
+2. 换算基础：用户 CNY 表与快照 USD 列三档比值恒定 6.6667 → 平台 CNY 列 = 6.6667 × USD 列；修正统一用平台 CNY 口径（旧账本 7.07 指示性汇率与平台内嵌汇率并存，6% 差异如实披露）。
+3. 重拆（Decimal 精确）：agent 实际 **3.74 元**（= 2 × 1.871，同一 token 量按 peak）+ sim 实际 **2.69 元**（6.43 − 3.74）= 6.43 ✓；**sim:agent = 0.72×（原 2.24× 反转）**；sim 单价 **$0.01008/集**（off-peak 基准；0.0672 / 0.1344 元 off-peak/peak）。
+4. 两档外推：**A peak-run 461.4 元（2.88×）** / **B off-peak-run 233.9 元（1.46×）**——**均 FAIL**；旧 457.6 元为混合口径（agent off-peak + sim 误读 off-peak 反解），恰与 A 档接近但结构完全不同。
+5. **结构性发现反转**：「a-mode Full 剩余单项超线」仅 peak 档成立（227.2 元）；off-peak 档 113.6 元不再单项越线。**off-peak 调度 = Task 11 首要降本杠杆**。
+6. **Task 10 上限重估**：≤$0.10（2–4 集）peak 档 4 集预估 ~$0.20 越限、off-peak 档 ~$0.098 贴线——执行前须定档（推荐 off-peak）或经用户重确认。
+
+**产物更新**：`outputs/bird-budget/pilot-ledger.json`（`balance_cross_check.band_correction_2026_09_14` + `projected_total_upper_bound_yuan=461.4` + `projected_total_scenario_off_peak_run_yuan=233.9` + decision 注记刷新；历史值保留 superseded 字段）；Pilot 报告 §0 指针 + §7 修正划线 + 新增 §8；HANDOFF §2.10 修正段 + §2.13 第 5 项；CLAUDE.md §0。**零付费、零 GT 读取、无代码变更**（`_pricing.py` 修复与快照 v5 重冻结待用户提供真实峰值窗口后独立红绿执行）。
