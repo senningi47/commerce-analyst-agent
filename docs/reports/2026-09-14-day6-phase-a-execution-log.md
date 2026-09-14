@@ -254,3 +254,14 @@ N=10 时 c 侧较 Pilot 失控基线 **-83%**。a-mode 无行为级基线拆分�
 3. Runner 命令（Task 13 模式）：`uv run --env-file .env python -m commerce_agent.evaluation --experiment task10-strategy-validate-20260914 --purpose ablation_repair --config-hash <现场计算> --task-list outputs/bird-pilot/task10/task-list.jsonl --events outputs/bird-eval/events-task10.jsonl --executor official --store postgres --adk-root _upstream/BIRD-Interact/BIRD-Interact-ADK --task-data-dir outputs/bird-pilot/task10/task-data --episode-output-dir outputs/bird-eval/episodes`。
 4. 监控：双时点快照（spool 文件数/成本两拍，坑 58）；熔断双条款按 Gate P 文档；上限 $0.10 硬线。
 5. 判据：c-mode submit_sql ≥1/集；**reward 首分 > 0 即通道证明**；每集 agent+sim 新成本读数 → 产出验证报告（策略修复前后对比）交 Task 11。
+
+## 17. Task 10 执行：三次运行、两基础设施发现、submit 通道贯通（同会话续，23:08–24:00 空闲档）
+
+**按 §16 清单执行**（用户指示「按 §16 清单执行 Task 10」）。完整细节见 `docs/reports/2026-09-14-task10-strategy-validation.md`；账本 `outputs/bird-budget/pilot-ledger.json` 新增 `task10_strategy_validation` 节。零 GT 读取；agent 实测 $0.025047 + sim 估 $0.05–0.08（余额核对终裁）。
+
+1. **准备**：空闲档 ✓；spike 6002 已 stop ✓；compose.bird 三服务 + 官方库 5433 起动。**config-hash 派生方式复核确认 = task-selection.json SHA-256**（Task 13 旧值精确复现），实验级单值 `97a40e74…ad749`；两个 per-profile 参考指纹现场复算与 §16 **精确一致**。
+2. **Run 1（`…20260914`，a+c 并发 2）**：c 集 2.4s failed——db-env `/init_task` 500，**同题双模式并发对同一 task DB drop/create 竞态**（官方 `create_task_db` 命名不含 mode；Task 13 异题故未触发）；a 集 succeeded（116s）但第 8 次模型调用被网关 fail-closed `provider_response_invalid` 中断（前 7 轮 reported，行为形态好：探索+知识+SQL+2 澄清，13/18 coin）。a 保留原判（轨迹可用，重跑破线）；c 按 GC7 + Task 13 字母后缀先例补跑。
+3. **Run 2（`…b`，c 单集 concurrency=1）**：succeeded 但 **60 ask / 0 submit / 551s**——Pilot 失控形态复现。**根因 = 镜像陈旧**：`bird-system-agent` 镜像烘焙于 09-13（Task 13 期），Task 5 闸与 v3 配置从未入 live（容器内 grep 0 命中、仅 v1 配置）。Run 2 测的是 Pilot 代码；修复「无效」被排除。
+4. **镜像重建 + Run 3（`…c`）**：rebuild 后容器内实证（gate 2 命中、v3 存在）→ c 补跑 **succeeded 118s：12 ask_user + 2 submit_sql，两次提交到达官方评审返回结构化 Phase 1 判定（failed，reward 0）**；dialogue 24 条零拦截（12 ≤ max_turn，模型自主提交）。**判据：submit_sql ≥1/集 ✓；reward >0 ✗（SQL 质量，非通道）**。
+5. **成本/遥测**：agent $0.025047（0.011539890 + 0 + 0.009389802 + 0.004117392）；sim 估 $0.05–0.08 → 合计估 $0.075–0.105（上限边界，本 episode 不再付费）。band 全程 off_peak ✓。Run 3 遥测经 Task 2 importer 入库（**首次真实使用**；`BIRD_EXPERIMENT_ID` compose 默认值 → 确定性改挂，披露为 Day 7 接线缺口）；Run 1/2 旧格式不可回填。
+6. **现场**：compose 栈 + 官方库已 stop（回到开场前）；eval 库新增 4 个 task10 attempt（证据保留）；migration 未动（head 0007）；无代码变更（纯 ops + docs + 新增公开 `outputs/bird-pilot/task10/task-list-b-c1.jsonl`）。

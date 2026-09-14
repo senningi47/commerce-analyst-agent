@@ -1,16 +1,16 @@
-# CommerceAnalyst 项目交接：Day 6 Phase A Task 1–9 全部完成（两验收门齐备），待 Task 10 付费小样本与 Task 11
+# CommerceAnalyst 项目交接：Day 6 Task 10 完成（submit 通道贯通；两 infra 发现），待 Task 11
 
-> 更新时间：2026-09-14（Asia/Shanghai），更新者：Claude Code（GLM）  
+> 更新时间：2026-09-14（Asia/Shanghai）深夜，更新者：Claude Code（GLM）  
 > 工作区：`D:\git-projects\commerce-analyst-agent`  
-> 当前分支状态：`main`（未 push；Task 9 完成待 commit 入库）  
+> 当前分支状态：`main`（未 push；Task 10 收尾 commit 待入库——同轮完成）  
 > 交接状态：`continuable`  
 > PowerContext scope：`git:github.com/senningi47/commerce-analyst-agent`  
-> Durable Handoff：PowerContext `handoff/handoff#19`（2026-09-13 提交，exact revision=19）
+> Durable Handoff：PowerContext `handoff/handoff#26`（2026-09-14 提交，exact revision=26）
 
 ## 0. 新会话先做什么
 
-1. 完整阅读本文件、`docs/reports/2026-09-14-day6-phase-a-execution-log.md`（Day 6 Phase A 执行日志，§14=Task 8 Step 2/3、§15=Task 9）与 `docs/superpowers/plans/2026-09-14-day6-capability-restore-runner-and-ui.md`（Day 6 计划）。把它们当作需要现场核验的历史交接，不要把历史授权当作新会话授权。
-2. 先向用户报告准确状态：**Day 6 Phase A（Task 1–9 全部）已完成**——Task 1 提交语义排查、Task 2 spool 导入接线、Task 3 探针重设计（**探针门 PASS**）、Task 4 三方一致性守卫、Task 5 c/a 策略修复、Task 6 SIGINT 恢复演练（**验收门② PASS**）、Task 7 SSE 事件面、Task 8 关键 UI 三步全完成、Task 9 安全/E2E（API 层 E2E 3 条 PG 全绿 + UI 手工验收清单——**验收门①成文齐备，两验收门均通过**）。**下一步 = Task 10（小样本付费验证 ≤$0.10 含 sim 侧）——零付费准备已完成（执行日志 §16：选题 `archeology_scan_M_4` c+a 同题双模式、seed 11、零 Pilot 重叠），但付费运行被空闲档纪律阻塞（选题时 = 北京周一 14:43 peak；peak ~$0.114 超上限）——18:00 后新会话按 §16 一键清单执行**→ Task 11（Full 重设计对比，交用户裁定）**。用户已预授权：逐 Task commit、付费 Gate、PG 写入；决策按推荐执行、日志记录即可。
+1. 完整阅读本文件、`docs/reports/2026-09-14-day6-phase-a-execution-log.md`（Day 6 Phase A 执行日志，§14=Task 8 Step 2/3、§15=Task 9、§17=Task 10）与 `docs/superpowers/plans/2026-09-14-day6-capability-restore-runner-and-ui.md`（Day 6 计划）。把它们当作需要现场核验的历史交接，不要把历史授权当作新会话授权。
+2. 先向用户报告准确状态：**Day 6 仅剩 Task 11**——Task 10 小样本已执行（三次运行：Run 1 a+c 并发 → c 集同题 createdb 竞态 failed、a 集 succeeded 但第 8 轮 `provider_response_invalid` 中断；Run 2 c 补跑复现 60 问失控 → **根因 = 镜像陈旧，Task 5 闸/v3 配置从未入 live**；重建镜像后 Run 3 c 集 **12 ask + 2 submit、118s，提交到达官方评审**（Phase 1 判定 failed，reward 0））。**判据：submit_sql≥1/集 ✓；reward>0 ✗（SQL 质量结果）**。agent 实测 $0.025047 + sim 估 $0.05–0.08（**待用户平台余额核对终裁**；达授权上限边界，本 episode 不再付费）。**下一步 = Task 11（Full 重设计方案对比，零付费分析，交用户裁定）**，输入 = Task 10 报告 §5/§8 新单价。
 3. **外部事实（关键）**：模型更名证据链与全部实测数字见研究笔记；价格快照已双源核对（用户读数 = 页面提取）；探针累计花费 ~$0.008。
 4. preflight 三项零付费已于 2026-09-13 完成（执行入口备查：`scripts/prepare_bird_pilot.py --dataset <公开数据集路径>`、`--run-db-check`、GT 拒绝检查见执行日志 §4）。Task 13 主运行**需要用户新会话明确授权**（一次正向运行 = 一次授权额度）。
 5. 根目录 `.env` 只能由已审核脚本或 `uv run --env-file .env ...` 消费。不要手工读取、打印、搜索、hash 或统计它。（本日已追加 Day 5 变量与 `USER_SIM_MODEL=openai/deepseek-flash`，均经用户授权。）
@@ -213,16 +213,28 @@ security/transaction gate `9 passed in 5.59s`；唯一正向 seller-risk scenari
 4. **过程修正（2 处测试自身）**：async fixture 内误用 asyncio.Runner（running loop 冲突）→ 改 async 直驱；审计 fixtures 同一时间戳导致 SSE 按 `(occurred_at, attempt_id, sequence)` 排序把 recovery 排最前 → 时间随事件递增。
 5. **终态**：PG 全套（integration+e2e）**140 passed**；离线 **866 passed, 140 skipped**；Ruff 全绿。**Day 6 两项验收门齐备：①主产品链路可演示（手工清单 + Task 8 实机验证）、②Runner 中断恢复（Task 6）。下一步 Task 10（付费 ≤$0.10，空闲档）→ Task 11。**
 
+### 2.20 Task 10：小样本策略验证执行（Claude Code，2026-09-14 深夜，付费已行使）
+
+用户指示「按 §16 清单执行 Task 10」后完成（报告 `docs/reports/2026-09-14-task10-strategy-validation.md`；执行日志 §17；三次运行、两 infra 发现、submit 通道贯通）：
+
+1. **准备**：空闲档（23:08–23:49 北京周一晚）✓；config-hash 派生方式复核确认 = **task-selection.json SHA-256**（Task 13 旧值精确复现），实验级 `97a40e74…ad749`；per-profile 参考指纹现场复算与 §16 精确一致。
+2. **Run 1**（`…20260914`，a+c 并发 2）：c 集 2.4s failed（**同题双模式并发 createdb 竞态**——官方 task DB 命名不含 mode，两集同时 drop/create 同名库；Task 13 异题故未触发）；a 集 succeeded 116s 但第 8 轮模型调用被网关 fail-closed `provider_response_invalid` 中断（前 7 轮 reported：探索+知识+SQL+2 澄清、13/18 coin——行为形态远好于 Pilot）。a 保留原判；c 按 GC7 补跑。
+3. **Run 2**（`…b`，c concurrency=1）：succeeded 但 **60 ask/0 submit/551s** = Pilot 失控复现 → **根因 = 镜像陈旧**（烘焙于 09-13，Task 5 闸 + v3 配置从未入 live；容器内 grep 实证 0 命中、仅 v1 配置）。**离线全绿 ≠ 镜像可用**（坑 54 再变体）。
+4. **镜像重建 + Run 3**（`…c`）：容器内实证闸/v3 → c 集 **succeeded 118s：12 ask_user + 2 submit_sql，提交到达官方评审**（结构化 Phase 1 判定 failed，reward 0.0 合法）。**判据：submit_sql ≥1/集 ✓；reward>0 ✗（SQL 质量结果，交 Task 11）**。
+5. **成本**：agent 实测 **$0.025047**（0.011539890+0+0.009389802+0.004117392，band 全程 off_peak）；sim 估 $0.05–0.08（~77 调用 × Pilot 均价）→ 合计估 $0.075–0.105（上限边界；**本 episode 不再付费**）；权威数字待用户余额核对。账本新增 `task10_strategy_validation` 节。
+6. **遥测导入**：Run 3 经 Task 2 importer 首次真实入库（14/14 文件 fail-closed 通过；`BIRD_EXPERIMENT_ID` compose 默认值 → 确定性改挂并披露 = Day 7 接线缺口）；Run 1/2 旧格式不可回填（Pilot d 同款裁定）。
+7. **交 Task 11 输入**：修复后 c 集 agent $0.0041 + sim ~$0.013 ≈ **$0.017/集**（优于 Task 5 敏感度口径）；a-mode 改善获轨迹支持、待完整 episode 实证。**下一步 = Task 11（零付费对比分析，交用户裁定）。**
+
 ## 3. 当前卡在哪里
 
-**没有技术阻塞。** Day 6 Phase A（Task 1–9 全部）完成，新会话从 Task 10 继续：
+**没有技术阻塞。** Task 10 已执行完毕（付费），Day 6 仅剩 Task 11（零付费分析）：
 
-- **用户已预授权（2026-09-14 深夜）**：① 剩余决策按执行者推荐行使；② 付费 Gate（Task 10 小样本 ≤$0.10 含 sim 侧）与 PG 写入；③ 逐 Task commit 打包授权；④ 只要求日志记录与上下文收尾。以上授权覆盖 Day 6 计划范围，**不含 push、不含 Day 7 计划、不含 Full 启动**（Task 11 仍只产出方案对比）。
-- **下一步顺序**：**Task 10 已零付费就绪、付费运行被空闲档纪律阻塞**（选题时现场时钟 = 北京周一 14:43 peak 窗口内；peak 2 集 ~$0.114 超出 ≤$0.10 上限，off-peak ~$0.057）——**18:00 后（或周末）新会话按执行日志 §16「一键执行清单」跑**（选题=`archeology_scan_M_4` c+a 同题双模式、同库不同题零重叠；config-hash 必须现场重算，旧 `b1889777…` 因 Task 5 配置面变更失效）→ Task 11（Full 重设计方案对比——范围压缩/sim 降本/上限修正三方向 × 修复后单价重推 §16.4，输入 = Task 10 新单价，交用户裁定）。
-- Task 10 执行入口（沿用 Task 13 模式）：`uv run --env-file .env python -m commerce_agent.evaluation --experiment <新id> --purpose ablation_repair --config-hash <现场计算> --task-list <清单> --events outputs/bird-eval/events-<id>.jsonl --executor official --store postgres --adk-root _upstream/BIRD-Interact/BIRD-Interact-ADK --task-data-dir outputs/bird-pilot/task-data --episode-output-dir outputs/bird-eval/episodes`；task-list 需新选 题（`scripts/prepare_bird_pilot.py` 同库不同题，seed 更换）；compose 栈起动前处置 spike 容器（6002，Day 1 遗留已 stop 但需确认）。
-- Task 8/9 现场备注：dev server 与 API 进程已停（重启：`cd web && npm run dev` + `uv run --env-file .env python scripts/run_api.py`，端口 5173/8010）；`scripts/seed_ui_live_run.py` 仅浏览器验证用，用后须场景 reset。
-- 关键输入：Task 1 研究笔记 + Task 5 敏感度表（账本 `task5_c_mode_sensitivity`：N=10 每集 $0.0069，c 侧 740 集 $5.11）；PG 测试需双开关 `COMMERCE_AGENT_RUN_POSTGRES_TESTS=1` + `LANGGRAPH_STRICT_MSGPACK=true`。
-- `cybermarket_pattern_12 [a]` unfinished 恢复（可选，需新会话向用户确认）；`crypto_exchange_9 [c]` failed 有效不重跑。
+- **用户已预授权（2026-09-14 深夜）**：① 剩余决策按执行者推荐行使；② 付费 Gate（Task 10 ≤$0.10 含 sim 侧——**已行使，agent $0.025047 实测 + sim 待余额核对，达上限边界，本 episode 不再付费**）与 PG 写入；③ 逐 Task commit 打包授权；④ 只要求日志记录。以上授权覆盖 Day 6 计划范围，**不含 push、不含 Day 7 计划、不含 Full 启动**（Task 11 只产出方案对比）。
+- **下一步 = Task 11**：Full 重设计方案对比（范围压缩/sim 降本/上限修正三方向 × 修复后单价重推 §16.4）。输入 = Task 10 报告 §5/§8（修复后 c 集 ~$0.017/集实测口径）+ Pilot 报告 §7 终裁 + 账本。产出交用户裁定，**Full 启动与否由用户决定**。
+- **待用户动作**：① 平台余额核对（sim 侧权威数字，Task 13 同款流程）；② Run 1 `provider_response_invalid` 若需定位具体响应形状，需网关一次性 sanitized 形状日志（隐私边界，待裁定）。
+- **Day 7 修复项（Task 10 实证）**：① 同题双模式必须串行（Runner 按 task_id 去并发或文档纪律）；② agent 代码/配置变更后镜像 rebuild + 容器内实证（grep 代码/config revision）入 preflight 清单；③ `BIRD_EXPERIMENT_ID` 每实验注入 compose env（否则 spool 导入 join 断）。
+- Task 8/9 现场备注：dev server 与 API 进程已停（重启：`cd web && npm run dev` + `uv run --env-file .env python scripts/run_api.py`，端口 5173/8010）；compose.bird 栈与官方库 5433 已 stop（复跑 Runner 前需重启，见执行日志 §16 清单第 1 步）；PG 测试需双开关 `COMMERCE_AGENT_RUN_POSTGRES_TESTS=1` + `LANGGRAPH_STRICT_MSGPACK=true`。
+- `cybermarket_pattern_12 [a]` unfinished 恢复（可选，需用户确认）；`crypto_exchange_9 [c]` failed 有效不重跑。
 - Day 7（产品 50 题、实验、Full 进度/收尾、README/面试材料、富工件 API 设计、浏览器自动化裁定）需独立计划；Full 启动与否在 Task 11 后由用户裁定。
 
 ## 4. 当前验证证据（2026-09-11 Task 18 测试数字 + 2026-09-12 Gate G/清理现场，最终源码状态，Claude Code）
@@ -254,12 +266,12 @@ security/transaction gate `9 passed in 5.59s`；唯一正向 seller-risk scenari
 
 ## 5. 下一步计划
 
-1. **Task 10–11 按 Day 6 计划顺序执行**（新会话）：Task 10 小样本（付费已预授权，≤$0.10，**空闲档**）→ Task 11 Full 重设计对比。
-2. **每 Task 纪律**：TDD 红绿 → owning tests → 全量 suite + Ruff → commit（打包授权范围内）。
-3. **收尾三件套**（长期规则）：① 更新本文件；② PowerContext handoff 并返回 exact revision；③ `docs/reports/` 执行日志。
-4. **可选（需向用户确认）**：`cybermarket_pattern_12 [a]` 按 §8.5.3 同 experiment（d）恢复。
-5. **Day 7 计划**（独立计划 Gate）：产品 50 题、实验、Full 进度/收尾、README/面试材料——Full 启动与否在 Task 11 方案对比后由用户裁定。
-6. **收尾三件套**（长期规则）：① 更新本文件；② PowerContext handoff 并返回 exact revision；③ `docs/reports/` 执行日志。
+1. **Task 11（Day 6 收官，零付费）**：Full 重设计方案对比（范围压缩/sim 降本/上限修正 × Task 10 实测单价重推），交用户裁定；**Full 启动与否由用户决定**。
+2. **每 Task 纪律**：TDD 红绿 → owning tests → 全量 suite + Ruff → commit（打包授权范围内）。**agent 侧代码/配置变更后追加：镜像 rebuild + 容器内实证**（Task 10 教训）。
+3. **用户动作**：平台余额核对（Task 10 sim 侧权威数字 → 账本 `task10_strategy_validation` 回填）。
+4. **收尾三件套**（长期规则）：① 更新本文件；② PowerContext handoff 并返回 exact revision；③ `docs/reports/` 执行日志。
+5. **可选（需向用户确认）**：`cybermarket_pattern_12 [a]` 按 §8.5.3 同 experiment（d）恢复。
+6. **Day 7 计划**（独立计划 Gate）：产品 50 题、实验、Full 进度/收尾、README/面试材料、Task 10 三修复项（同题串行/镜像 rebuild 纪律/BIRD_EXPERIMENT_ID 注入）。
 
 ## 6. 踩过的坑，绝对不要再踩
 
@@ -344,6 +356,12 @@ security/transaction gate `9 passed in 5.59s`；唯一正向 seller-risk scenari
 60. **vite 7 dev server 默认只绑 IPv6 `::1`**——`127.0.0.1:5173` connection refused（白页，标题即 URL 是失败页特征）。用 `localhost` 访问。另：vite 代理对上游断开的传播有延迟（后端已杀，浏览器 SSE 短时仍显示「已连接」）——断连显示时效在 dev 代理层，直连无此层；重连恢复语义不受影响。
 61. **React 19 dev StrictMode 双挂载会把事件流回放双份入 state**（effect→cleanup→effect 竞速）——服务端 Last-Event-ID 重放语义正确也不能免；客户端按事件 cursor 去重是必要防线（修复后 10/10 精确）。
 62. **`', '.join(<str>)` 对字符串是逐字符连接**——migration 列元组误写为单字符串时 `CREATE VIEW` 收到逐字符列名（`SELECT e, x, p, ...`）。alembic 事务性 DDL 整体回滚、目录零漂移（护栏按设计工作）；migration 失败停止→修源→重跑，与坑 7/8 一致。
+
+### 6.10 Task 10 本轮新增（2026-09-14 深夜，Claude Code）
+
+63. **同题双模式并发会撞官方 task DB 命名。** 官方 `create_task_db` 的库名只含 task_id（`{base}__{task_id}`），不含 mode——同题 c+a 并发时两集同时对同一 task DB drop/create，`createdb --template` 500（init 阶段即死、零模型调用）。Task 13 两模式异题故从未触发。**同题对照实验必须串行**（concurrency=1 或分时），Task 10 以新 experiment 字母后缀 + concurrency=1 补跑解决。
+64. **「离线全绿」不覆盖 Docker 镜像层：agent 侧代码/配置变更后必须 rebuild + 容器内实证。** Task 5 的闸与 v3 配置离线全绿，但 `bird-system-agent` 镜像烘焙于 Task 13 期（configs 挂 BIRD_CONFIG_ROOT 无卷、代码 COPY 入镜像）——live 跑的仍是 Pilot 时代行为（60 ask 失控精确复现）。判别方法（零成本）：容器内 `grep` 新代码符号 + `grep` 配置 revision。§16 清单的「离线全绿」前置条件因此升级为「离线全绿 + 镜像重建 + 容器内实证」。坑 54 的「凡首次真实 X」再变体：这次缺的是「部署证据」而非「可观测性」。
+65. **agent 容器的实验身份是 compose 默认值，spool 导入 join 会断。** `BIRD_EXPERIMENT_ID` 未随 run 注入，spool 标记恒为 `bird-system-agent`，`(experiment_id, task_id, mode)` join 找不到 attempt——Task 10 以确定性改挂（唯一候选 + 时间窗 + task/mode，账本披露）绕过。Day 7 修复：Runner 起 run 时把实验 id 写入 compose env。另：**每集一个新 experiment id（字母后缀）是既定先例**（Task 13 a/b/c/d、Task 10 b/c），failed 终态不重跑由 store 契约保证。
 
 ## 7. 关键文件与 SHA-256
 
@@ -466,3 +484,12 @@ security/transaction gate `9 passed in 5.59s`；唯一正向 seller-risk scenari
 - **gitignored**：`outputs/bird-pilot/task10/task-data/`（2 个 GT 拆分）、`outputs/bird-pilot/bird-budget/pilot-ledger.json`（Task 10 seed 账本）。
 - **DB/付费**：零 DB 变更、零 API 请求（脚本 preflight 完整输出「no API requests were made」）；Pilot 账本核验完好。
 - **状态**：付费运行 staged，待空闲档（见 §3 与执行日志 §16 一键清单）。
+
+### 8.4 Task 10 执行轮（2026-09-14 深夜，付费已行使）
+
+- **付费**：3 次有效运行（Run 1 a+c、Run 2 c 补跑、Run 3 c 补跑）——agent 实测 **$0.025047084**（spool 逐轮聚合：0.011539890 + 0 + 0.009389802 + 0.004117392）；sim 侧不可见估 $0.05–0.08，**待用户余额核对终裁**；band 全程 off_peak。
+- **DB 现场变更（预授权范围内）**：eval 库新增实验 `task10-strategy-validate-20260914`（a succeeded / c failed-infra）+ `…b`（c succeeded-runaway）+ `…c`（c succeeded-fixed）；Run 3 attempt 的 telemetry 经 Task 2 importer 回填（`merge_telemetry`，14 轮/$0.004117392；experiment_id 从 compose 默认值确定性改挂，披露）。migration 未动（head 0007）。
+- **镜像**：`bird-system-agent` 重建（含 Task 5 闸 + v3 配置；容器内 grep 实证）；`bird-user-simulator`/`bird-db-environment` 未动。
+- **外部状态收尾**：compose.bird 三服务与官方库 5433 已 stop（回到开场前）；spike 6002 全程 Exited；产品 PG 5432 未动。
+- **gitignored 产物**：`outputs/bird-eval/events-task10*.jsonl`、`outputs/bird-eval/episodes/<3 个新 attempt>.json`、`outputs/bird-agent-spool/`（+75 文件：a 1 + b 60 + c 14）、账本 task10 节。
+- **新增（公开，入库）**：`outputs/bird-pilot/task10/task-list-b-c1.jsonl`（c 单集补跑清单）、`docs/reports/2026-09-14-task10-strategy-validation.md`（验证报告）、执行日志 §17、本文件、`CLAUDE.md` §0。
