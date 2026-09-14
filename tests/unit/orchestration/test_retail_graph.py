@@ -40,9 +40,6 @@ from commerce_agent.orchestration.tools import (
     ToolContractError,
     ToolInfrastructureError,
 )
-from commerce_agent.query_engine._ast_policy import AstPolicy, ValidatedQuery
-from commerce_agent.query_engine.contracts import QueryResult
-from commerce_agent.query_engine.engine import QueryEngine
 
 CONFIG_ROOT = Path(__file__).parents[3] / "configs" / "model"
 RUN_ID = UUID("00000000-0000-0000-0000-000000000811")
@@ -99,12 +96,6 @@ class InMemoryKnowledgeStore:
                 ),
             ),
         )
-
-
-class AggregateExecutor:
-    async def execute(self, query: ValidatedQuery) -> QueryResult:
-        del query
-        return QueryResult(columns=["order_count"], rows=[{"order_count": 99_441}])
 
 
 class FailOnceReadonlyDispatcher:
@@ -319,10 +310,8 @@ async def test_resume_retries_readonly_tool_without_calling_model_or_resetting_b
     request = retail_request(registry, "Count statuses")
     call = ToolCall(
         call_id="call_1",
-        name="execute_readonly_sql",
-        arguments_json=(
-            '{"sql":"SELECT COUNT(*) AS order_count FROM retail.orders"}'
-        ),
+        name="retrieve_retail_knowledge",
+        arguments_json='{"question":"status count"}',
     )
     gateway = FakeModel(
         [
@@ -341,9 +330,9 @@ async def test_resume_retries_readonly_tool_without_calling_model_or_resetting_b
     )
     dispatcher = FailOnceReadonlyDispatcher(
         RetailToolDispatcher(
-            knowledge=None,
+            knowledge=KnowledgeModule(InMemoryKnowledgeStore()),
             resolver=None,
-            query_engine=QueryEngine(policy=AstPolicy(), executor=AggregateExecutor()),
+            query_engine=None,
         )
     )
     turn_store = RecordingTurnStore()

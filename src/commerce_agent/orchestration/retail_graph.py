@@ -68,11 +68,17 @@ from commerce_agent.sql_reasoning.errors import SqlNoProgress
 from commerce_agent.sql_reasoning.reasoner import SqlReasoner
 
 _ZERO_HASH = "0" * 64
-_RETAIL_TOOL_NAMES = {
-    "retrieve_retail_knowledge",
-    "resolve_business_value",
-    "execute_readonly_sql",
-}
+# Decide-step allowlist; must stay exactly equal to the retail_decide rule's
+# tool_names and inside the frozen retail catalog (tests/contract/
+# test_bird_tool_catalog.py pins both).
+RETAIL_TOOL_NAMES = frozenset(
+    {
+        "retrieve_retail_knowledge",
+        "resolve_business_value",
+        "request_clarification",
+        "submit_investigation_plan",
+    }
+)
 _HISTORY_ADAPTER = TypeAdapter(tuple[ConversationGroup, ...])
 _RESULTS_ADAPTER = TypeAdapter(tuple[ToolResult, ...])
 
@@ -1044,7 +1050,7 @@ class RetailGraph:
         ):
             if getattr(pending, field_name) != state[field_name]:
                 raise ToolContractError("pending_hash_mismatch")
-        if any(call.name not in _RETAIL_TOOL_NAMES for call in pending.tool_calls):
+        if any(call.name not in RETAIL_TOOL_NAMES for call in pending.tool_calls):
             raise ToolContractError("tool_not_registered")
         if (
             state["tool_call_count"] + len(pending.tool_calls)
