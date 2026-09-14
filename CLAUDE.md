@@ -16,11 +16,12 @@
 Day 4 overall: PASS；Day 5 Phase A + Gate P preflight 全 PASS（模型已切 deepseek-flash）
 Task 13 Pilot: 完成（两门 FAIL 为 Day 6 输入基线：预算 457.6 元/160 线（band 经官方定义确认，Pilot 为空闲档计费）、
          能力 rewards 全 0；付费运行纪律：peak 档 = 2×，一律空闲档调度）
-Day 6 Phase A: Task 1–7 完成（提交语义排查 / spool 导入接线 / 探针门翻 PASS / v2 decide 三方一致性守卫
-         + 旧探针退役 / c-a 策略修复 / Runner SIGINT 演练=验收门② PASS / SSE 事件面：migration 0006 只读视图 + api 包）；
+Day 6 Phase A: Task 1–7 + Task 8 Step 1 完成（提交语义排查 / spool 导入接线 / 探针门翻 PASS / v2 decide 三方一致性守卫
+         + 旧探针退役 / c-a 策略修复 / Runner SIGINT 演练=验收门② PASS / SSE 事件面：migration 0006 只读视图 + api 包 /
+         web Demo 布局已获用户确认：目标用户=运营分析师(工作台)/运营负责人(审批)/平台团队(评测)）；
          离线 855 passed / 132 skipped；Ruff 全绿；PG 132 passed
-下一步: Task 8 关键 UI（web/ 全新，Demo 先行）→ Task 9 安全/E2E
-         → Task 10 小样本付费验证（预授权 ≤$0.10，空闲档运行）→ Task 11 Full 重设计对比
+下一步: Task 8 Step 2/3（SSE 客户端 + 只读 eval API（先补 eval 读授权）+ 评测中心接线 + E2E 验收门①）
+         → Task 9 安全/E2E → Task 10 小样本付费验证（预授权 ≤$0.10，空闲档运行）→ Task 11 Full 重设计对比
 已预授权: 逐 Task commit、付费 Gate、PG 写入；不含 push、不含 Day 7 计划、不含 Full 启动
 终态证据: 执行日志 docs/reports/2026-09-14-day6-phase-a-execution-log.md；commit 链至 84180e2（未 push）
 ```

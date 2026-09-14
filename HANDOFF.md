@@ -10,7 +10,7 @@
 ## 0. 新会话先做什么
 
 1. 完整阅读本文件、`docs/reports/2026-09-14-day6-phase-a-execution-log.md`（Day 6 Phase A 前段执行日志）与 `docs/superpowers/plans/2026-09-14-day6-capability-restore-runner-and-ui.md`（Day 6 计划）。把它们当作需要现场核验的历史交接，不要把历史授权当作新会话授权。
-2. 先向用户报告准确状态：**Day 6 Phase A（Task 1–7）已完成并 commit**——Task 1 提交语义排查、Task 2 spool 导入接线、Task 3 探针重设计（**探针门 PASS**）、Task 4 三方一致性守卫（+旧探针退役）、Task 5 c/a 策略修复、Task 6 SIGINT 恢复演练（**验收门② PASS**）、Task 7 SSE 事件面（migration 0006 视图 + api 包 + PG 判据）+ band 澄清两轮。**下一步 = Task 8（关键 UI `web/` 全新）→ Task 9（安全/E2E）→ Task 10（小样本付费验证，预授权 ≤$0.10，空闲档）→ Task 11（Full 重设计对比）**。用户已预授权：逐 Task commit、付费 Gate、PG 写入；决策按推荐执行、日志记录即可。
+2. 先向用户报告准确状态：**Day 6 Phase A（Task 1–7 全部 + Task 8 Step 1）已完成并 commit**——Task 1 提交语义排查、Task 2 spool 导入接线、Task 3 探针重设计（**探针门 PASS**）、Task 4 三方一致性守卫（+旧探针退役）、Task 5 c/a 策略修复、Task 6 SIGINT 恢复演练（**验收门② PASS**）、Task 7 SSE 事件面（migration 0006 视图 + api 包 + PG 判据）、Task 8 Step 1 Demo（**用户已确认布局满意——计划门通过**）+ band 澄清两轮（原对账恢复）。**下一步 = Task 8 Step 2/3（SSE 客户端接真实事件流 + 只读 eval API + 评测中心接线）→ Task 9（安全/E2E）→ Task 10（小样本付费验证，预授权 ≤$0.10，空闲档）→ Task 11（Full 重设计对比）**。用户已预授权：逐 Task commit、付费 Gate、PG 写入；决策按推荐执行、日志记录即可。
 3. **外部事实（关键）**：模型更名证据链与全部实测数字见研究笔记；价格快照已双源核对（用户读数 = 页面提取）；探针累计花费 ~$0.008。
 4. preflight 三项零付费已于 2026-09-13 完成（执行入口备查：`scripts/prepare_bird_pilot.py --dataset <公开数据集路径>`、`--run-db-check`、GT 拒绝检查见执行日志 §4）。Task 13 主运行**需要用户新会话明确授权**（一次正向运行 = 一次授权额度）。
 5. 根目录 `.env` 只能由已审核脚本或 `uv run --env-file .env ...` 消费。不要手工读取、打印、搜索、hash 或统计它。（本日已追加 Day 5 变量与 `USER_SIM_MODEL=openai/deepseek-flash`，均经用户授权。）
@@ -182,12 +182,21 @@ security/transaction gate `9 passed in 5.59s`；唯一正向 seller-risk scenari
 4. **新坑：starlette 1.6 TestClient 缓冲整个响应体**——无限 SSE 流经 `client.stream()` 必挂（portal 跑到完成为止）；流式行为一律直接驱动 async 生成器测试。
 5. **终态**：离线 **855 passed, 132 skipped**；Ruff 全绿；PG **132 passed**。
 
+### 2.17 Task 8 Step 1：Demo 布局（Claude Code，2026-09-14 同会话续）
+
+用户「继续下一步Task8」启动 Step 1（`79de29b` 初版 → 用户定位反馈 → `7d3881e` 重做）→ **用户确认满意（计划门通过）**。细节见执行日志 §13：
+
+1. **目标用户定位（新入 HANDOFF §1 语义）**：电商运营团队三角色——运营分析师（工作台主用户）/ 运营负责人（审批）/ 平台团队（评测）。初版偏工程师视角被用户纠正后按分析师答案视角重做，风格走 `minimalist-ui`（暖白单色 + 粉彩语义色 + 无 emoji）。
+2. **web/ 工程**：Vite 7 + React 19 + TS 5.9 + ECharts 5.6，独立 lockfile，`web/.gitignore` 排除 node_modules/dist/*.tsbuildinfo；`npm run build`（tsc+vitc）干净。
+3. **Step 2/3 必读约束**：①模拟载荷（SQL/表格/图表）demo-only，真实 SSE summary-only——需**只读工件 API** 决策；②`buildView`/`stageOf` 为真实事件复用种子；③评测中心真实数据需 **eval schema 读授权**（无角色可读——migration 0007 或等效，延续 0006 模式）；④dev server 已停（`cd web && npm run dev`）。
+4. 终态：离线 855/132、PG 132、Ruff 全绿。本会话累计 12 commits（Task 4 → 8 Step 1），未 push。
+
 ## 3. 当前卡在哪里
 
 **没有技术阻塞。** Day 6 Phase A（Task 1–5）完成，新会话从 Task 6 继续：
 
 - **用户已预授权（2026-09-14 深夜）**：① 剩余决策按执行者推荐行使；② 付费 Gate（Task 3 探针已用毕、Task 10 小样本 ≤$0.10 含 sim 侧）与 PG 写入；③ 逐 Task commit 打包授权；④ 只要求日志记录与上下文收尾。以上授权覆盖 Day 6 计划范围，**不含 push、不含 Day 7 计划、不含 Full 启动**（Task 11 仍只产出方案对比）。
-- **下一步顺序**：Task 8（关键 UI `web/` 全新：模拟数据 Demo 布局确认 → SSE 客户端 → 评测中心只读页）→ Task 9（安全/E2E `tests/e2e/`）→ Task 10（小样本验证，新 experiment；**空闲档运行**）→ Task 11（Full 重设计方案对比，交用户裁定）。
+- **下一步顺序**：Task 8 Step 2/3（SSE 客户端 EventSource + Last-Event-ID 重连接 `api/` 真实事件流；只读 eval API——**先解决 eval schema 读授权**（migration 0007 延续 0006 视图模式）；评测中心真实数据接线；`tests/e2e/` 验收门①）→ Task 9（安全/E2E）→ Task 10（小样本验证，新 experiment；**空闲档运行**）→ Task 11（Full 重设计方案对比，交用户裁定）。
 - 关键输入：Task 1 研究笔记（`docs/project/research/2026-09-14-submit-semantics-alignment.md`）已定 Task 5 修复形状；PG 测试需双开关 `COMMERCE_AGENT_RUN_POSTGRES_TESTS=1` + `LANGGRAPH_STRICT_MSGPACK=true`。
 - `cybermarket_pattern_12 [a]` unfinished 恢复（可选，需新会话向用户确认）；`crypto_exchange_9 [c]` failed 有效不重跑。
 - Day 7（产品 50 题、实验、Full 进度/收尾、README/面试材料）需独立计划；Full 启动与否在 Task 11 后由用户裁定。
@@ -365,6 +374,7 @@ security/transaction gate `9 passed in 5.59s`；唯一正向 seller-risk scenari
 | `src/commerce_agent/api/app.py` | `57f8d22f111ea2b9d77cebcf2f2a37bf7a53408c0a0863b96db6bb71b9850398` | **新建（3003ca5，FastAPI 工厂）** |
 | `tests/integration/api/test_trace_sse_pg.py` | `f5c52c19e0b9b65241b644aeac2aba6b1b088c594012dbefd3d038f22c8665ee` | **新建（3003ca5，PG 判据 3 条）** |
 | `tests/unit/api/`（test_events.py `1208e95e…` / test_sse.py `c0de728b…`）+ `tests/unit/test_day6_trace_view_migration.py`（`bc42d7b9…`） | 见左 | **新建（3003ca5，离线 11 条）** |
+| `web/`（package.json + lockfile + src/ 10 文件：App/Workbench/ApprovalsPage/EvalCenterPage/ResultChart/types/view/mock.stream/styles 等） | 详见 `79de29b` + `7d3881e`（两 commit） | **新建（Task 8 Step 1 Demo，用户已确认布局；独立 npm toolchain）** |
 
 不要覆盖或回退这些文件。若现场哈希不同，先确认是否是用户或其他会话的新修改，再继续工作。
 
