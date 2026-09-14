@@ -8,7 +8,9 @@ sets come from `load_official_contract()`) as an in-memory session harness:
   `dialogue_history`, `tool_trajectory`);
 - c-interact runs the official within-turn loop: one submit per `run_session`
   (`_submitted_this_phase` is reset at entry, as `adk_runtime` does), bounded
-  by the official `MAX_MODEL_TURNS = 60`;
+  by the official `MAX_MODEL_TURNS = 60`; the official clarification budget
+  (state `max_turn`) is enforced as a result-replacing ask_user gate and a
+  live budget line in each turn's phase record (Task 5 policy layer);
 - a-interact runs one `BirdAGraph` attempt per `run_session`; official budget
   gating and trajectory bookkeeping live in `BirdSessionStatePort`, a
   `BirdToolPort` decorator, so the graph itself stays coin-agnostic;
@@ -52,6 +54,31 @@ _INTERNAL_MODE: dict[str, Literal["a", "c"]] = {
     "a-interact": "a",
     "c-interact": "c",
 }
+
+
+def _clarification_budget(state: Mapping[str, object]) -> int | None:
+    """Official c-interact clarification cap (session state key `max_turn`).
+
+    The orchestrator seeds it per task (ambiguities + patience). Absent or
+    non-positive means the cap is unknown and the gate stays disabled,
+    matching the prompt-only pre-Task-5 behavior.
+    """
+    raw = state.get("max_turn")
+    if isinstance(raw, bool) or not isinstance(raw, int) or raw <= 0:
+        return None
+    return raw
+
+
+def _phase_content(feedback: str, state: Mapping[str, object]) -> str:
+    """Feedback plus the live clarification budget line (Task 5 policy layer)."""
+    max_turn = _clarification_budget(state)
+    if max_turn is None:
+        return feedback
+    used = int(state.get("_ask_user_turns", 0))
+    return (
+        f"{feedback}\n\n[clarification budget: {used} of {max_turn} ask_user turns "
+        "used; once exhausted you must call submit_sql]"
+    )
 
 
 def _canonical_json(value: object) -> str:
@@ -160,6 +187,10 @@ class BirdSessionStatePort:
             gated = self._gate_budget(call)
             if gated is not None:
                 return gated
+        elif self._mode == "c" and call.name == "ask_user":
+            gated = self._gate_clarification_budget(call)
+            if gated is not None:
+                return gated
         result = await self._inner.execute(call)
         self._after_tool(call, result)
         return result
@@ -205,6 +236,10 @@ class BirdSessionStatePort:
         )
         self._state["tool_trajectory"] = trajectory
         if name == "ask_user" and result.status == "success":
+            if self._mode == "c":
+                self._state["_ask_user_turns"] = (
+                    int(self._state.get("_ask_user_turns", 0)) + 1
+                )
             try:
                 answer = str(json.loads(result.content_json).get("answer", ""))
             except json.JSONDecodeError:
@@ -241,8 +276,32 @@ class BirdSessionStatePort:
                 self._state["task_done"] = True
         self._state["_last_submit_raw"] = body.get("message", "")
 
-    def _text_result(self, call: ToolCall, text: str) -> ToolResult:
-        content_json = _canonical_json({"text": text})
+    def _gate_clarification_budget(self, call: ToolCall) -> ToolResult | None:
+        max_turn = _clarification_budget(self._state)
+        if max_turn is None:
+            return None
+        used = int(self._state.get("_ask_user_turns", 0))
+        if used < max_turn:
+            return None
+        text = (
+            f"Clarification budget exhausted ({used} of {max_turn} ask_user turns "
+            "used). You MUST call submit_sql with your best query now."
+        )
+        # the reminder rides the model's own tool-call identity and flows back
+        # through the ask_user answer channel (see _run_c feedback extraction)
+        return self._text_result(
+            call, text, key="answer", source_ref="bird:clarification_gate"
+        )
+
+    def _text_result(
+        self,
+        call: ToolCall,
+        text: str,
+        *,
+        key: str = "text",
+        source_ref: str = "bird:budget_gate",
+    ) -> ToolResult:
+        content_json = _canonical_json({key: text})
         digest = sha256(content_json.encode("utf-8")).hexdigest()
         return ToolResult(
             call_id=call.call_id,
@@ -250,10 +309,10 @@ class BirdSessionStatePort:
             status="success",
             content_json=content_json,
             deterministic_summary=_canonical_json(
-                {"content_sha256": digest, "source_refs": ("bird:budget_gate",)}
+                {"content_sha256": digest, "source_refs": (source_ref,)}
             ),
             content_sha256=digest,
-            source_refs=("bird:budget_gate",),
+            source_refs=(source_ref,),
         )
 
 
@@ -345,6 +404,7 @@ class _Session:
 
     async def _run_c(self, message: str) -> str:
         self.state["_submitted_this_phase"] = False  # official pre-run reset
+        self.state["_ask_user_turns"] = 0  # per-phase clarification budget reset
         handler = self._c_handler
         if handler is None:  # pragma: no cover - constructor guarantees presence
             raise RuntimeError("c handler missing")
@@ -359,7 +419,7 @@ class _Session:
                     attempt_id=self._attempt_ids(),
                     current_phase=_phase_datum(
                         f"bird-session:{self.session_id}:turn{request_turn}",
-                        feedback,
+                        _phase_content(feedback, self.state),
                     ),
                 )
             )

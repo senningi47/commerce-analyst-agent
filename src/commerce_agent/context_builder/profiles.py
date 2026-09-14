@@ -18,7 +18,7 @@ from commerce_agent.model.contracts import ToolDefinition
 
 _FILES = (
     "run-profiles.v2.json",
-    "prompt-policies.v2.json",
+    "prompt-policies.v3.json",
     "bird-tools.synthetic.v1.json",
 )
 _PROFILE_ADAPTER = TypeAdapter(RunProfile)
@@ -62,8 +62,8 @@ _STEPS = {
 _POLICY_REVISIONS = {
     "common-envelope-v1",
     "retail-policy-v2",
-    "bird-a-policy-v1",
-    "bird-c-policy-v1",
+    "bird-a-policy-v2",
+    "bird-c-policy-v2",
 }
 _FORBIDDEN_SYNTHETIC = (
     "olist",
@@ -161,7 +161,7 @@ class ProfileRegistry:
         synthetic_document = documents[_FILES[2]]
         if run_document.get("revision") != "run-profiles-v2":
             raise RevisionMismatch()
-        if policy_document.get("revision") != "prompt-policies-v2":
+        if policy_document.get("revision") != "prompt-policies-v3":
             raise RevisionMismatch()
         if synthetic_document.get("revision") != "bird-tools-manifest-v1":
             raise RevisionMismatch()

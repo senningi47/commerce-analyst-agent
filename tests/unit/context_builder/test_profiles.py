@@ -150,7 +150,7 @@ def test_synthetic_runtime_manifest_matches_fixture_and_is_isolated() -> None:
 def test_loader_rejects_noncanonical_or_unknown_config(tmp_path: Path) -> None:
     root = tmp_path / "model"
     shutil.copytree(CONFIG_ROOT, root)
-    path = root / "prompt-policies.v2.json"
+    path = root / "prompt-policies.v3.json"
     path.write_text(path.read_text(encoding="utf-8") + "\n", encoding="utf-8")
     with pytest.raises(RevisionMismatch):
         ProfileRegistry.load(root)

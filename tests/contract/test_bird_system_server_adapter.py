@@ -355,6 +355,121 @@ def test_c_run_stops_at_max_model_turns() -> None:
     assert response.state["model_turns"] == 60
 
 
+class RecordingAskHandler:
+    """Endless ask_user that records every request's phase datum."""
+
+    def __init__(self) -> None:
+        self.requests: list[BirdCRequest] = []
+
+    async def respond(self, request: BirdCRequest) -> BirdCResponse:
+        self.requests.append(request)
+        return stub_c_response(AskUserCandidate(type="ask_user", question="more?"))
+
+
+def test_c_clarification_budget_gate_blocks_ask_user_after_max_turn() -> None:
+    port = RepeatPort({"answer": "x"})
+    adapter = make_adapter(port=port, c_handler=RecordingAskHandler())
+    adapter.init_session(init_request(state={"max_turn": 2}))
+
+    response = asyncio.run(
+        adapter.run_session(
+            BirdRunSessionRequest(task_id="task-1", mode="c-interact", message="go")
+        )
+    )
+
+    assert response.response == "Maximum turns reached. Task ended."
+    executed_asks = [call for call in port.calls if call.name == "ask_user"]
+    assert len(executed_asks) == 2
+    assert response.state["_ask_user_turns"] == 2
+    assert response.state["model_turns"] == 60
+
+
+def test_c_clarification_gate_injects_live_budget_into_phase_record() -> None:
+    handler = RecordingAskHandler()
+    adapter = make_adapter(port=RepeatPort({"answer": "x"}), c_handler=handler)
+    adapter.init_session(init_request(state={"max_turn": 2}))
+
+    asyncio.run(
+        adapter.run_session(
+            BirdRunSessionRequest(task_id="task-1", mode="c-interact", message="go")
+        )
+    )
+
+    first = handler.requests[0].current_phase.content
+    assert "[clarification budget: 0 of 2 ask_user turns used" in first
+    third = handler.requests[2].current_phase.content
+    assert "[clarification budget: 2 of 2 ask_user turns used" in third
+    fourth = handler.requests[3].current_phase.content
+    assert "Clarification budget exhausted (2 of 2 ask_user turns used)" in fourth
+    assert "[clarification budget: 2 of 2 ask_user turns used" in fourth
+
+
+def test_c_clarification_budget_gated_ask_reaches_submit_within_cap() -> None:
+    handler = StubCHandler(
+        [
+            stub_c_response(AskUserCandidate(type="ask_user", question="q1")),
+            stub_c_response(AskUserCandidate(type="ask_user", question="q2")),
+            stub_c_response(AskUserCandidate(type="ask_user", question="q3")),
+            stub_c_response(SubmitSqlCandidate(type="submit_sql", sql="SELECT 1")),
+        ]
+    )
+    port = StubPort(
+        [
+            canned_result("ask_user", {"answer": "a1"}),
+            canned_result("ask_user", {"answer": "a2"}),
+            canned_result("submit_sql", SUBMIT_BODY),
+        ]
+    )
+    adapter = make_adapter(c_handler=handler, port=port)
+    adapter.init_session(init_request(state={"max_turn": 2}))
+
+    response = asyncio.run(
+        adapter.run_session(
+            BirdRunSessionRequest(task_id="task-1", mode="c-interact", message="go")
+        )
+    )
+
+    assert response.response == "SQL submitted. Awaiting result."
+    assert response.state["_ask_user_turns"] == 2
+    assert response.state["model_turns"] == 4
+    assert response.state["dialogue_history"] == [
+        {"role": "agent", "content": "q1"},
+        {"role": "user", "content": "a1"},
+        {"role": "agent", "content": "q2"},
+        {"role": "user", "content": "a2"},
+    ]
+    assert len(port.calls) == 3
+
+
+def test_c_clarification_budget_resets_per_run_session() -> None:
+    handler = StubCHandler(
+        [
+            stub_c_response(AskUserCandidate(type="ask_user", question="q1")),
+            stub_c_response(SubmitSqlCandidate(type="submit_sql", sql="SELECT 1")),
+            stub_c_response(AskUserCandidate(type="ask_user", question="q2")),
+            stub_c_response(SubmitSqlCandidate(type="submit_sql", sql="SELECT 2")),
+        ]
+    )
+    port = StubPort(
+        [
+            canned_result("ask_user", {"answer": "a1"}),
+            canned_result("submit_sql", SUBMIT_BODY),
+            canned_result("ask_user", {"answer": "a2"}),
+            canned_result("submit_sql", SUBMIT_BODY),
+        ]
+    )
+    adapter = make_adapter(c_handler=handler, port=port)
+    adapter.init_session(init_request(state={"max_turn": 1}))
+    run = BirdRunSessionRequest(task_id="task-1", mode="c-interact", message="m")
+
+    first = asyncio.run(adapter.run_session(run))
+    second = asyncio.run(adapter.run_session(run))
+
+    assert first.state["_ask_user_turns"] == 1
+    assert second.state["_ask_user_turns"] == 1
+    assert second.response == "SQL submitted. Awaiting result."
+
+
 def test_a_run_completed_passes_through() -> None:
     handler = StubAHandler([stub_a_outcome("SELECT 1")])
     adapter = make_adapter(a_handler=handler, port=StubPort([]))
