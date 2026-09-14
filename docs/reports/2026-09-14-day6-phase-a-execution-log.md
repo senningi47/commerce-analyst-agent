@@ -200,3 +200,26 @@ N=10 时 c 侧较 Pilot 失控基线 **-83%**。a-mode 无行为级基线拆分�
 - dev server 已停（`cd web && npm run dev` 重启，端口 5173）。
 
 **终态**：Task 8 Step 1 完成（用户满意）；Step 2/3 未开始。离线 **855 passed, 132 skipped**；PG **132 passed**；Ruff 全绿（web 侧独立 toolchain，不入 Python suite）。本会话 commit 链（自 Task 4 起）：`84180e2`→`9f7f10f`→`211648a`→`2a2046b`→`ad961e8`→`c782287`→`f6af9f1`→`3ee58f1`→`3003ca5`→`494600c`→`79de29b`→`7d3881e`（12 个，未 push）。
+
+## 14. Task 8 Step 2/3：SSE 客户端 + 只读 eval API + 评测中心真实数据（新会话 2026-09-14 续，零付费）
+
+**输入**：HANDOFF §2.17 Step 2/3 必读约束四条 + 用户打包授权（剩余决策按推荐行使、PG 写入、逐 Task commit）。现场核验：产品源码中 `retail_graph` 持有 trace 端口但尚未写入（Task 7 PG 判据是直接经 `PostgresTraceStore` 驱动）——印证 live 模式必须按 summary-only 事件面设计。
+
+**工件 API 决策（Step 1 遗留①，按授权行使推荐）**：live 模式 v1 = **summary-only 事件面直驱**——事件公开面即工件（decision_summary 文本 → 结论/计划/对账、SQL 双指纹 + reason_code → 查询版本、evidence chips、proposal/execution refs）；**富工件（SQL 文本/结果表/图表）不持久化、不新增工件写路径**，推迟到 Day 7（需 QueryEngine 写路径扩展 + 新 ACL，超出 §22 UI 收窄）。演示模式保留完整富布局（Step 1 已验收）。
+
+**交付（四层）**：
+1. **migration 0007**（`0007_day6_eval_read_view`，已应用）：`ops_read.eval_experiments` + `ops_read.eval_attempts`（security_barrier，attempt 视图 = attempt+result LEFT JOIN + telemetry 白名单三列 agent_cost_amount/simulator_cost_amount/agent_turns）；**视图 owner = evaluation_owner**（底层权限检查走 eval owner → 基表 ACL 零改动，比 0006 的 ops_owner 方案更严）；SELECT 授权现有 `agent_reader`。revision id 24 字符（≤32 坑已内化）。
+2. **API**（`src/commerce_agent/api/`）：`eval.py`（experiments 聚合 + attempts 明细两端点，行映射纯函数可离线测）、`runs.py`（`/api/runs` 运行目录）、`app.py` 扩展（可选源注入 + `create_postgres_app` env 装配）+ `scripts/run_api.py`（win32 启动器，见新坑 59）+ `scripts/seed_ui_live_run.py`（浏览器验证用一次性种子，验证后已场景 reset 归零）。uvicorn 0.52.4 入依赖（fastapi 的服务标准件）。
+3. **web**：`api.ts`（REST + `openRunStream`——服务端事件块带 `event:` 字段故按 11 种类型 `addEventListener`；EventSource 原生携带 Last-Event-ID 重连）、`view.ts`（真实 summary-only 事件 → 视图模型投影 + 共享 `stageOf`（未映射事件返回 null，UI 回退显示事件类型本身））、`App.tsx`（演示/实时双模式；实时 = 运行下拉选择 → SSE 订阅 → 同一 `buildView` 投影）、Workbench（无 SQL 文本时渲染指纹芯片、无 meta 提案显示 ref、无答案澄清不虚构）、EvalCenterPage（真实 eval API + 断连时演示快照并明确标注）、vite `/api` 代理。
+4. **测试**：migration 源测试 5（白名单逐列 + 授权语句字面钉死 + revision 长度）；api 单测 6（行映射/端点/可选源 404 面）；PG 集成 5（agent_reader 身份读真实行 + 视图列白名单 == 期望 + **负向 ACL：agent_reader 读 eval 基表 InsufficientPrivilege** + runs 目录真实 trace 行）。
+
+**过程中的坑（3 个新坑，全部实证，详见 HANDOFF §6.9）**：
+- **坑 59**：uvicorn 0.52 win32 硬编码 `ProactorEventLoop` 工厂（`use_subprocess=False` 时），`asyncio.set_event_loop_policy` 与 factory 内设置**都太晚**（psycopg async 拒绝 Proactor）——离线/PG 测试全绿、首次真实服务起动即炸（坑 54 再验）。唯一干净接缝：启动器自管 `asyncio.Runner(loop_factory=asyncio.SelectorEventLoop)` 驱动 `Server.serve()`。
+- **坑 60**：vite 7 默认只绑 IPv6 `::1`——`127.0.0.1:5173` connection refused（白页）；且 vite 代理对上游断开传播有延迟（后端已杀，浏览器 SSE 短时仍显示「已连接」）。演示用 `localhost` URL；断连显示时效如实记录（直连后端无此层）。
+- **坑 61**：React 19 dev StrictMode 双挂载会把事件流回放**双份**入 state（#10 ×4）——服务端 Last-Event-ID 重放语义正确也不能免；客户端按 cursor 去重后精确 10/10。
+
+**浏览器实机验证（IAB，Chrome 内核）**：演示模式回归完整（15/15 事件）；评测中心**真实 Pilot d 数据逐格核对一致**（20 集 c×10/a×10、18 成功、1 failed official_task_error=crypto_exchange_9、1 基础设施错误 official_process_failed=cybermarket_pattern_12、rewards 全 0 如实展示、`$0.0000` 成本卡诚实标注「spool 未回填（旧格式）· 实际消耗见 Pilot 账本」）；实时模式选 run → SSE 10 事件流入 → 投影正确（结论/提案 ref/计划步骤/审计轨）→ **杀后端 → 重启 → EventSource 自动重连，仍恰好 10 事件无重复**（服务端 cursor 重放 + 客户端去重双保险）。截图两帧留档。
+
+**现场清理**：种子场景 `day6-ui-live-v1` 场景 reset 归零（seeded trace 0 行）；eval 库 4 实验为 Pilot 原有数据未动；dev server 与 API 进程已停。零付费、零 GT 读取。
+
+**终态**：离线 **866 passed, 137 skipped**（855+11：migration 5 + api 6；skip 132+5 = 新 PG 测试离线 skip）；Ruff 全绿；PG `-m postgres` **137 passed**（132+5）；`npm run build` 干净；migration head = `0007_day6_eval_read_view`。Task 8 全部三步完成（Step 1 用户门 + Step 2/3 本轮）。**下一步：Task 9（tests/e2e 安全/E2E，验收门①成文）→ Task 10（付费 ≤$0.10，空闲档）→ Task 11（Full 重设计对比）。**

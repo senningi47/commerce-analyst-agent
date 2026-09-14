@@ -1,16 +1,16 @@
-# CommerceAnalyst 项目交接：Task 13 Pilot 主运行完成（18/20 有效终态，agent 侧 1.49 元），待 commit 授权与 Pilot 报告期
+# CommerceAnalyst 项目交接：Day 6 Task 8 全部完成（Demo 三步 + SSE 客户端 + 只读 eval API），待 Task 9 安全/E2E
 
-> 更新时间：2026-09-13（Asia/Shanghai），更新者：Claude Code（Opus 5 1M）  
+> 更新时间：2026-09-14（Asia/Shanghai），更新者：Claude Code（GLM）  
 > 工作区：`D:\git-projects\commerce-analyst-agent`  
-> 当前分支状态：`main` @ `9f4df34`（23 commits，未 push；Task 13 Pilot 完成，六缺陷修复与收尾文档已按用户裁定分两个主题 commit 入库）  
+> 当前分支状态：`main`（23+ commits，未 push；Task 8 Step 2/3 完成待 commit 入库）  
 > 交接状态：`continuable`  
 > PowerContext scope：`git:github.com/senningi47/commerce-analyst-agent`  
 > Durable Handoff：PowerContext `handoff/handoff#19`（2026-09-13 提交，exact revision=19）
 
 ## 0. 新会话先做什么
 
-1. 完整阅读本文件、`docs/reports/2026-09-14-day6-phase-a-execution-log.md`（Day 6 Phase A 前段执行日志）与 `docs/superpowers/plans/2026-09-14-day6-capability-restore-runner-and-ui.md`（Day 6 计划）。把它们当作需要现场核验的历史交接，不要把历史授权当作新会话授权。
-2. 先向用户报告准确状态：**Day 6 Phase A（Task 1–7 全部 + Task 8 Step 1）已完成并 commit**——Task 1 提交语义排查、Task 2 spool 导入接线、Task 3 探针重设计（**探针门 PASS**）、Task 4 三方一致性守卫（+旧探针退役）、Task 5 c/a 策略修复、Task 6 SIGINT 恢复演练（**验收门② PASS**）、Task 7 SSE 事件面（migration 0006 视图 + api 包 + PG 判据）、Task 8 Step 1 Demo（**用户已确认布局满意——计划门通过**）+ band 澄清两轮（原对账恢复）。**下一步 = Task 8 Step 2/3（SSE 客户端接真实事件流 + 只读 eval API + 评测中心接线）→ Task 9（安全/E2E）→ Task 10（小样本付费验证，预授权 ≤$0.10，空闲档）→ Task 11（Full 重设计对比）**。用户已预授权：逐 Task commit、付费 Gate、PG 写入；决策按推荐执行、日志记录即可。
+1. 完整阅读本文件、`docs/reports/2026-09-14-day6-phase-a-execution-log.md`（Day 6 Phase A 执行日志，§14 = Task 8 Step 2/3）与 `docs/superpowers/plans/2026-09-14-day6-capability-restore-runner-and-ui.md`（Day 6 计划）。把它们当作需要现场核验的历史交接，不要把历史授权当作新会话授权。
+2. 先向用户报告准确状态：**Day 6 Phase A（Task 1–8 全部）已完成**——Task 1 提交语义排查、Task 2 spool 导入接线、Task 3 探针重设计（**探针门 PASS**）、Task 4 三方一致性守卫、Task 5 c/a 策略修复、Task 6 SIGINT 恢复演练（**验收门② PASS**）、Task 7 SSE 事件面（migration 0006 + api 包）、Task 8 关键 UI 三步全完成（Step 1 用户确认布局满意 + Step 2/3 SSE 客户端/live 模式/migration 0007 eval 读授权/只读 eval+runs API/评测中心真实数据/浏览器实机验证）。**下一步 = Task 9（安全/E2E：`tests/e2e/test_product_chain_api.py` + `test_ui_acceptance.md`，验收门①成文）→ Task 10（小样本付费验证 ≤$0.10，**空闲档**运行）→ Task 11（Full 重设计对比，交用户裁定）**。用户已预授权：逐 Task commit、付费 Gate、PG 写入；决策按推荐执行、日志记录即可。
 3. **外部事实（关键）**：模型更名证据链与全部实测数字见研究笔记；价格快照已双源核对（用户读数 = 页面提取）；探针累计花费 ~$0.008。
 4. preflight 三项零付费已于 2026-09-13 完成（执行入口备查：`scripts/prepare_bird_pilot.py --dataset <公开数据集路径>`、`--run-db-check`、GT 拒绝检查见执行日志 §4）。Task 13 主运行**需要用户新会话明确授权**（一次正向运行 = 一次授权额度）。
 5. 根目录 `.env` 只能由已审核脚本或 `uv run --env-file .env ...` 消费。不要手工读取、打印、搜索、hash 或统计它。（本日已追加 Day 5 变量与 `USER_SIM_MODEL=openai/deepseek-flash`，均经用户授权。）
@@ -191,15 +191,28 @@ security/transaction gate `9 passed in 5.59s`；唯一正向 seller-risk scenari
 3. **Step 2/3 必读约束**：①模拟载荷（SQL/表格/图表）demo-only，真实 SSE summary-only——需**只读工件 API** 决策；②`buildView`/`stageOf` 为真实事件复用种子；③评测中心真实数据需 **eval schema 读授权**（无角色可读——migration 0007 或等效，延续 0006 模式）；④dev server 已停（`cd web && npm run dev`）。
 4. 终态：离线 855/132、PG 132、Ruff 全绿。本会话累计 12 commits（Task 4 → 8 Step 1），未 push。
 
+### 2.18 Task 8 Step 2/3：SSE 客户端 + 只读 eval API + 评测中心真实数据（Claude Code，2026-09-14 新会话续）
+
+用户「读 HANDOFF.md 继续 Task 8」后完成（细节见执行日志 §14，待 commit）：
+
+1. **工件 API 决策（按打包授权行使推荐）**：live 模式 v1 = summary-only 事件面直驱（decision_summary → 结论/计划/对账、SQL 双指纹 + reason_code、evidence chips、refs）；富工件（SQL 文本/结果表/图表）不持久化、不新增写路径——推迟 Day 7（需 QueryEngine 写路径 + 新 ACL，超出 §22 UI 收窄）。
+2. **migration 0007**（已应用，head）：`ops_read.eval_experiments`/`eval_attempts` 视图（attempt = attempt LEFT JOIN result + telemetry 白名单三列 agent_cost/simulator_cost/agent_turns）；**owner=evaluation_owner**（基表 ACL 零改动，比 0006 更严）；授权现有 `agent_reader`。
+3. **API**：`api/eval.py`（/api/eval/experiments 聚合 + /attempts 明细）、`api/runs.py`（/api/runs 运行目录）、`create_postgres_app` env 装配 + `scripts/run_api.py`（win32 selector-loop 启动器，坑 59）+ `scripts/seed_ui_live_run.py`（一次性验证种子，已 reset 归零）；uvicorn 0.52.4 入依赖。
+4. **web**：`api.ts`（按 11 事件类型 addEventListener 的 EventSource 客户端 + 原生 Last-Event-ID 重连）、`view.ts`（summary-only 投影 + 共享 stageOf，未映射事件回退显示事件类型）、`App.tsx` 演示/实时双模式、Workbench 指纹芯片/无 meta 提案/无答案澄清适配、EvalCenterPage 真实数据 + 断连回退演示快照并标注、vite `/api` 代理。
+5. **坑 3 个新（§6.9 坑 59–61）**：uvicorn 0.52 win32 硬编码 Proactor（policy/factory 内设置均太晚）；vite 只绑 `::1` + 代理对上游断开传播延迟；React StrictMode 双挂载事件重复（cursor 去重修复，10/10 精确）。
+6. **浏览器实机验证**：评测中心真实 Pilot d 数据逐格一致（18+1 failed+1 infra，rewards 全 0，$0.0000 成本卡诚实标注 spool 未回填）；实时模式 SSE 10 事件 → 投影正确 → 杀后端重启自动重连仍恰好 10 事件。种子场景 reset 归零（trace 0 行；eval 4 实验为 Pilot 原有）。
+7. **终态**：离线 **866 passed, 137 skipped**；Ruff 全绿；PG **137 passed**；migration head=`0007_day6_eval_read_view`；`npm run build` 干净。**Task 8 三步全部完成；下一步 Task 9（tests/e2e 验收门①成文）→ Task 10（付费 ≤$0.10 空闲档）→ Task 11。**
+
 ## 3. 当前卡在哪里
 
-**没有技术阻塞。** Day 6 Phase A（Task 1–5）完成，新会话从 Task 6 继续：
+**没有技术阻塞。** Day 6 Phase A（Task 1–8 全部）完成，新会话从 Task 9 继续：
 
-- **用户已预授权（2026-09-14 深夜）**：① 剩余决策按执行者推荐行使；② 付费 Gate（Task 3 探针已用毕、Task 10 小样本 ≤$0.10 含 sim 侧）与 PG 写入；③ 逐 Task commit 打包授权；④ 只要求日志记录与上下文收尾。以上授权覆盖 Day 6 计划范围，**不含 push、不含 Day 7 计划、不含 Full 启动**（Task 11 仍只产出方案对比）。
-- **下一步顺序**：Task 8 Step 2/3（SSE 客户端 EventSource + Last-Event-ID 重连接 `api/` 真实事件流；只读 eval API——**先解决 eval schema 读授权**（migration 0007 延续 0006 视图模式）；评测中心真实数据接线；`tests/e2e/` 验收门①）→ Task 9（安全/E2E）→ Task 10（小样本验证，新 experiment；**空闲档运行**）→ Task 11（Full 重设计方案对比，交用户裁定）。
+- **用户已预授权（2026-09-14 深夜）**：① 剩余决策按执行者推荐行使；② 付费 Gate（Task 10 小样本 ≤$0.10 含 sim 侧）与 PG 写入；③ 逐 Task commit 打包授权；④ 只要求日志记录与上下文收尾。以上授权覆盖 Day 6 计划范围，**不含 push、不含 Day 7 计划、不含 Full 启动**（Task 11 仍只产出方案对比）。
+- **下一步顺序**：Task 9（安全/E2E：`tests/e2e/test_product_chain_api.py` API 层 E2E——工作台链路经 SSE + REST 全程、三闭环各一次审批/执行/读回；`test_ui_acceptance.md` 手工验收清单；Playwright 是否引入由用户裁定，默认不引入）→ Task 10（小样本验证，新 experiment；**空闲档运行**）→ Task 11（Full 重设计方案对比，交用户裁定）。
+- Task 8 现场备注：dev server 与 API 进程已停（重启：`cd web && npm run dev` + `uv run --env-file .env python scripts/run_api.py`，端口 5173/8010，vite 代理已指 8010——8000 被 PowerContext 占用）；`scripts/seed_ui_live_run.py` 仅浏览器验证用，用后须场景 reset。
 - 关键输入：Task 1 研究笔记（`docs/project/research/2026-09-14-submit-semantics-alignment.md`）已定 Task 5 修复形状；PG 测试需双开关 `COMMERCE_AGENT_RUN_POSTGRES_TESTS=1` + `LANGGRAPH_STRICT_MSGPACK=true`。
 - `cybermarket_pattern_12 [a]` unfinished 恢复（可选，需新会话向用户确认）；`crypto_exchange_9 [c]` failed 有效不重跑。
-- Day 7（产品 50 题、实验、Full 进度/收尾、README/面试材料）需独立计划；Full 启动与否在 Task 11 后由用户裁定。
+- Day 7（产品 50 题、实验、Full 进度/收尾、README/面试材料、富工件 API 设计）需独立计划；Full 启动与否在 Task 11 后由用户裁定。
 
 ## 4. 当前验证证据（2026-09-11 Task 18 测试数字 + 2026-09-12 Gate G/清理现场，最终源码状态，Claude Code）
 
@@ -230,7 +243,7 @@ security/transaction gate `9 passed in 5.59s`；唯一正向 seller-risk scenari
 
 ## 5. 下一步计划
 
-1. **Task 4–11 按 Day 6 计划顺序执行**（新会话）：Task 4 v2 decide 守卫 → Task 5 策略修复 → Task 6 Runner 演练 → Task 7/8/9 SSE/UI/E2E → Task 10 小样本（付费已预授权，≤$0.10）→ Task 11 Full 重设计对比。
+1. **Task 9–11 按 Day 6 计划顺序执行**（新会话）：Task 9 安全/E2E（`tests/e2e/`）→ Task 10 小样本（付费已预授权，≤$0.10，**空闲档**）→ Task 11 Full 重设计对比。
 2. **每 Task 纪律**：TDD 红绿 → owning tests → 全量 suite + Ruff → commit（打包授权范围内）。
 3. **收尾三件套**（长期规则）：① 更新本文件；② PowerContext handoff 并返回 exact revision；③ `docs/reports/` 执行日志。
 4. **可选（需向用户确认）**：`cybermarket_pattern_12 [a]` 按 §8.5.3 同 experiment（d）恢复。
@@ -314,6 +327,13 @@ security/transaction gate `9 passed in 5.59s`；唯一正向 seller-risk scenari
 57. **拒绝/降级路径必须携带原调用身份（call_id/name）。** 官方 before_tool_callback 语义是"替换该调用的结果"；另发一条无主结果（`call_id="budget_gate"`）会让 ToolExchangeGroup 封闭校验炸成 400。
 58. **Windows 下停止父进程不保证杀尽 detached 子进程；付费运行的止血验证 = 双时点快照对比**（文件计数/成本两拍），不能凭停止回执当已止血。另：按文件名 glob 得到的是字符串，`Path.glob` 才是 Path；监控/聚合脚本先对历史窗口做边界过滤。
 
+### 6.9 Task 8 Step 2/3 本轮新增（2026-09-14，Claude Code）
+
+59. **uvicorn 0.52 在 win32 硬编码 `ProactorEventLoop` 工厂**（`use_subprocess=False` 时 `asyncio_loop_factory` 直接返回 Proactor）——`asyncio.set_event_loop_policy` 与 ASGI factory 内设置**都太晚**（loop 已建），psycopg async 拒绝 Proactor。唯一干净接缝：启动器自管 `asyncio.Runner(loop_factory=asyncio.SelectorEventLoop)` 驱动 `Server.serve()`（`scripts/run_api.py`）。凡「首次真实服务起动」都会暴露此类循环/装配差异（坑 54 再验）：测试全绿 ≠ 服务可起。
+60. **vite 7 dev server 默认只绑 IPv6 `::1`**——`127.0.0.1:5173` connection refused（白页，标题即 URL 是失败页特征）。用 `localhost` 访问。另：vite 代理对上游断开的传播有延迟（后端已杀，浏览器 SSE 短时仍显示「已连接」）——断连显示时效在 dev 代理层，直连无此层；重连恢复语义不受影响。
+61. **React 19 dev StrictMode 双挂载会把事件流回放双份入 state**（effect→cleanup→effect 竞速）——服务端 Last-Event-ID 重放语义正确也不能免；客户端按事件 cursor 去重是必要防线（修复后 10/10 精确）。
+62. **`', '.join(<str>)` 对字符串是逐字符连接**——migration 列元组误写为单字符串时 `CREATE VIEW` 收到逐字符列名（`SELECT e, x, p, ...`）。alembic 事务性 DDL 整体回滚、目录零漂移（护栏按设计工作）；migration 失败停止→修源→重跑，与坑 7/8 一致。
+
 ## 7. 关键文件与 SHA-256
 
 哈希用于发现意外变化。入库状态（2026-09-12 晚）：§7 全部所列源码/测试/文档**均已随 14 个 commit 入库**（Day 4 allowlist → checkpoint 补录 → Day 5 Phase A 十二连）；`HANDOFF.md`、`CLAUDE.md` 本身为收尾更新、保持未跟踪。2026-09-11 由 Claude Code 现场计算并机械复核（15 组报告哈希对 + HANDOFF 交叉核对全部一致）；2026-09-12 复验 11/11 MATCH。
@@ -375,6 +395,18 @@ security/transaction gate `9 passed in 5.59s`；唯一正向 seller-risk scenari
 | `tests/integration/api/test_trace_sse_pg.py` | `f5c52c19e0b9b65241b644aeac2aba6b1b088c594012dbefd3d038f22c8665ee` | **新建（3003ca5，PG 判据 3 条）** |
 | `tests/unit/api/`（test_events.py `1208e95e…` / test_sse.py `c0de728b…`）+ `tests/unit/test_day6_trace_view_migration.py`（`bc42d7b9…`） | 见左 | **新建（3003ca5，离线 11 条）** |
 | `web/`（package.json + lockfile + src/ 10 文件：App/Workbench/ApprovalsPage/EvalCenterPage/ResultChart/types/view/mock.stream/styles 等） | 详见 `79de29b` + `7d3881e`（两 commit） | **新建（Task 8 Step 1 Demo，用户已确认布局；独立 npm toolchain）** |
+| `db/migrations/versions/0007_day6_eval_read_view.py` | `5e9a9d581d662c24f440c5d576731cb45fd9bbfb53a90e1d8038aa46a210ca84` | **新建（Task 8 Step 2/3，eval 只读视图；已应用，head）** |
+| `src/commerce_agent/api/eval.py` | `5de358da26636be20fd97a64ea69de623f3df3f647bcf5b4adb7024a016d81b8` | **新建（Task 8 Step 2/3，只读 eval API）** |
+| `src/commerce_agent/api/runs.py` | `660963578ff64eb540b0d4f58698fa12b7ef395c4ef1c167a90360a51ec697dc` | **新建（Task 8 Step 2/3，运行目录 API）** |
+| `src/commerce_agent/api/app.py` | `c6e4a6ae5d978a7aadad8e1b048ef64ea5a91f087172abbc4146d1a994c741a9` | **修改（Task 8 Step 2/3，可选源 + create_postgres_app）** |
+| `scripts/run_api.py` | `12e1875d41f33b0243acd0ac57800a209e0117df432e3c714f43bdf200a2e51a` | **新建（Task 8 Step 2/3，win32 selector-loop 启动器，坑 59）** |
+| `scripts/seed_ui_live_run.py` | `eeca09a99f5f943eee70902caa90c90cd5fff2e3c8b88492dacd240fcbae3fed` | **新建（Task 8 Step 2/3，一次性浏览器验证种子；用后须场景 reset）** |
+| `tests/unit/test_day6_eval_read_view_migration.py` | `24667d2982c6f0787761a2ec5d3600dde5f030791e71a2035f38a40820d434e0` | **新建（Task 8 Step 2/3，migration 源测试 5 条）** |
+| `tests/unit/api/test_eval_and_runs_api.py` | `375869fbef40f97bc559ac88ebd8e70c96eca21a4768648c8bed5ec7a81b6f85` | **新建（Task 8 Step 2/3，api 单测 6 条）** |
+| `tests/integration/api/test_eval_read_pg.py` | `7d7d6fb38b667157883ba36a65972035c71330ba07ebe726f802adb2bef1146c` | **新建（Task 8 Step 2/3，PG 判据 5 条含负向 ACL）** |
+| `docs/reports/2026-09-14-day6-phase-a-execution-log.md` | `d52323ac24a3f33121fdc99d8e6d58c3cc590989807ec3f1749d6ef67f308888` | **修改（Task 8 Step 2/3 追加 §14）** |
+| `web/src/`（api.ts 新建；App/view/types/Workbench/ApprovalsPage/EvalCenterPage/mock.stream/styles/vite.config 修改） | 详见本轮 commit | **修改（Task 8 Step 2/3，SSE 客户端 + live 模式 + 评测中心真实数据）** |
+| `pyproject.toml` + `uv.lock` | 详见本轮 commit | **修改（uvicorn>=0.30,<1 入依赖）** |
 
 不要覆盖或回退这些文件。若现场哈希不同，先确认是否是用户或其他会话的新修改，再继续工作。
 
@@ -398,3 +430,10 @@ security/transaction gate `9 passed in 5.59s`；唯一正向 seller-risk scenari
 **gitignored 产物（不入库）**：`outputs/bird-pilot/task-data/`（GT 拆分）、`outputs/bird-budget/pilot-ledger.json`（已写实测值）、`outputs/bird-agent-spool/`（agent 侧用量原始证据）、`outputs/bird-eval/`（events JSONL、episode 输出、诊断输出——agent 可见内容，非 GT）。
 
 **外部状态**：spike 容器已 stop（6002 释放）；compose 栈三服务 running；eval 库含 a/b/c/d 四实验身份数据；官方 db（5433）与产品 db（5432）未动。未 push。
+
+### 8.1 Task 8 Step 2/3 轮（2026-09-14 新会话，待 commit）
+
+- **新增**：`db/migrations/versions/0007_day6_eval_read_view.py`（已应用）、`src/commerce_agent/api/eval.py`、`src/commerce_agent/api/runs.py`、`scripts/run_api.py`、`scripts/seed_ui_live_run.py`、`tests/unit/test_day6_eval_read_view_migration.py`、`tests/unit/api/test_eval_and_runs_api.py`、`tests/integration/api/test_eval_read_pg.py`、`web/src/api.ts`。
+- **修改**：`src/commerce_agent/api/app.py`（create_postgres_app）、`web/src/`（App/view/types/Workbench/ApprovalsPage/EvalCenterPage/mock.stream/styles/vite.config）、`pyproject.toml` + `uv.lock`（uvicorn）、执行日志 §14、本文件、`CLAUDE.md` §0。
+- **DB 现场变更（预授权范围内）**：migration 0007 应用（ops_read 两视图 + agent_reader SELECT；基表 ACL 零改动）；浏览器验证用一次性种子场景 `day6-ui-live-v1` 写入后已 reset 归零（seeded trace 0 行）；eval 库 4 实验 = Pilot 原有数据未动。
+- **外部状态**：vite dev（5173）与 API（8010）进程已停；8000 = PowerContext（勿占用）。零付费、零 GT 读取。
