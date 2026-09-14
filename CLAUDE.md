@@ -14,8 +14,8 @@
 
 ```text
 Day 4 overall: PASS；Day 5 Phase A + Gate P preflight 全 PASS（模型已切 deepseek-flash）
-Task 13 Pilot: 完成（两门 FAIL 为 Day 6 输入基线：预算 band 修正后 233.9–461.4 元区间两档均越 160 线、能力 rewards 全 0；
-         sim:agent = 0.72×（band 修正反转）；off-peak 调度 = Task 11 首要杠杆）
+Task 13 Pilot: 完成（两门 FAIL 为 Day 6 输入基线：预算 457.6 元/160 线（band 经官方定义确认，Pilot 为空闲档计费）、
+         能力 rewards 全 0；付费运行纪律：peak 档 = 2×，一律空闲档调度）
 Day 6 Phase A: Task 1–4 完成（提交语义排查 / spool 导入接线 / 探针门翻 PASS / v2 decide 三方一致性守卫
          + Day 3 旧探针退役）；离线 834 passed / 128 skipped；Ruff 全绿；PG 128 passed
 下一步: Task 5 c/a 策略修复（prompt-policies v3 + 澄清预算闸）→ Task 6 Runner SIGINT 演练

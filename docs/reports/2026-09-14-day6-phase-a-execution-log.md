@@ -100,3 +100,15 @@
 6. **Task 10 上限重估**：≤$0.10（2–4 集）peak 档 4 集预估 ~$0.20 越限、off-peak 档 ~$0.098 贴线——执行前须定档（推荐 off-peak）或经用户重确认。
 
 **产物更新**：`outputs/bird-budget/pilot-ledger.json`（`balance_cross_check.band_correction_2026_09_14` + `projected_total_upper_bound_yuan=461.4` + `projected_total_scenario_off_peak_run_yuan=233.9` + decision 注记刷新；历史值保留 superseded 字段）；Pilot 报告 §0 指针 + §7 修正划线 + 新增 §8；HANDOFF §2.10 修正段 + §2.13 第 5 项；CLAUDE.md §0。**零付费、零 GT 读取、无代码变更**（`_pricing.py` 修复与快照 v5 重冻结待用户提供真实峰值窗口后独立红绿执行）。
+
+> **⚠ §8 状态：已于同日撤回**——建立在该轮「peak 计费」用户口误之上，见 §9。
+
+## 9. Band 撤回与恢复（2026-09-14 同日稍晚，docs commit）
+
+**用户第二轮输入**：官方峰值窗口定义 + 定价页截图——**高峰 = 北京周一至五 09:00–12:00、14:00–18:00，其余全为空闲档**；并自述「忘记运行当天是周日了」→ 撤回「6.43 元为高峰计费」的说法。
+
+**核实**：官方定义与快照 v4 **精确一致**（`peak_windows_utc` UTC 01–04/06–10 = 北京 09–12/14–18；evidence「weekdays」；`_pricing.py:46` weekday 门）——**band 模型自始正确**，快照与代码零改动；band 判定获得双源确认（api-docs USD 页 + 用户 CNY 定价页）。周日全天空闲档 → Pilot 全部消耗（d + 诊断）确为 off-peak 计费。
+
+**恢复**：§3.5 原对账与 457.6 元 FAIL 终裁全部恢复有效（sim $0.6288 / 2.24× / $0.03144 每集 / a-mode 单项 210 元超线）；§8 的拆分、两档外推、结构反转、Task 10 上限重估**全部作废**。账本恢复 457.6 并新增 `band_claim_withdrawal_2026_09_14`（含 `projected_total_peak_run_penalty_yuan=908.8`）。HANDOFF §2.10/§2.13、CLAUDE.md §0、Pilot 报告 §0/§7 同步为最终口径。
+
+**存续洞见 → 运行纪律**：peak 档恰为 off-peak 的 2×；付费运行（Task 10 小样本、未来 Full/消融）**一律调度空闲档**（北京工作日夜/晨、周末），否则剩余翻倍至 ~908.8 元（5.68×）。Pilot（周日）已天然满足；汇率口径注记（平台 CNY 列 = 6.6667×USD 列，总账对两种汇率口径不敏感：457.3 vs 457.6）随账本记录。零付费、零代码变更。
