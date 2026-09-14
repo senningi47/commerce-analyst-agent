@@ -17,6 +17,8 @@ outputs/probes/*-candidate.json
 outputs/probes/*.private.json
 outputs/probes/*.redacted.json
 outputs/bird-pilot/task-data/
+outputs/bird-pilot/task10/task-data/
+outputs/bird-pilot/bird-budget/
 outputs/bird-budget/
 outputs/bird-eval/
 outputs/bird-agent-spool/

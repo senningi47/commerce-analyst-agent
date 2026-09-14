@@ -1,0 +1,26 @@
+{
+  "generated_at": "2026-09-14T06:46:34.860422+00:00",
+  "strategy": "database+ambiguity-fallback (v0.3 §16.3 fallback; no BI/DM labels assumed)",
+  "count": 2,
+  "seed": 11,
+  "selections": [
+    {
+      "task_id": "archeology_scan_M_4",
+      "mode": "c",
+      "basis": {
+        "strategy": "database+ambiguity-fallback",
+        "selected_database": "archeology_scan",
+        "ambiguity_count": 3
+      }
+    },
+    {
+      "task_id": "archeology_scan_M_4",
+      "mode": "a",
+      "basis": {
+        "strategy": "database+ambiguity-fallback",
+        "selected_database": "archeology_scan",
+        "ambiguity_count": 3
+      }
+    }
+  ]
+}
