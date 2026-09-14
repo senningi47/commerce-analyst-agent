@@ -141,3 +141,19 @@
 N=10 时 c 侧较 Pilot 失控基线 **-83%**。a-mode 无行为级基线拆分，预期改善（coin 策略引导探索收敛）待 Task 10 实测。
 
 **下一步**：Task 6（Runner SIGINT 中断恢复 E2E，双开关）→ Task 7→8→9（SSE/UI/E2E）→ Task 10（付费 ≤$0.10，空闲档运行）→ Task 11（Full 重设计对比）。
+
+## 11. Task 6：Runner SIGINT 中断恢复 E2E（`f6af9f1`，同会话续，零付费）
+
+**交付**：`tests/integration/evaluation/test_runner_sigint_recovery.py`（`-m postgres`，PG 真库 + 脚本化 executor，1.99s）。Day 6 验收门②证据，与 §19.3 末条逐字对应。
+
+**演练设计**（4 题清单，concurrency=1 确定性串行）：
+1. **Run 1（中断）**：`sigint-a1`/`sigint-b2` 立即 succeed；`sigint-hang` 在 executor 内 `stop_event.set()` 后挂起——这是 `cli._bridge_signals` 收到 SIGINT/SIGTERM 后 `stop_event.set()` 的确定性等价物；`sigint-p4` 因信号先到而**从未被 claim**。断言：`summary.stopped=True`、attempted=3、status_counts={succeeded:2, interrupted:1}；**eval 表恰好 3 行**（hang 行 `interrupted`，p4 无任何 attempt 行——`finish_attempt` 对未注册 id 抛 EvalStateConflict 被 `_mark_abandoned` 捕获，恰好是 pending 题的正确形态）。
+2. **Run 2（同 experiment 重启）**：completed 不重跑 ✓；interrupted 题以 **attempt_seq=2 从头跑**并 succeed ✓；pending 题以 seq=1 正常跑 ✓；总账 4 completed / 0 unfinished。
+3. **交叉断言**：事件 JSONL 全 10 条序列精确（含 `attempt_interrupted` 不带 status 键——事件类型即信号；seq=2 的 started 带新 run_id）；`experiment_rows` 只读查询逐行核对两个 run 的状态机终态。
+4. **finally 语义**（坑 6 同款）：fixture 按序 DELETE task_result → task_attempt → experiment（admin DSN），完成后该 experiment 行数归零。
+
+**红绿说明**：Day 5 的状态机/停止机制（gather-vs-stop 竞速修复、`_mark_abandoned`、恢复序列）已被单测钉死；本演练为集成级验收证据——首跑仅 1 处测试断言错误（误以为 `attempt_interrupted` 事件携带 `status` 字段，实现上事件类型即状态信号），修正后即绿；产品代码零改动。
+
+**终态**：PG `-m postgres` **129 passed**（+1）；离线 **844 passed, 129 skipped**（新 PG 测试默认 skip +1）；Ruff 全绿。
+
+**下一步**：Task 7（SSE 事件面 `src/commerce_agent/api/` 全新）→ Task 8（关键 UI `web/`）→ Task 9（安全/E2E）→ Task 10（付费 ≤$0.10，空闲档）→ Task 11（Full 重设计对比）。
