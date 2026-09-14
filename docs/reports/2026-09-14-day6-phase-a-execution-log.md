@@ -157,3 +157,23 @@ N=10 时 c 侧较 Pilot 失控基线 **-83%**。a-mode 无行为级基线拆分�
 **终态**：PG `-m postgres` **129 passed**（+1）；离线 **844 passed, 129 skipped**（新 PG 测试默认 skip +1）；Ruff 全绿。
 
 **下一步**：Task 7（SSE 事件面 `src/commerce_agent/api/` 全新）→ Task 8（关键 UI `web/`）→ Task 9（安全/E2E）→ Task 10（付费 ≤$0.10，空闲档）→ Task 11（Full 重设计对比）。
+
+## 12. Task 7：SSE 事件面（`3003ca5`，同会话续，零付费）
+
+**交付**：`src/commerce_agent/api/`（app 工厂 + events schema + sse 端点）+ **migration 0006** + 离线单测 11 条 + PG 判据测试 3 条。fastapi 0.141.1 入依赖（httpx 已在 lock）。
+
+**设计决策（三个关键）**：
+1. **事件面 = Product Trace 的 11 种 `TraceEventType`**（计划候选名映射：approval_required≡proposal_created、approval_decided≡decision_recorded、execution_receipt≡execution_completed、report_ready≡report_completed、run_resumed≡recovery_applied、sql_rejected 经 status+reason_code 表达）——推送序列与产品闭环审计**按构造一致**；载荷排除 node/phase（§20 前端不依赖 LangGraph 节点名）。
+2. **隐私 = 视图即白名单**：migration 0006 建 `ops_read.product_trace_events`（security_barrier，恰 8 列公开面）授权**现有 `agent_reader`**（`PRODUCT_DATABASE_DSN` 即该身份）——不动基表授权（trace_writer 保持 append-only、agent_reader 保持无基表 SELECT，Day 4 ACL 测试不破）。载荷主体 = trace 表预计算的 `safe_summary`（Day 4 已定公开面）。
+3. **游标 = row_number() 稳定序**：trace 的 `sequence` 是 attempt 内序号（恢复事件在新 attempt seq=0，直接用会撞号）——SSE `id` 用 `(occurred_at, attempt_id, sequence)` 排序的 run 级 row_number，Last-Event-ID 按它重放；载荷保留原 sequence 供审计对账。
+
+**过程中的坑（3 个，全部实证）**：
+- **starlette 1.6 TestClient 缓冲整个响应体**（`portal.call(self.app…)` 跑到完成为止）——无限 SSE 流经 `client.stream()` 必挂（最小对照用例的「成功」是 3 块后生成器自然结束的假象）。流式行为改为**直接驱动 async 生成器**测试；Last-Event-ID 解析抽纯函数单测；PG 判据同法直驱真源。
+- **alembic revision id ≤32 字符**：首版 revision 33 字符，`UPDATE alembic_version` 超出 varchar(32) 报 StringDataRightTruncation——事务性 DDL 整体回滚、目录零漂移，缩短 id 重跑成功。已写进 migration docstring。
+- **TestClient 对纯 fake 的流式单测**同样受第 1 条约束——挂起超时两轮定位（faulthandler 栈：portal 线程 Proactor `_poll` 空转 + 主线程等 response start）。
+
+**PG 判据（`tests/integration/api/test_trace_sse_pg.py`，1.56s）**：真实 `PostgresTraceStore` 写入完整闭环 13 事件（澄清→计划→SQL→修复→执行→对账→提案 v1（未审批）→拒绝→提案 v2→批准→执行→报告 + 新 attempt 恢复）→ 经 `PostgresTraceEventSource`（agent_reader 身份）消费 `sse_stream`：推送序列与审计**逐条一致**（ids 1–13、拒绝决策摘要原文透出）；`Last-Event-ID: 6` 只推 7–13；视图列白名单 == 8 列。finally 场景 reset 归零 + 连接关闭守卫通过。
+
+**终态**：离线 **855 passed, 132 skipped**（844+11 / 129+3）；Ruff 全绿；PG `-m postgres` **132 passed**（129+3）；migration head = `0006_day6_trace_read_view`（PG 写入预授权范围内应用）。
+
+**下一步**：Task 8（关键 UI `web/` 全新：模拟数据 Demo → SSE 客户端 → 评测中心只读页）→ Task 9（安全/E2E）→ Task 10（付费 ≤$0.10，空闲档）→ Task 11（Full 重设计对比）。
