@@ -10,25 +10,24 @@
 
 项目由 Codex 推进 12 天（2026-08-24 → 09-07），Claude Code 于 09-11 接手，09-13 完成 Task 13 Pilot 主运行。
 
-**精确状态（2026-09-14 更新，以 `HANDOFF.md` 为准）：**
+**精确状态（2026-09-15 更新，以 `HANDOFF.md` 为准）：**
 
 ```text
 Day 4 overall: PASS；Day 5 Phase A + Gate P preflight 全 PASS（模型已切 deepseek-flash）
 Task 13 Pilot: 完成（两门 FAIL 为 Day 6 输入基线：预算 457.6 元/160 线（band 经官方定义确认，Pilot 为空闲档计费）、
          能力 rewards 全 0；付费运行纪律：peak 档 = 2×，一律空闲档调度）
-Day 6 Phase A: Task 1–10 全部完成（提交语义排查 / spool 导入接线 / 探针门翻 PASS / v2 decide 三方一致性守卫
+Day 6: Task 1–11 全部完成（能力门修复线：提交语义排查 / spool 导入接线 / 探针门翻 PASS / v2 decide 三方一致性守卫
          + 旧探针退役 / c-a 策略修复 / Runner SIGINT 演练=验收门② PASS / SSE 事件面：migration 0006 + api 包 /
-         Task 8 关键 UI 三步：Demo 布局用户确认 + SSE 客户端 live 模式 + migration 0007 eval 只读视图 +
-         只读 eval/runs API + 评测中心真实 Pilot 数据 + 浏览器实机验证 / Task 9 安全 E2E：API 层 3 条 PG 全绿 +
-         UI 手工验收清单（Playwright 默认不引入）/ Task 10 小样本付费验证：submit 通道首次贯通（c 集 12 ask+2 submit
-         到达官方评审，reward 0=SQL 质量结果）；两 infra 发现=同题双模式 createdb 竞态（必须串行）+ 镜像陈旧
-         （Task 5 闸/v3 配置曾未入 live，已重建实证））——两项验收门①②均通过；
+         Task 8 关键 UI 三步 / Task 9 安全 E2E / Task 10 小样本付费验证：submit 通道首次贯通（c 集 12 ask+2 submit
+         到达官方评审，reward 0=SQL 质量结果；两 infra 发现=同题双模式 createdb 竞态 + 镜像陈旧，均已实证处置）/
+         Task 11 Full 重设计对比收官：方向 0 重推基准 201.6 元=1.26×（策略修复已砍 56% 总账；sim 平摊对 a-mode
+         高估披露反转）+ 三方向对比 + 能力验证前置建议，裁定清单交用户）——两项验收门①②均通过；
          离线 866 passed / 140 skipped；Ruff 全绿；PG 140 passed；migration head=0007
-下一步: Task 11 Full 重设计对比（零付费分析，输入=Task 10 实测单价：修复后 c 集 ~$0.017/集），交用户裁定
-已预授权: 逐 Task commit、付费 Gate（Task 10 已行使：agent 实测 $0.025047 + sim 估 $0.05–0.08 待余额核对终裁，
-         本 episode 不再付费）、PG 写入；不含 push、不含 Day 7 计划、不含 Full 启动
-终态证据: 执行日志 docs/reports/2026-09-14-day6-phase-a-execution-log.md（§13/§14/§15/§16/§17）
-         + docs/reports/2026-09-14-task10-strategy-validation.md；未 push
+下一步: 等用户裁定 Full 重设计五项清单（研究笔记 docs/project/research/2026-09-15-full-redesign-options.md §9：
+         能力验证前置 / 范围 A1–A4 或 C / ceiling / sim 合规排查 / 余额核对）；裁定前不付费、不 push、不实施 Day 7
+已预授权: 已全部行使完毕（Day 6 打包授权至 Task 11 收尾）；新会话任何付费/新范围都需重新明确授权
+终态证据: 执行日志 docs/reports/2026-09-14-day6-phase-a-execution-log.md（§13–§18）
+         + docs/reports/2026-09-14-task10-strategy-validation.md + Task 11 研究笔记；未 push
 ```
 
 ---
