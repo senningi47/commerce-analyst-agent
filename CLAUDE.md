@@ -16,15 +16,16 @@
 Day 4 overall: PASS；Day 5 Phase A + Gate P preflight 全 PASS（模型已切 deepseek-flash）
 Task 13 Pilot: 完成（两门 FAIL 为 Day 6 输入基线：预算 457.6 元/160 线（band 经官方定义确认，Pilot 为空闲档计费）、
          能力 rewards 全 0；付费运行纪律：peak 档 = 2×，一律空闲档调度）
-Day 6 Phase A: Task 1–8 全部完成（提交语义排查 / spool 导入接线 / 探针门翻 PASS / v2 decide 三方一致性守卫
+Day 6 Phase A: Task 1–9 全部完成（提交语义排查 / spool 导入接线 / 探针门翻 PASS / v2 decide 三方一致性守卫
          + 旧探针退役 / c-a 策略修复 / Runner SIGINT 演练=验收门② PASS / SSE 事件面：migration 0006 + api 包 /
-         Task 8 关键 UI 三步：Demo 布局用户确认 + SSE 客户端 live 模式（EventSource + Last-Event-ID）+
-         migration 0007 eval 只读视图 + 只读 eval/runs API + 评测中心真实 Pilot 数据 + 浏览器实机验证）；
-         离线 866 passed / 137 skipped；Ruff 全绿；PG 137 passed；migration head=0007
-下一步: Task 9 安全/E2E（tests/e2e/，验收门①成文）→ Task 10 小样本付费验证（预授权 ≤$0.10，空闲档运行）
-         → Task 11 Full 重设计对比
+         Task 8 关键 UI 三步：Demo 布局用户确认 + SSE 客户端 live 模式 + migration 0007 eval 只读视图 +
+         只读 eval/runs API + 评测中心真实 Pilot 数据 + 浏览器实机验证 / Task 9 安全 E2E：API 层 3 条 PG 全绿 +
+         UI 手工验收清单（Playwright 默认不引入））——两项验收门①②均通过；
+         离线 866 passed / 140 skipped；Ruff 全绿；PG 140 passed；migration head=0007
+下一步: Task 10 小样本付费验证（预授权 ≤$0.10 含 sim 侧，**空闲档运行**：新 experiment、c/a 各半 2–4 集、
+         Pilot 同库不同题）→ Task 11 Full 重设计对比（交用户裁定）
 已预授权: 逐 Task commit、付费 Gate、PG 写入；不含 push、不含 Day 7 计划、不含 Full 启动
-终态证据: 执行日志 docs/reports/2026-09-14-day6-phase-a-execution-log.md（§13=Task 8 Step 1，§14=Step 2/3）；未 push
+终态证据: 执行日志 docs/reports/2026-09-14-day6-phase-a-execution-log.md（§13/§14/§15）；未 push
 ```
 
 ---

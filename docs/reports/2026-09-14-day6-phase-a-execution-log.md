@@ -223,3 +223,19 @@ N=10 时 c 侧较 Pilot 失控基线 **-83%**。a-mode 无行为级基线拆分�
 **现场清理**：种子场景 `day6-ui-live-v1` 场景 reset 归零（seeded trace 0 行）；eval 库 4 实验为 Pilot 原有数据未动；dev server 与 API 进程已停。零付费、零 GT 读取。
 
 **终态**：离线 **866 passed, 137 skipped**（855+11：migration 5 + api 6；skip 132+5 = 新 PG 测试离线 skip）；Ruff 全绿；PG `-m postgres` **137 passed**（132+5）；`npm run build` 干净；migration head = `0007_day6_eval_read_view`。Task 8 全部三步完成（Step 1 用户门 + Step 2/3 本轮）。**下一步：Task 9（tests/e2e 安全/E2E，验收门①成文）→ Task 10（付费 ≤$0.10，空闲档）→ Task 11（Full 重设计对比）。**
+
+## 15. Task 9：安全/E2E（`tests/e2e/`，同会话续，零付费）
+
+**交付**：`tests/e2e/test_product_chain_api.py`（PG E2E 3 条）+ `tests/e2e/test_ui_acceptance.md`（手工验收清单）+ `tests/e2e/conftest.py`（win32 selector policy + postgres skip 门控，镜像 integration/conftest 的两块承重件）。
+
+**E2E 设计（纯读侧 + 真实装配）**：
+1. **三闭环审计 fixtures**：经营调查 13 事件（澄清→计划→SQL 生成→修复→执行→对账→提案 v1→驳回→提案 v2→批准→受控执行（execution_ref+audit_ref 读回关联）→报告 + 新 attempt 恢复）经真实 `PostgresTraceStore`（trace_writer）写入三个 scoped 场景；卖家风险/指标预警两闭环各 3 事件（proposal→approval→execution+audit_ref）。
+2. **消费只走 agent_reader**：`create_app` 全三源真实装配（TraceEventSource/EvalSource/RunDirectory）——REST 经 TestClient（runs/eval 端点），SSE 直驱生成器（TestClient 缓冲限制，Task 7 已钉死）。
+3. **判据**：①工作台链路 REST+SSE 全程——/api/runs 发现 13 事件 run、SSE 推送序列==审计序列（ids 1–13）、驳回/批准决策码、执行事件带 execution_ref+audit_ref、报告码 report_ready；②三闭环各一次审批/执行/读回；③评测中心 REST 读回（experiment 聚合 + attempt 明细 reward/P1/turns）；④**载荷白名单**：每条 SSE data 键集 ⊆ §18 十六键、无 node/phase。
+4. **Playwright 决策（按授权行使推荐）**：不引入——§21 必选清单未含、IAB 实机验证已在 Task 8 完成、CI 无浏览器需求；清单中留 Day 7 裁定口。
+
+**过程修正（2 处，测试自身）**：`_write_audit` 在 async fixture 内误用 `asyncio.Runner`（running loop 冲突）→ 改 async 直驱；审计 fixtures 全部同一时间戳导致 SSE 排序键 `(occurred_at, attempt_id, sequence)` 把 recovery 按 attempt_id 排到最前 → 时间随事件递增（recovery +100s）。
+
+**判据达成（Task 9 完成即 Day 6 两验收门齐备）**：验收门①「主产品链路可演示」= 手工清单（`test_ui_acceptance.md`，演示模式 + 实时模式 + 评测中心 + 隐私红线四节）且 Task 8 Step 2/3 已实机走通；验收门②「Runner 中断恢复」= Task 6 SIGINT 演练 PASS。PG 全套（integration+e2e）**140 passed**；离线 **866 passed, 140 skipped**（e2e 3 条默认 skip）；Ruff 全绿。
+
+**下一步**：Task 10（付费 ≤$0.10 已预授权——**空闲档运行**，新 experiment，c/a 各半 2–4 集，选 Pilot 同库不同题避免记忆污染；执行前确认 prompt-policies v3 全绿[已达成]）→ Task 11（Full 重设计方案对比，交用户裁定）。
