@@ -10,7 +10,7 @@
 ## 0. 新会话先做什么
 
 1. 完整阅读本文件、`docs/reports/2026-09-14-day6-phase-a-execution-log.md`（Day 6 Phase A 前段执行日志）与 `docs/superpowers/plans/2026-09-14-day6-capability-restore-runner-and-ui.md`（Day 6 计划）。把它们当作需要现场核验的历史交接，不要把历史授权当作新会话授权。
-2. 先向用户报告准确状态：**Day 6 Phase A 前段（Task 1–3）已完成并 commit**——Task 1 提交语义排查（根因 = prompt 缺官方策略，通道无缺陷）、Task 2 spool 导入接线（回填能力就绪，d 旧格式不可回填）、Task 3 探针重设计（**探针门翻转为 PASS**，付费 $0.000035334×2 次调用）。**下一步 = Task 4（v2 decide 三方一致性守卫）→ Task 5（c/a 策略修复）→ Task 6（Runner SIGINT 演练）→ Task 7–9（SSE/UI/E2E）→ Task 10（小样本付费验证，上会话已预授权 ≤$0.10）→ Task 11（Full 重设计对比）**。用户已预授权：逐 Task commit、付费 Gate、PG 写入；决策按推荐执行、日志记录即可。
+2. 先向用户报告准确状态：**Day 6 Phase A（Task 1–4）已完成并 commit**——Task 1 提交语义排查（根因 = prompt 缺官方策略，通道无缺陷）、Task 2 spool 导入接线（回填能力就绪，d 旧格式不可回填）、Task 3 探针重设计（**探针门翻转为 PASS**，付费 $0.000035334×2 次调用）、Task 4 v2 decide 三方一致性守卫（图 allowlist 对齐 v2 规则 + 旧探针退役）。**下一步 = Task 5（c/a 策略修复）→ Task 6（Runner SIGINT 演练）→ Task 7–9（SSE/UI/E2E）→ Task 10（小样本付费验证，上会话已预授权 ≤$0.10）→ Task 11（Full 重设计对比）**。用户已预授权：逐 Task commit、付费 Gate、PG 写入；决策按推荐执行、日志记录即可。
 3. **外部事实（关键）**：模型更名证据链与全部实测数字见研究笔记；价格快照已双源核对（用户读数 = 页面提取）；探针累计花费 ~$0.008。
 4. preflight 三项零付费已于 2026-09-13 完成（执行入口备查：`scripts/prepare_bird_pilot.py --dataset <公开数据集路径>`、`--run-db-check`、GT 拒绝检查见执行日志 §4）。Task 13 主运行**需要用户新会话明确授权**（一次正向运行 = 一次授权额度）。
 5. 根目录 `.env` 只能由已审核脚本或 `uv run --env-file .env ...` 消费。不要手工读取、打印、搜索、hash 或统计它。（本日已追加 Day 5 变量与 `USER_SIM_MODEL=openai/deepseek-flash`，均经用户授权。）
@@ -143,12 +143,21 @@ security/transaction gate `9 passed in 5.59s`；唯一正向 seller-risk scenari
 
 **新会话任务**：Task 4 → 5 → 6 → 7→8→9 → 10（付费已预授权）→ 11，按计划文档顺序与判据执行；每 Task 红绿 + owning tests + 全量 suite + Ruff 后 commit（已打包授权）。
 
+### 2.13 Task 4：v2 decide 三方一致性守卫（Claude Code，2026-09-14 续会话）
+
+用户指示「读 HANDOFF 继续 Task 4、先起动 powercontext」后完成（commit **`84180e2`**，细节见执行日志 §6）：
+
+1. **修复面**：`retail_graph.py` 图白名单 `_RETAIL_TOOL_NAMES`（v1 残留含 `execute_readonly_sql`）→ `RETAIL_TOOL_NAMES`（与 v2 `retail_decide` 规则四工具精确相等）；`bird_c_responder.py` 内联集合提升为 `BIRD_C_TOOL_NAMES`；守卫测试 2 → 6（三方精确相等：profile 规则 == 图/端口 allowlist == 冻结契约）；legacy resume 测试换 `retrieve_retail_knowledge` + 死代码清理。
+2. **旧探针退役**：`scripts/probe_deepseek_gateway.py`（928 行）+ 其单测（16 项）git rm；未跟踪的 deepseek live 测试磁盘删除。依据：`636129c` 已宣布替代 + Gate P 正式退役 Day 3 固定 SQL 链判据 + fake 路径与新 allowlist 结构性冲突（全量 suite 首跑 3 failed 抓到）。
+3. **披露**：`bird_c_responder.py` 为未跟踪文件（Day 2 时代、非 gitignore、从未入 allowlist；同状态含 context_builder/builder.py、model/* 等核心模块）——本次未卷入窄主题 commit，是否入库待用户裁定。
+4. 终态：离线 **834 passed, 128 skipped**（846+4−16 / 129−1）；Ruff 全绿；PG **128 passed**。PowerContext 服务本会话开场起动（端口 8000）。
+
 ## 3. 当前卡在哪里
 
-**没有技术阻塞。** Day 6 Phase A 前段（Task 1–3）完成，新会话从 Task 4 继续：
+**没有技术阻塞。** Day 6 Phase A（Task 1–4）完成，新会话从 Task 5 继续：
 
 - **用户已预授权（2026-09-14 深夜）**：① 剩余决策按执行者推荐行使；② 付费 Gate（Task 3 探针已用毕、Task 10 小样本 ≤$0.10 含 sim 侧）与 PG 写入；③ 逐 Task commit 打包授权；④ 只要求日志记录与上下文收尾。以上授权覆盖 Day 6 计划范围，**不含 push、不含 Day 7 计划、不含 Full 启动**（Task 11 仍只产出方案对比）。
-- **下一步顺序**：Task 4（v2 decide 三方一致性守卫）→ Task 5（c/a 策略修复：prompt-policies v3 + 澄清预算闸；Task 1 结论已给形状）→ Task 6（Runner SIGINT 演练，双开关）→ Task 7→8→9（SSE/UI/E2E，`api/`、`web/`、`tests/e2e/` 全新）→ Task 10（小样本验证，新 experiment，须在 Task 5 红绿后）→ Task 11（Full 重设计方案对比，交用户裁定）。
+- **下一步顺序**：Task 5（c/a 策略修复：prompt-policies v3 + 澄清预算闸；Task 1 结论已给形状）→ Task 6（Runner SIGINT 演练，双开关）→ Task 7→8→9（SSE/UI/E2E，`api/`、`web/`、`tests/e2e/` 全新）→ Task 10（小样本验证，新 experiment，须在 Task 5 红绿后）→ Task 11（Full 重设计方案对比，交用户裁定）。
 - 关键输入：Task 1 研究笔记（`docs/project/research/2026-09-14-submit-semantics-alignment.md`）已定 Task 5 修复形状；PG 测试需双开关 `COMMERCE_AGENT_RUN_POSTGRES_TESTS=1` + `LANGGRAPH_STRICT_MSGPACK=true`。
 - `cybermarket_pattern_12 [a]` unfinished 恢复（可选，需新会话向用户确认）；`crypto_exchange_9 [c]` failed 有效不重跑。
 - Day 7（产品 50 题、实验、Full 进度/收尾、README/面试材料）需独立计划；Full 启动与否在 Task 11 后由用户裁定。
@@ -306,7 +315,12 @@ security/transaction gate `9 passed in 5.59s`；唯一正向 seller-risk scenari
 | `docs/project/research/2026-09-14-submit-semantics-alignment.md` | 待现场计算 | **已入库（1bdcf78）** |
 | `src/commerce_agent/evaluation/spool_importer.py` | 待现场计算 | **新建（4ceab5c）** |
 | `scripts/probe_model_capability.py` | 待现场计算 | **新建（636129c）** |
-| `docs/reports/2026-09-14-day6-phase-a-execution-log.md` | 待现场计算 | **新建（de66c21，本会话执行日志）** |
+| `docs/reports/2026-09-14-day6-phase-a-execution-log.md` | `1cef9100af66d8c4d8b5a1b3e04a554f45a27225c1510786711ad66c4921bf9a` | **新建（de66c21，Task 1–3）+ Task 4 追加（§6/§7，待 docs commit）** |
+| `src/commerce_agent/orchestration/retail_graph.py` | `9283c8b36cf35560b866e0026cca626bab7be8ae4156a0f7a99b273307852a91` | **修改（84180e2，Task 4 图 allowlist 对齐 v2 规则）** |
+| `src/commerce_agent/orchestration/bird_c_responder.py` | `2c809883268c9128c498642332cb54576cf234dbfc245eba66940787321e798a` | **修改（84180e2，Task 4 常量提升；⚠ 未跟踪文件，从未入库）** |
+| `tests/contract/test_bird_tool_catalog.py` | `757714a24799836d75fcc57de504c2fc2b440582bd5f4fe9f09ffa7cee2a5dab` | **修改（84180e2，Task 4 三方一致性守卫 2→6 测试）** |
+| `tests/unit/orchestration/test_retail_graph.py` | `df647d62c8a422e02ada4351ef8533faf98ae0352e605742d8371e2f8701d6cd` | **修改（84180e2，Task 4 legacy 测试对齐 + 死代码清理）** |
+| `scripts/probe_deepseek_gateway.py` + `tests/unit/scripts/test_probe_deepseek_gateway.py` + `tests/integration/deepseek/test_retail_probe.py` | — | **删除（84180e2，Day 3 旧探针退役；前两个 tracked git rm，最后一个未跟踪磁盘删除）** |
 
 不要覆盖或回退这些文件。若现场哈希不同，先确认是否是用户或其他会话的新修改，再继续工作。
 

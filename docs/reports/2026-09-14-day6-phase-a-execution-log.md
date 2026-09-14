@@ -1,4 +1,4 @@
-# 2026-09-14 执行日志：Day 6 Phase A 前段（Task 1–3）与授权链
+# 2026-09-14 执行日志：Day 6 Phase A（Task 1–4）与授权链
 
 > 会话：2026-09-14（Asia/Shanghai）· 执行者：Claude Code（GLM）
 > 范围：Day 6 计划批准与打包 commit 授权 → Task 1 提交语义排查、Task 2 spool 导入接线、Task 3 能力探针重设计（含付费执行）；Task 4–11 留待新会话
@@ -64,3 +64,25 @@
   5. Task 10（付费 ≤$0.10 已预授权）：小样本策略验证（新 experiment，c/a 各半，2–4 集）
   6. Task 11：Full 重设计方案对比（零付费分析，交用户裁定）
 - 授权提醒：Task 10 是首次付费运行策略修复后的 episode；执行前确认 prompt-policies v3 离线全绿 + Task 5 红绿完成。
+
+## 6. Task 4：v2 decide 三方一致性守卫（`84180e2`，新会话 2026-09-14 续）
+
+**背景**：Gate P §6.5 技术债③——v2 `retail_decide` 规则提供 `request_clarification`/`submit_investigation_plan`，但图白名单 `_RETAIL_TOOL_NAMES` 仍是 v1 残留（含 `execute_readonly_sql`、缺这两个），legacy 图路径模型真实调用即 `tool_not_registered`。
+
+**修复面（最小）**：
+1. `retail_graph.py`：`_RETAIL_TOOL_NAMES`（v1 三工具）→ `RETAIL_TOOL_NAMES`（公开常量，与 v2 decide 规则四工具精确相等）。
+2. `bird_c_responder.py`：内联 `{"ask_user","submit_sql"}` 提升为 `BIRD_C_TOOL_NAMES` 常量（查重点不变）。
+3. `tests/contract/test_bird_tool_catalog.py`：2 → 6 测试——既有 BIRD 目录 ⊆ 契约两条保留，新增**三方精确相等**四条：bird_a 规则 == 端口 allowlist（同源冻结契约 fixture）、bird_c 规则 == 响应器常量、retail decide 规则 == 图 allowlist、图 allowlist ⊆ 冻结 retail 目录。
+4. `tests/unit/orchestration/test_retail_graph.py`：resume 重试测试的 `execute_readonly_sql` 调用改为 `retrieve_retail_knowledge`（四工具白名单内），连带删除死代码 `AggregateExecutor` 与 QueryEngine/AstPolicy/QueryResult 导入。
+
+**旧探针退役（`scripts/probe_deepseek_gateway.py` + 两个测试文件删除）**：全量 suite 首跑暴露 3 失败——旧探针 fake 路径在 decide 注入 `execute_readonly_sql`（`retail-probe-profile-v8` 合成规则），与新 allowlist 结构性冲突。退役依据：① `636129c` commit 信息已宣布「replace day 3 probe with day 6 capability probe」；② Gate P 正式结论「Day 3 固定 SQL 链判据不可行，需 Day 6 重设计」且 Task 3 已完成重设计（门 PASS）；③ 旧探针唯一调用面是其自身与两个测试。删除明细：`probe_deepseek_gateway.py`（928 行，tracked）、`tests/unit/scripts/test_probe_deepseek_gateway.py`（521 行，14 函数含一组 ×3 参数化 = 16 测试项，tracked）、`tests/integration/deepseek/test_retail_probe.py`（deepseek marker live 测试，**未跟踪文件**，磁盘删除）。`tests/integration/deepseek/__init__.py` 保留。
+
+**数字闭合**：离线 846 + 4（新守卫）− 16（旧探针单测项）= **834 passed**；skip 129 − 1（deepseek live）= **128 skipped**；Ruff 全绿（src/tests/scripts/db/migrations/bird_system_agent）；PG `-m postgres` **128 passed**（checkpoint/resume 无回归）。
+
+**披露（git 跟踪状态，待用户裁定）**：`src/commerce_agent/orchestration/bird_c_responder.py` 是**未跟踪文件**（Day 2 时代创建、从未入 allowlist，`git check-ignore` 确认非 gitignore；同状态还有 context_builder/builder.py、model/* 等核心模块——被跟踪测试早已导入未跟踪模块，属项目既有部分入库模式）。本 commit 未将其卷入窄主题 commit（守卫测试 `from ...bird_c_responder import BIRD_C_TOOL_NAMES` 与既有惯例一致）；若用户希望该模块（或其余未跟踪核心模块）入库，另行裁定。
+
+## 7. 当前状态（Task 4 后）
+
+- commit 链：`3a71357` → `b1c9a4e` → `1bdcf78` → `4ceab5c` → `636129c` → `de66c21` → `abb3beb` → **`84180e2`**（未 push）。
+- 终态：离线 **834 passed, 128 skipped**；Ruff 全绿；PG **128 passed**。PowerContext 已由用户要求在本会话开场起动（端口 8000，`live: ok`）。
+- **下一步**：Task 5（c/a 策略修复：prompt-policies v3 + c-mode 澄清预算闸 + a-mode 提交预留；Task 1 结论已定形状）→ Task 6（Runner SIGINT 演练）→ Task 7→8→9（SSE/UI/E2E）→ Task 10（付费 ≤$0.10 已预授权）→ Task 11（Full 重设计对比）。

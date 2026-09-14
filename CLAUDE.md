@@ -10,19 +10,17 @@
 
 项目由 Codex 推进 12 天（2026-08-24 → 09-07），Claude Code 于 09-11 接手，09-13 完成 Task 13 Pilot 主运行。
 
-**精确状态（2026-09-13 深夜更新，以 `HANDOFF.md` 为准）：**
+**精确状态（2026-09-14 更新，以 `HANDOFF.md` 为准）：**
 
 ```text
 Day 4 overall: PASS；Day 5 Phase A + Gate P preflight 全 PASS（模型已切 deepseek-flash）
-Task 13 Pilot: 完成（experiment pilot-day5-20260913d：20 集 = 18 succeeded + 1 failed + 1 unfinished；
-         rewards 全 0 为合法评测结果；agent 侧 1.4932 元 / 30 元上限；simulator 侧待用户余额核对）
-六活体缺陷: 全部红绿修复（镜像依赖×2 / 快照加载缝 / 契约 fixture 入镜像 / provider_user_id / 工具目录+预算门）；
-         离线 829 passed；Ruff 全绿；边界消毒日志已就位
-当前边界: ① commit 授权（HANDOFF §8 清单，两主题 commit 已获裁定待执行）
-         ② 用户余额交叉核对 ③ Pilot 报告（§16.4 Full 判据外推，Full 启动需另行批准）
-         ④ cybermarket_pattern_12 可按 §8.5.3 恢复（需授权）
-外部事实: DeepSeek 已退役 deepseek-v4-flash → 全配置面 deepseek-flash（capability/price v4）
-终态证据: 离线 829 passed / 128 skipped；Ruff 全绿；执行日志 docs/reports/2026-09-13-task13-pilot-main-run.md
+Task 13 Pilot: 完成（两门 FAIL 为 Day 6 输入基线：预算 457.6 元/160 线、能力 rewards 全 0）
+Day 6 Phase A: Task 1–4 完成（提交语义排查 / spool 导入接线 / 探针门翻 PASS / v2 decide 三方一致性守卫
+         + Day 3 旧探针退役）；离线 834 passed / 128 skipped；Ruff 全绿；PG 128 passed
+下一步: Task 5 c/a 策略修复（prompt-policies v3 + 澄清预算闸）→ Task 6 Runner SIGINT 演练
+         → Task 7–9 SSE/UI/E2E → Task 10 小样本付费验证（预授权 ≤$0.10）→ Task 11 Full 重设计对比
+已预授权: 逐 Task commit、付费 Gate、PG 写入；不含 push、不含 Day 7 计划、不含 Full 启动
+终态证据: 执行日志 docs/reports/2026-09-14-day6-phase-a-execution-log.md；commit 链至 84180e2（未 push）
 ```
 
 ---
