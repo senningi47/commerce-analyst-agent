@@ -10,7 +10,7 @@
 ## 0. 新会话先做什么
 
 1. 完整阅读本文件、`docs/reports/2026-09-14-day6-phase-a-execution-log.md`（Day 6 Phase A 前段执行日志）与 `docs/superpowers/plans/2026-09-14-day6-capability-restore-runner-and-ui.md`（Day 6 计划）。把它们当作需要现场核验的历史交接，不要把历史授权当作新会话授权。
-2. 先向用户报告准确状态：**Day 6 Phase A（Task 1–4）已完成并 commit**——Task 1 提交语义排查（根因 = prompt 缺官方策略，通道无缺陷）、Task 2 spool 导入接线（回填能力就绪，d 旧格式不可回填）、Task 3 探针重设计（**探针门翻转为 PASS**，付费 $0.000035334×2 次调用）、Task 4 v2 decide 三方一致性守卫（图 allowlist 对齐 v2 规则 + 旧探针退役）。**下一步 = Task 5（c/a 策略修复）→ Task 6（Runner SIGINT 演练）→ Task 7–9（SSE/UI/E2E）→ Task 10（小样本付费验证，上会话已预授权 ≤$0.10）→ Task 11（Full 重设计对比）**。用户已预授权：逐 Task commit、付费 Gate、PG 写入；决策按推荐执行、日志记录即可。
+2. 先向用户报告准确状态：**Day 6 Phase A（Task 1–5）已完成并 commit**——Task 1 提交语义排查（根因 = prompt 缺官方策略，通道无缺陷）、Task 2 spool 导入接线（回填能力就绪，d 旧格式不可回填）、Task 3 探针重设计（**探针门翻转为 PASS**，付费 $0.000035334×2 次调用）、Task 4 v2 decide 三方一致性守卫（图 allowlist 对齐 v2 规则 + 旧探针退役）、Task 5 c/a 策略修复（prompt-policies v3 + c-mode 澄清预算闸）+ band 澄清两轮（原对账恢复，band 模型经官方定义确认）。**下一步 = Task 6（Runner SIGINT 演练）→ Task 7–9（SSE/UI/E2E）→ Task 10（小样本付费验证，上会话已预授权 ≤$0.10，空闲档运行）→ Task 11（Full 重设计对比）**。用户已预授权：逐 Task commit、付费 Gate、PG 写入；决策按推荐执行、日志记录即可。
 3. **外部事实（关键）**：模型更名证据链与全部实测数字见研究笔记；价格快照已双源核对（用户读数 = 页面提取）；探针累计花费 ~$0.008。
 4. preflight 三项零付费已于 2026-09-13 完成（执行入口备查：`scripts/prepare_bird_pilot.py --dataset <公开数据集路径>`、`--run-db-check`、GT 拒绝检查见执行日志 §4）。Task 13 主运行**需要用户新会话明确授权**（一次正向运行 = 一次授权额度）。
 5. 根目录 `.env` 只能由已审核脚本或 `uv run --env-file .env ...` 消费。不要手工读取、打印、搜索、hash 或统计它。（本日已追加 Day 5 变量与 `USER_SIM_MODEL=openai/deepseek-flash`，均经用户授权。）
@@ -155,12 +155,21 @@ security/transaction gate `9 passed in 5.59s`；唯一正向 seller-risk scenari
 4. 终态：离线 **834 passed, 128 skipped**（846+4−16 / 129−1）；Ruff 全绿；PG **128 passed**。PowerContext 服务本会话开场起动（端口 8000）。
 5. **Band 澄清（用户输入，零付费，两轮后定稿）**：「peak 计费」说法经用户提供官方峰值窗口定义后撤回——原对账（sim $0.6288 / 2.24× / 457.6 元 FAIL）恢复，band 模型（快照窗口 + `_pricing.py` weekday 门）经官方定义**精确确认**；新增付费运行调度纪律（peak = 2×，一律空闲档运行，Pilot 已满足）。账本、Pilot 报告 §9、HANDOFF §2.10、执行日志 §9 已同步。
 
+### 2.14 Task 5：c/a 策略修复（Claude Code，2026-09-14 同会话续）
+
+用户指示「直接继续 Task 5」后完成（commit **`ad961e8`**，细节见执行日志 §10）：
+
+1. **prompt-policies v3**（新文件）：`bird-a-policy-v2` = 隔离 envelope 原样 + 官方策略（9 工具 coin 成本逐项==冻结契约断言、探索先行、先验证再提交、失败 debug 重试、P2 纪律）；`bird-c-policy-v2` = envelope 原样 + `max_turn` 上限声明；retail/common 零改动。**官方 a-mode 预算实为 `6+2×歧义+2×patience`（任务相关），policy 锚定 `budget_remaining` 不硬编码。**
+2. **c-mode 澄清预算闸**：`BirdSessionStatePort` 按 state `max_turn`（orchestrator 种入，`cinteract.py:115-124` 一手核验）闸 ask_user——耗尽后提醒替换结果（原 call_id，坑 57），经 **answer 通道**回流（`_answer_text` 提取 `answer` 键；a-mode gate 的 `text` 键在该通道会丢——实现期发现）；每轮 phase datum 注入实时预算行；`_ask_user_turns` 按 phase 重置；max_turn 缺失 → gate 关闭。
+3. **判据达成**：离线演练 c-mode 修复后行为（2 澄清 + 1 闸提醒 + submit，model_turns=4）✓；三轨不交叉全绿 ✓；离线 **844 passed, 128 skipped**（+10）；Ruff 全绿；PG **128 passed**。
+4. **Task 11 输入**：c-mode 敏感度表入账本（N=10 每集 $0.0069 / c 侧 740 集 $5.11，较失控基线 **-83%**）。
+
 ## 3. 当前卡在哪里
 
-**没有技术阻塞。** Day 6 Phase A（Task 1–4）完成，新会话从 Task 5 继续：
+**没有技术阻塞。** Day 6 Phase A（Task 1–5）完成，新会话从 Task 6 继续：
 
 - **用户已预授权（2026-09-14 深夜）**：① 剩余决策按执行者推荐行使；② 付费 Gate（Task 3 探针已用毕、Task 10 小样本 ≤$0.10 含 sim 侧）与 PG 写入；③ 逐 Task commit 打包授权；④ 只要求日志记录与上下文收尾。以上授权覆盖 Day 6 计划范围，**不含 push、不含 Day 7 计划、不含 Full 启动**（Task 11 仍只产出方案对比）。
-- **下一步顺序**：Task 5（c/a 策略修复：prompt-policies v3 + 澄清预算闸；Task 1 结论已给形状）→ Task 6（Runner SIGINT 演练，双开关）→ Task 7→8→9（SSE/UI/E2E，`api/`、`web/`、`tests/e2e/` 全新）→ Task 10（小样本验证，新 experiment，须在 Task 5 红绿后）→ Task 11（Full 重设计方案对比，交用户裁定）。
+- **下一步顺序**：Task 6（Runner SIGINT 演练，双开关 `COMMERCE_AGENT_RUN_POSTGRES_TESTS=1` + `LANGGRAPH_STRICT_MSGPACK=true`）→ Task 7→8→9（SSE/UI/E2E，`api/`、`web/`、`tests/e2e/` 全新）→ Task 10（小样本验证，新 experiment，须在 Task 5 红绿后——已满足；**空闲档运行**）→ Task 11（Full 重设计方案对比，交用户裁定）。
 - 关键输入：Task 1 研究笔记（`docs/project/research/2026-09-14-submit-semantics-alignment.md`）已定 Task 5 修复形状；PG 测试需双开关 `COMMERCE_AGENT_RUN_POSTGRES_TESTS=1` + `LANGGRAPH_STRICT_MSGPACK=true`。
 - `cybermarket_pattern_12 [a]` unfinished 恢复（可选，需新会话向用户确认）；`crypto_exchange_9 [c]` failed 有效不重跑。
 - Day 7（产品 50 题、实验、Full 进度/收尾、README/面试材料）需独立计划；Full 启动与否在 Task 11 后由用户裁定。
@@ -324,6 +333,13 @@ security/transaction gate `9 passed in 5.59s`；唯一正向 seller-risk scenari
 | `tests/contract/test_bird_tool_catalog.py` | `757714a24799836d75fcc57de504c2fc2b440582bd5f4fe9f09ffa7cee2a5dab` | **修改（84180e2，Task 4 三方一致性守卫 2→6 测试）** |
 | `tests/unit/orchestration/test_retail_graph.py` | `df647d62c8a422e02ada4351ef8533faf98ae0352e605742d8371e2f8701d6cd` | **修改（84180e2，Task 4 legacy 测试对齐 + 死代码清理）** |
 | `scripts/probe_deepseek_gateway.py` + `tests/unit/scripts/test_probe_deepseek_gateway.py` + `tests/integration/deepseek/test_retail_probe.py` | — | **删除（84180e2，Day 3 旧探针退役；前两个 tracked git rm，最后一个未跟踪磁盘删除）** |
+| `configs/model/prompt-policies.v3.json` | `c8dfc65f5d52186827233f6260b7806fc786560810284be2e6585dcf4ddd66f3` | **新建（ad961e8，Task 5 bird-a/bird-c 官方策略整合；v2 文件保留作历史）** |
+| `configs/model/run-profiles.v2.json` | `d231b61685b8ffb0b12a772528c52b090558d6035993ef60cc90eaf4e5138cb6` | **修改（ad961e8，bird profiles 的 prompt_policy_revision → v2 策略名）** |
+| `src/commerce_agent/context_builder/profiles.py` | `81fd32aeb800e0ed9a0fd1d2fc14091c1f6a074729c6f2a19cadff35d3c9f5c8` | **修改（ad961e8，_FILES/revision 校验/_POLICY_REVISIONS 切 v3）** |
+| `src/commerce_agent/orchestration/bird_server.py` | `3569b4b7bbe2afd67f9601288d44d8008ec2020ecec105a553e1a8dd44fd2bd5` | **修改（ad961e8，c-mode 澄清预算闸 + 实时预算行注入）** |
+| `tests/contract/test_bird_prompt_policy.py` | `86fa18b0fe0f84431e649b11a1e2967a85e8b8c565b6fc4748adfca91dbfc3ea` | **新建（ad961e8，策略守卫 6 条）** |
+| `tests/contract/test_bird_system_server_adapter.py` | `f2f016bb0b3e9943e06f4e6b50d80537f889febbfdf5874f4dc722d3f8393355` | **修改（ad961e8，gate 测试 4 条）** |
+| `tests/unit/context_builder/test_profiles.py` | `a0e4553ae2b9c6ba43b6a05954aa4073c4b8c1a23241b09f4de878ce51b869eb` | **修改（ad961e8，canonical 校验文件名 v2→v3）** |
 
 不要覆盖或回退这些文件。若现场哈希不同，先确认是否是用户或其他会话的新修改，再继续工作。
 

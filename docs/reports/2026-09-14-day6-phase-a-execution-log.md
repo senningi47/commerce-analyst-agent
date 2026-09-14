@@ -112,3 +112,32 @@
 **恢复**：§3.5 原对账与 457.6 元 FAIL 终裁全部恢复有效（sim $0.6288 / 2.24× / $0.03144 每集 / a-mode 单项 210 元超线）；§8 的拆分、两档外推、结构反转、Task 10 上限重估**全部作废**。账本恢复 457.6 并新增 `band_claim_withdrawal_2026_09_14`（含 `projected_total_peak_run_penalty_yuan=908.8`）。HANDOFF §2.10/§2.13、CLAUDE.md §0、Pilot 报告 §0/§7 同步为最终口径。
 
 **存续洞见 → 运行纪律**：peak 档恰为 off-peak 的 2×；付费运行（Task 10 小样本、未来 Full/消融）**一律调度空闲档**（北京工作日夜/晨、周末），否则剩余翻倍至 ~908.8 元（5.68×）。Pilot（周日）已天然满足；汇率口径注记（平台 CNY 列 = 6.6667×USD 列，总账对两种汇率口径不敏感：457.3 vs 457.6）随账本记录。零付费、零代码变更。
+
+## 10. Task 5：c/a 策略修复（`ad961e8`，同会话续）
+
+**输入**：Task 1 研究笔记 §5（修复形状：prompt-policies v3 + c-mode 澄清预算闸；根因 = 我方 prompt 缺官方任务策略，通道无缺陷）。零付费、零 GT 读取。
+
+**修复面（全部策略层，未动 submit 链路/`_apply_submit_state`/BudgetStopGate/`_submitted_this_phase`）**：
+1. **`configs/model/prompt-policies.v3.json`**（新增，canonical 单行）：`bird-a-policy-v2` = 原 3 句隔离 envelope **原样保留** + 官方策略整合——9 工具 coin 成本逐项列出（与冻结契约逐项断言相等，防漂移）、探索先行（schema/列含义/外部知识）、**先 execute_sql 验证再 submit_sql**、失败且预算有余则 debug 重试、P2 同纪律；`bird-c-policy-v2` = 原 2 句 envelope 原样保留 + `max_turn` 澄清上限声明（每轮恰一问、预算耗尽必须 submit）。`retail-policy-v2` 与 common envelope 零改动（三轨不交叉测试全绿）。**官方预算澄清**：a-mode 初始预算非固定 18，而是 `6 + 2×歧义数 + 2×patience`（`ainteract.py:45-54`，任务相关存 state）——policy 引导锚定 `budget_remaining` 而非硬编码。
+2. **`run-profiles.v2.json`**：bird_a/bird_c 的 `prompt_policy_revision` → v2 策略名（profile revision 沿 Task 13 先例不 bump）。
+3. **c-mode 澄清预算闸（graph 层，行为保险）**：`BirdSessionStatePort` 新增 `_gate_clarification_budget`——官方 state 键 `max_turn`（orchestrator 按 `n_ambiguities + patience` 种入，`cinteract.py:115-124` 一手核验）；预算耗尽后的 ask_user **替换为提醒结果**（对齐官方 before_model_callback 语义，搭载原 call_id——坑 57）；提醒经 **ask_user 的 answer 通道**回流（`_run_c` 的 `_answer_text` 提取 `answer` 键——a-mode gate 的 `text` 键在该通道会提取成空串，实现期发现的坑）；每轮 phase datum 注入实时预算行 `[clarification budget: used of max_turn ...]`；`_ask_user_turns` 与 `_submitted_this_phase` 同点按 phase 重置。max_turn 缺失/非正 → gate 关闭（prompt-only，等价 Task 5 前行为）。
+4. **guard**：`tests/contract/test_bird_prompt_policy.py` 新增 6 条（envelope 前缀保持 ×2、coin 成本==冻结契约、策略要点存在 ×2、retail policy 不受沾染）。
+
+**TDD 红绿**：RED 7 failed（3 policy + 4 gate，含「60 轮全 ask_user」最小复现——`max_turn=2` 下 EndlessAskHandler 应只执行 2 次 ask_user）→ GREEN 后 210 passed（contract+builder+orchestration）。测试期修正一处断言索引：gate 提醒出现在**下一轮**请求的 phase datum（gating 发生于模型第 3 轮仍选 ask_user 之后），非当轮。
+
+**判据达成**：离线演练 `test_c_clarification_budget_gated_ask_reaches_submit_within_cap`——2 次澄清 + 1 次被闸提醒 + submit_sql，`model_turns=4`，dialogue_history 零污染（被闸的第三次提问不入对话史）；c-mode 每集至少一次 submit_sql 的修复后行为模式成立。全量离线 **844 passed, 128 skipped**（834+10）；Ruff 全绿；PG `-m postgres` **128 passed**。配置面变更经 `compute_config_hash` 自动流入新 experiment 的 config_hash（无硬编码哈希破坏）。
+
+**Step 4：c-mode 成本敏感度表（供 Task 11，入账本 `task5_c_mode_sensitivity`）**：实测锚定（60 轮：agent $0.0100 + sim $0.03144 每集，线性模型）→ 每轮合计 $0.000691；修复后轮次 ≈ max_turn+1~2：
+
+| N（模型轮） | 每集 agent+sim | c 侧 740 集合计 |
+|---|---|---|
+| 5 | $0.0035（0.024 元） | $2.56（18.1 元） |
+| 8 | $0.0055（0.039 元） | $4.09（28.9 元） |
+| **10** | **$0.0069（0.049 元）** | **$5.11（36.1 元）** |
+| 15 | $0.0104（0.073 元） | $7.67（54.2 元） |
+| 20 | $0.0138（0.098 元） | $10.22（72.3 元） |
+| 60（Pilot 实况） | $0.0414（0.293 元） | $30.67（216.8 元） |
+
+N=10 时 c 侧较 Pilot 失控基线 **-83%**。a-mode 无行为级基线拆分，预期改善（coin 策略引导探索收敛）待 Task 10 实测。
+
+**下一步**：Task 6（Runner SIGINT 中断恢复 E2E，双开关）→ Task 7→8→9（SSE/UI/E2E）→ Task 10（付费 ≤$0.10，空闲档运行）→ Task 11（Full 重设计对比）。
