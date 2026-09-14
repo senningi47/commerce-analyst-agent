@@ -10,7 +10,7 @@
 ## 0. 新会话先做什么
 
 1. 完整阅读本文件、`docs/reports/2026-09-14-day6-phase-a-execution-log.md`（Day 6 Phase A 执行日志，§14=Task 8 Step 2/3、§15=Task 9）与 `docs/superpowers/plans/2026-09-14-day6-capability-restore-runner-and-ui.md`（Day 6 计划）。把它们当作需要现场核验的历史交接，不要把历史授权当作新会话授权。
-2. 先向用户报告准确状态：**Day 6 Phase A（Task 1–9 全部）已完成**——Task 1 提交语义排查、Task 2 spool 导入接线、Task 3 探针重设计（**探针门 PASS**）、Task 4 三方一致性守卫、Task 5 c/a 策略修复、Task 6 SIGINT 恢复演练（**验收门② PASS**）、Task 7 SSE 事件面、Task 8 关键 UI 三步全完成、Task 9 安全/E2E（API 层 E2E 3 条 PG 全绿 + UI 手工验收清单——**验收门①成文齐备，两验收门均通过**）。**下一步 = Task 10（小样本付费验证 ≤$0.10 含 sim 侧，**空闲档运行**——北京工作日夜/晨或周末；新 experiment、c/a 各半 2–4 集、Pilot 同库不同题避免记忆污染）→ Task 11（Full 重设计对比，交用户裁定）**。用户已预授权：逐 Task commit、付费 Gate、PG 写入；决策按推荐执行、日志记录即可。
+2. 先向用户报告准确状态：**Day 6 Phase A（Task 1–9 全部）已完成**——Task 1 提交语义排查、Task 2 spool 导入接线、Task 3 探针重设计（**探针门 PASS**）、Task 4 三方一致性守卫、Task 5 c/a 策略修复、Task 6 SIGINT 恢复演练（**验收门② PASS**）、Task 7 SSE 事件面、Task 8 关键 UI 三步全完成、Task 9 安全/E2E（API 层 E2E 3 条 PG 全绿 + UI 手工验收清单——**验收门①成文齐备，两验收门均通过**）。**下一步 = Task 10（小样本付费验证 ≤$0.10 含 sim 侧）——零付费准备已完成（执行日志 §16：选题 `archeology_scan_M_4` c+a 同题双模式、seed 11、零 Pilot 重叠），但付费运行被空闲档纪律阻塞（选题时 = 北京周一 14:43 peak；peak ~$0.114 超上限）——18:00 后新会话按 §16 一键清单执行**→ Task 11（Full 重设计对比，交用户裁定）**。用户已预授权：逐 Task commit、付费 Gate、PG 写入；决策按推荐执行、日志记录即可。
 3. **外部事实（关键）**：模型更名证据链与全部实测数字见研究笔记；价格快照已双源核对（用户读数 = 页面提取）；探针累计花费 ~$0.008。
 4. preflight 三项零付费已于 2026-09-13 完成（执行入口备查：`scripts/prepare_bird_pilot.py --dataset <公开数据集路径>`、`--run-db-check`、GT 拒绝检查见执行日志 §4）。Task 13 主运行**需要用户新会话明确授权**（一次正向运行 = 一次授权额度）。
 5. 根目录 `.env` 只能由已审核脚本或 `uv run --env-file .env ...` 消费。不要手工读取、打印、搜索、hash 或统计它。（本日已追加 Day 5 变量与 `USER_SIM_MODEL=openai/deepseek-flash`，均经用户授权。）
@@ -218,7 +218,7 @@ security/transaction gate `9 passed in 5.59s`；唯一正向 seller-risk scenari
 **没有技术阻塞。** Day 6 Phase A（Task 1–9 全部）完成，新会话从 Task 10 继续：
 
 - **用户已预授权（2026-09-14 深夜）**：① 剩余决策按执行者推荐行使；② 付费 Gate（Task 10 小样本 ≤$0.10 含 sim 侧）与 PG 写入；③ 逐 Task commit 打包授权；④ 只要求日志记录与上下文收尾。以上授权覆盖 Day 6 计划范围，**不含 push、不含 Day 7 计划、不含 Full 启动**（Task 11 仍只产出方案对比）。
-- **下一步顺序**：Task 10（小样本策略验证：新 experiment id、c/a 各半 2–4 集、选 Pilot 同库不同题避免记忆污染；**空闲档运行**——peak=2×，北京工作日夜/晨或周末；验证 c-mode submit_sql ≥1/集、reward 通道打通[首分>0 即通道证明]、每集 agent+sim 新成本读数；产出验证报告交 Task 11）→ Task 11（Full 重设计方案对比——范围压缩/sim 降本/上限修正三方向 × 修复后单价重推 §16.4，交用户裁定）。
+- **下一步顺序**：**Task 10 已零付费就绪、付费运行被空闲档纪律阻塞**（选题时现场时钟 = 北京周一 14:43 peak 窗口内；peak 2 集 ~$0.114 超出 ≤$0.10 上限，off-peak ~$0.057）——**18:00 后（或周末）新会话按执行日志 §16「一键执行清单」跑**（选题=`archeology_scan_M_4` c+a 同题双模式、同库不同题零重叠；config-hash 必须现场重算，旧 `b1889777…` 因 Task 5 配置面变更失效）→ Task 11（Full 重设计方案对比——范围压缩/sim 降本/上限修正三方向 × 修复后单价重推 §16.4，输入 = Task 10 新单价，交用户裁定）。
 - Task 10 执行入口（沿用 Task 13 模式）：`uv run --env-file .env python -m commerce_agent.evaluation --experiment <新id> --purpose ablation_repair --config-hash <现场计算> --task-list <清单> --events outputs/bird-eval/events-<id>.jsonl --executor official --store postgres --adk-root _upstream/BIRD-Interact/BIRD-Interact-ADK --task-data-dir outputs/bird-pilot/task-data --episode-output-dir outputs/bird-eval/episodes`；task-list 需新选 题（`scripts/prepare_bird_pilot.py` 同库不同题，seed 更换）；compose 栈起动前处置 spike 容器（6002，Day 1 遗留已 stop 但需确认）。
 - Task 8/9 现场备注：dev server 与 API 进程已停（重启：`cd web && npm run dev` + `uv run --env-file .env python scripts/run_api.py`，端口 5173/8010）；`scripts/seed_ui_live_run.py` 仅浏览器验证用，用后须场景 reset。
 - 关键输入：Task 1 研究笔记 + Task 5 敏感度表（账本 `task5_c_mode_sensitivity`：N=10 每集 $0.0069，c 侧 740 集 $5.11）；PG 测试需双开关 `COMMERCE_AGENT_RUN_POSTGRES_TESTS=1` + `LANGGRAPH_STRICT_MSGPACK=true`。
@@ -459,3 +459,10 @@ security/transaction gate `9 passed in 5.59s`；唯一正向 seller-risk scenari
 - **修改**：执行日志 §15、本文件、`CLAUDE.md` §0。
 - **DB 现场变更（预授权范围内）**：E2E 三场景（investigation/seller-risk/alert，`task15-e2e-*-v1`）写入→断言→finally 场景 reset 归零；eval 验证实验自建自清理。三套件终态：PG **140 passed**（integration 137 + e2e 3）、离线 **866 passed, 140 skipped**、Ruff 全绿。
 - **外部状态**：无残留进程；零付费、零 GT 读取。
+
+### 8.3 Task 10 零付费准备轮（2026-09-14 同会话，待 commit）
+
+- **新增（公开，入库）**：`outputs/bird-pilot/task10/task-selection.json`、`outputs/bird-pilot/task10/task-list.jsonl`；`.gitignore` +2 行（`task10/task-data/` GT 拆分、`bird-pilot/bird-budget/` seed 账本）。
+- **gitignored**：`outputs/bird-pilot/task10/task-data/`（2 个 GT 拆分）、`outputs/bird-pilot/bird-budget/pilot-ledger.json`（Task 10 seed 账本）。
+- **DB/付费**：零 DB 变更、零 API 请求（脚本 preflight 完整输出「no API requests were made」）；Pilot 账本核验完好。
+- **状态**：付费运行 staged，待空闲档（见 §3 与执行日志 §16 一键清单）。

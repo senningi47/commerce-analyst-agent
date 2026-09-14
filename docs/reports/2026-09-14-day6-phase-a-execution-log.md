@@ -239,3 +239,18 @@ N=10 时 c 侧较 Pilot 失控基线 **-83%**。a-mode 无行为级基线拆分�
 **判据达成（Task 9 完成即 Day 6 两验收门齐备）**：验收门①「主产品链路可演示」= 手工清单（`test_ui_acceptance.md`，演示模式 + 实时模式 + 评测中心 + 隐私红线四节）且 Task 8 Step 2/3 已实机走通；验收门②「Runner 中断恢复」= Task 6 SIGINT 演练 PASS。PG 全套（integration+e2e）**140 passed**；离线 **866 passed, 140 skipped**（e2e 3 条默认 skip）；Ruff 全绿。
 
 **下一步**：Task 10（付费 ≤$0.10 已预授权——**空闲档运行**，新 experiment，c/a 各半 2–4 集，选 Pilot 同库不同题避免记忆污染；执行前确认 prompt-policies v3 全绿[已达成]）→ Task 11（Full 重设计方案对比，交用户裁定）。
+
+## 16. Task 10 零付费准备完成（同会话续；付费运行待空闲档，未执行）
+
+**空闲档判定（运行纪律，§9）**：选题主会话现场时钟 = 北京周一 14:43，**peak 窗口内**（工作日 09–12/14–18）。off-peak 2 集预估 ~$0.057，peak 同量 ~$0.114 **超出 ≤$0.10 授权上限**——付费运行不执行，待 18:00 后空闲档（或周末）。
+
+**预算算术（选题依据）**：修复后 c 集（N≈10 轮）agent+sim ≈$0.0069/集（Task 5 敏感度表）；a 集 agent p95 $0.0188 + sim $0.03144 ≈$0.0502/集（Pilot 实测）。c2/a2 ≈$0.114 越限 → **取下限 2 集（c1/a1）**，off-peak 预估 ~$0.057，cap 余量 ~2×。
+
+**选题（`prepare_bird_pilot.py --count 2 --seed 11 --out-dir outputs/bird-pilot/task10`，零 API）**：`archeology_scan_M_4` c+a **同题双模式**（同 GT 直接对照两模式，比异题更强）；库 = archeology_scan（Pilot 同库不同题：Pilot 用 M_1，零任务重叠 → 记忆安全）。ambiguity_count=3（a-mode 预算 = 6+2×3+2×patience，任务相关）。产物：`task-selection.json` + `task-list.jsonl`（公开，入库）；`task10/task-data/`（GT 拆分，gitignored——**新坑实例：GT 守卫对新 out-dir fail-closed 拦截，`.gitignore` 精确补 `task10/task-data/` 与 `bird-pilot/bird-budget/` 后通过**）。Pilot 账本（`outputs/bird-budget/pilot-ledger.json`）核验完好未触碰；新 seed 账本落 `outputs/bird-pilot/bird-budget/`（gitignored）。
+
+**18:00 后一键执行清单（新会话按此跑）**：
+1. 确认空闲档（北京工作日夜/晨或周末）+ spike 容器 6002 已 stop + compose.bird 栈三服务起动。
+2. **现场重算 config-hash**（Task 5 后配置面已变：prompt-policies v3 + run-profiles bird 规则；Pilot 旧值 `b1889777…` **失效不得复用**）。参考指纹（本会话用 `compute_config_hash(profile, NonThinkingConfig(disabled), "deepseek-flash")` 现算）：bird_a `b4a9505b7841d765b8bf8140c30fabd5d3be49f93557c2b1e3f7705cc6e7242d`、bird_c `3bfd579a9a9632c48c22ea2cc53c01ee95d1bedd2a9a9cf8ba4a330eb1feb7f8`——**执行时按 Task 13 同款派生方式定实验级单值并记录**。
+3. Runner 命令（Task 13 模式）：`uv run --env-file .env python -m commerce_agent.evaluation --experiment task10-strategy-validate-20260914 --purpose ablation_repair --config-hash <现场计算> --task-list outputs/bird-pilot/task10/task-list.jsonl --events outputs/bird-eval/events-task10.jsonl --executor official --store postgres --adk-root _upstream/BIRD-Interact/BIRD-Interact-ADK --task-data-dir outputs/bird-pilot/task10/task-data --episode-output-dir outputs/bird-eval/episodes`。
+4. 监控：双时点快照（spool 文件数/成本两拍，坑 58）；熔断双条款按 Gate P 文档；上限 $0.10 硬线。
+5. 判据：c-mode submit_sql ≥1/集；**reward 首分 > 0 即通道证明**；每集 agent+sim 新成本读数 → 产出验证报告（策略修复前后对比）交 Task 11。

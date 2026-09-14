@@ -22,10 +22,12 @@ Day 6 Phase A: Task 1–9 全部完成（提交语义排查 / spool 导入接线
          只读 eval/runs API + 评测中心真实 Pilot 数据 + 浏览器实机验证 / Task 9 安全 E2E：API 层 3 条 PG 全绿 +
          UI 手工验收清单（Playwright 默认不引入））——两项验收门①②均通过；
          离线 866 passed / 140 skipped；Ruff 全绿；PG 140 passed；migration head=0007
-下一步: Task 10 小样本付费验证（预授权 ≤$0.10 含 sim 侧，**空闲档运行**：新 experiment、c/a 各半 2–4 集、
-         Pilot 同库不同题）→ Task 11 Full 重设计对比（交用户裁定）
+下一步: Task 10 小样本付费验证（预授权 ≤$0.10 含 sim 侧）——零付费准备已完成（执行日志 §16：archeology_scan_M_4
+         c+a 同题双模式、seed 11、零 Pilot 重叠、off-peak 预估 ~$0.057），付费运行待空闲档（选题时=北京周一 14:43
+         peak，~$0.114 超上限）——18:00 后按 §16 一键清单执行；config-hash 必须现场重算（旧 b1889777 失效）
+         → Task 11 Full 重设计对比（交用户裁定）
 已预授权: 逐 Task commit、付费 Gate、PG 写入；不含 push、不含 Day 7 计划、不含 Full 启动
-终态证据: 执行日志 docs/reports/2026-09-14-day6-phase-a-execution-log.md（§13/§14/§15）；未 push
+终态证据: 执行日志 docs/reports/2026-09-14-day6-phase-a-execution-log.md（§13/§14/§15/§16）；未 push
 ```
 
 ---
