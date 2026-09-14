@@ -1,11 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { buildView } from "./view";
-import {
-  DEMO_STAGES,
-  SCRIPT,
-  eventsForStage,
-  stageOf,
-} from "./mock/stream";
+import { DEMO_STAGES, SCRIPT, eventsForStage, SUGGESTED_QUESTIONS } from "./mock/stream";
 import { STAGE_LABELS, type LoopStage, type RunEvent } from "./types";
 import { Workbench } from "./components/Workbench";
 import { ApprovalsPage } from "./components/ApprovalsPage";
@@ -17,9 +12,16 @@ export default function App() {
   const [tab, setTab] = useState<Tab>("workbench");
   const [stage, setStage] = useState<LoopStage>("completed");
   const [playing, setPlaying] = useState(false);
+  const [question, setQuestion] = useState("");
 
   const events: RunEvent[] = useMemo(() => eventsForStage(stage), [stage]);
   const view = useMemo(() => buildView(events), [events]);
+
+  useEffect(() => {
+    const go = () => setTab("approvals");
+    window.addEventListener("goto-approvals", go);
+    return () => window.removeEventListener("goto-approvals", go);
+  }, []);
 
   useEffect(() => {
     if (!playing) return;
@@ -38,10 +40,18 @@ export default function App() {
     return () => window.clearInterval(timer);
   }, [playing, stage]);
 
+  const ask = (text: string) => {
+    setQuestion(text);
+    setPlaying(false);
+    setStage("clarifying");
+  };
+
   return (
     <div className="app">
       <header className="topbar">
-        <div className="brand">CommerceAnalyst <span className="muted">电商经营分析</span></div>
+        <div className="brand">
+          CommerceAnalyst <span className="brand-sub">电商经营分析工作台</span>
+        </div>
         <nav className="tabs">
           {(
             [
@@ -59,15 +69,38 @@ export default function App() {
             </button>
           ))}
         </nav>
-        <div className="connection">
-          <span className="badge demo">模拟流</span>
-          <span className="muted">{events.length}/{SCRIPT.length} 事件</span>
-        </div>
+        <div className="connection muted small mono">模拟数据 · {events.length}/{SCRIPT.length} 事件</div>
       </header>
 
-      <div className="stagerail">
+      {tab === "workbench" && (
+        <section className="askbar">
+          <input
+            className="ask-input"
+            placeholder="输入一个经营问题，例如：上周华北 GMV 为什么下滑？"
+            value={question}
+            onChange={(e) => setQuestion(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && question.trim()) ask(question.trim());
+            }}
+          />
+          <button className="btn-primary" onClick={() => question.trim() && ask(question.trim())}>
+            开始分析
+          </button>
+          <div className="suggestions">
+            <span className="muted small">快速上手：</span>
+            {SUGGESTED_QUESTIONS.map((item) => (
+              <button key={item.question} className="suggest" onClick={() => ask(item.question)}>
+                {item.question}
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
+
+      <div className="democtl">
+        <span className="muted small">演示控制</span>
         <button className="play" onClick={() => setPlaying((value) => !value)}>
-          {playing ? "⏸ 暂停" : "▶ 自动播放"}
+          {playing ? "暂停" : "自动播放"}
         </button>
         {DEMO_STAGES.map((item) => (
           <button
@@ -86,19 +119,13 @@ export default function App() {
       <main className="content">
         {tab === "workbench" && <Workbench stage={stage} view={view} events={events} />}
         {tab === "approvals" && (
-          <ApprovalsPage
-            stage={stage}
-            proposal={view.proposal}
-            decision={view.decision}
-          />
+          <ApprovalsPage stage={stage} proposal={view.proposal} decision={view.decision} />
         )}
         {tab === "eval" && <EvalCenterPage />}
       </main>
 
       <footer className="footnote">
-        Demo（模拟数据）· 状态条驱动全状态切换 · 自动播放按事件时间轴推进 ·
-        当前阶段：<b>{STAGE_LABELS[stage]}</b>
-        {stageOf(events) === stage ? "" : "（强制覆盖）"}
+        Demo（模拟数据）· 演示控制条仅用于评审时切换状态，真实产品中状态由运行事件驱动。
       </footer>
     </div>
   );

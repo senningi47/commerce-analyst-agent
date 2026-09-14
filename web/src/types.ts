@@ -62,10 +62,24 @@ export interface DemoPayload {
   question?: string;
   clarification?: { question: string; answer: string };
   planStep?: { id: string; title: string; status: "done" | "pending" };
-  sql?: { sql: string; rejected?: string };
-  table?: { columns: string[]; rows: Record<string, string | number>[] };
+  metrics?: { label: string; value: string; delta?: string; tone?: Tone }[];
+  sql?: { sql: string; rejected?: string; source?: string };
+  table?: {
+    columns: string[];
+    rows: Record<string, string | number>[];
+    source?: string;
+  };
   chart?: { day: string; gmv: number; lastWeek: number }[];
   reconciliation?: { rule: string; passed: boolean; detail: string };
   conclusion?: string;
   commandDiff?: { field: string; from: string; to: string }[];
+  proposalMeta?: {
+    title: string;
+    requester: string;
+    kind: string;
+    budgetImpact: string;
+    evidence: string[];
+  };
 }
+
+export type Tone = "neutral" | "down" | "up";

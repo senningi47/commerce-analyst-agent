@@ -11,49 +11,65 @@ const PILOT_ROWS = [
     succeeded: 18,
     failed: 1,
     unfinished: 1,
-    reward: 0.0,
+    reward: "0.0",
     agentCost: "¥1.4932",
     rounds: "675 turn",
-    note: "c: ask_user×539 / submit×1；a: submit×10 未过评审",
   },
   {
-    experiment: "pilot-day5-20260913d (分支统计)",
-    purpose: "c ×10",
+    experiment: "pilot-day5-20260913d",
+    purpose: "c 分支 ×10",
     sets: 10,
     succeeded: 9,
     failed: 1,
     unfinished: 0,
-    reward: 0.0,
+    reward: "0.0",
     agentCost: "≈¥1.00",
     rounds: "60 turn/集",
-    note: "澄清循环失控（修复见 prompt-policies v3）",
   },
   {
-    experiment: "pilot-day5-20260913d (分支统计)",
-    purpose: "a ×10",
+    experiment: "pilot-day5-20260913d",
+    purpose: "a 分支 ×10",
     sets: 10,
     succeeded: 9,
     failed: 0,
     unfinished: 1,
-    reward: 0.0,
+    reward: "0.0",
     agentCost: "≈¥0.49",
     rounds: "18 coin/集",
-    note: "探索挤占提交，SQL 未先验证",
   },
 ];
 
 export function EvalCenterPage() {
   return (
     <div className="evalcenter">
-      <section className="panel">
-        <h3>评测中心（只读）</h3>
-        <p className="muted">
-          数据源：eval 表经只读 API（Step 3 接线）。下表为 Pilot 实测口径。
-        </p>
-        <table className="result eval">
+      <div className="metrics four">
+        <div className="card metric tone-neutral">
+          <div className="card-label">评测集</div>
+          <div className="metric-value mono">20</div>
+          <div className="metric-delta">c ×10 + a ×10</div>
+        </div>
+        <div className="card metric tone-neutral">
+          <div className="card-label">有效完成</div>
+          <div className="metric-value mono">18</div>
+          <div className="metric-delta">1 failed · 1 unfinished</div>
+        </div>
+        <div className="card metric tone-down">
+          <div className="card-label">平均 reward</div>
+          <div className="metric-value mono">0.0</div>
+          <div className="metric-delta">策略层问题，通道无缺陷</div>
+        </div>
+        <div className="card metric tone-neutral">
+          <div className="card-label">agent 侧费用</div>
+          <div className="metric-value mono">¥1.4932</div>
+          <div className="metric-delta">上限 ¥30 · 空闲档计费</div>
+        </div>
+      </div>
+
+      <section className="card">
+        <div className="card-label">运行明细 · pilot-day5-20260913d</div>
+        <table className="result">
           <thead>
             <tr>
-              <th>实验</th>
               <th>目的/分支</th>
               <th>集数</th>
               <th>succeeded</th>
@@ -62,29 +78,26 @@ export function EvalCenterPage() {
               <th>reward</th>
               <th>agent 费用</th>
               <th>轮次</th>
-              <th>备注</th>
             </tr>
           </thead>
           <tbody>
             {PILOT_ROWS.map((row, index) => (
               <tr key={index}>
-                <td>{row.experiment}</td>
                 <td>{row.purpose}</td>
-                <td>{row.sets}</td>
-                <td>{row.succeeded}</td>
-                <td>{row.failed}</td>
-                <td>{row.unfinished}</td>
-                <td className="zero">{row.reward.toFixed(1)}</td>
-                <td>{row.agentCost}</td>
-                <td>{row.rounds}</td>
-                <td className="muted">{row.note}</td>
+                <td className="mono">{row.sets}</td>
+                <td className="mono">{row.succeeded}</td>
+                <td className="mono">{row.failed}</td>
+                <td className="mono">{row.unfinished}</td>
+                <td className="mono zero">{row.reward}</td>
+                <td className="mono">{row.agentCost}</td>
+                <td className="mono">{row.rounds}</td>
               </tr>
             ))}
           </tbody>
         </table>
-        <div className="notice warn">
-          预算门 FAIL（457.6 元 / 160 元线）· 能力门 FAIL（rewards 全 0）——两门为
-          Day 6 输入基线，修复后以 Task 10 小样本实测更新。
+        <div className="stage-note">
+          两门基线：预算门 FAIL（457.6 元 / 160 元线）· 能力门 FAIL（rewards 全
+          0）。策略修复（prompt-policies v3）后以 Task 10 小样本实测更新本页。
         </div>
       </section>
     </div>
