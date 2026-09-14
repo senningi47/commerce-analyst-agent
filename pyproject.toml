@@ -5,6 +5,7 @@ description = "CommerceAnalyst: e-commerce analysis and controlled-operations ag
 requires-python = ">=3.11,<3.12"
 dependencies = [
   "alembic>=1.19,<2",
+  "fastapi>=0.115,<1",
   "httpx>=0.28.1,<0.29",
   "langgraph>=1.2.11,<1.3",
   "langgraph-checkpoint-postgres==3.1.2",
