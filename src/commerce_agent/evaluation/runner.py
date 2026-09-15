@@ -18,7 +18,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from uuid import UUID, uuid4
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from commerce_agent.evaluation.contracts import (
     AttemptRecord,
@@ -38,6 +38,22 @@ class RunnerConfig(BaseModel, frozen=True, extra="forbid"):
     concurrency: int = Field(default=2, ge=1, le=2)  # spike-frozen at 2 (v0.3 §16.2)
     stop_grace_seconds: int = Field(default=60, ge=1)
     task_order_seed: int = 0
+    compose_env_out: Path | None = None
+
+    @model_validator(mode="after")
+    def validate_same_task_serial(self) -> RunnerConfig:
+        """Pit 63: the official task DB name omits the mode — same-task c/a
+        episodes racing concurrently drop/create the same database."""
+        if self.concurrency > 1:
+            modes_per_task: dict[str, set[str]] = {}
+            for task in self.task_list:
+                modes_per_task.setdefault(task.task_id, set()).add(task.mode)
+            if any(len(modes) > 1 for modes in modes_per_task.values()):
+                raise ValueError(
+                    "same task in both modes requires concurrency=1 "
+                    "(official task DB naming omits the mode)"
+                )
+        return self
 
 
 class RunSummary(BaseModel, frozen=True, extra="forbid"):
@@ -93,6 +109,16 @@ class EvaluationRunner:
         self._status_counts: dict[str, int] = {}
 
     async def run(self) -> RunSummary:
+        if self._config.compose_env_out is not None:
+            # pit 65: the agent container tags spool files with
+            # BIRD_EXPERIMENT_ID — stage the compose env file so the stack can
+            # be (re)started with the exact experiment identity
+            env_path = self._config.compose_env_out
+            env_path.parent.mkdir(parents=True, exist_ok=True)
+            env_path.write_text(
+                f"BIRD_EXPERIMENT_ID={self._config.experiment_id}\n",
+                encoding="utf-8",
+            )
         self._store.register_experiment(
             experiment_id=self._config.experiment_id,
             purpose=self._config.purpose,

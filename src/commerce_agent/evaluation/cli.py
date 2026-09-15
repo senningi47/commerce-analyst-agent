@@ -48,6 +48,12 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--adk-root", type=Path, default=None)
     parser.add_argument("--task-data-dir", type=Path, default=None)
     parser.add_argument("--episode-output-dir", type=Path, default=None)
+    parser.add_argument(
+        "--compose-env-out",
+        type=Path,
+        default=None,
+        help="where to stage BIRD_EXPERIMENT_ID for the stack (default: next to --events)",
+    )
     return parser
 
 
@@ -119,6 +125,8 @@ async def _async_main(args: argparse.Namespace) -> int:
         concurrency=args.concurrency,
         stop_grace_seconds=args.stop_grace_seconds,
         task_order_seed=args.seed,
+        compose_env_out=args.compose_env_out
+        or (args.events.parent / "compose-experiment.env"),
     )
     stop_event = asyncio.Event()
     _bridge_signals(stop_event)

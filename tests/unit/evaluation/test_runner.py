@@ -3,6 +3,9 @@ from datetime import UTC, datetime
 from decimal import Decimal
 from uuid import uuid4
 
+import pytest
+from pydantic import ValidationError
+
 from commerce_agent.evaluation._memory import InMemoryEvaluationStore
 from commerce_agent.evaluation.contracts import (
     AttemptTelemetry,
@@ -304,3 +307,54 @@ def test_register_experiment_called_once_with_frozen_identity(tmp_path) -> None:
     asyncio.run(runner.run())
 
     assert store.experiment("pilot-day5") == ("pilot", CONFIG_HASH)
+
+
+def test_same_task_both_modes_requires_serial_concurrency() -> None:
+    """Pit 63: the official task DB name omits the mode — same-task c/a
+    episodes racing concurrently drop/create the same database. Fail fast at
+    config construction instead of at episode time."""
+    with pytest.raises(ValidationError):
+        make_config(
+            task_list=(
+                EpisodeTask(task_id="task-1", mode="c"),
+                EpisodeTask(task_id="task-1", mode="a"),
+            ),
+            concurrency=2,
+        )
+    make_config(
+        task_list=(
+            EpisodeTask(task_id="task-1", mode="c"),
+            EpisodeTask(task_id="task-1", mode="a"),
+        ),
+        concurrency=1,
+    )
+    make_config(
+        task_list=(
+            EpisodeTask(task_id="task-1", mode="c"),
+            EpisodeTask(task_id="task-2", mode="a"),
+        ),
+        concurrency=2,
+    )
+
+
+def test_run_writes_compose_experiment_env_file(tmp_path) -> None:
+    """Pit 65: the agent container tags spool files with BIRD_EXPERIMENT_ID;
+    the runner stages the compose env file at run start so the stack can be
+    (re)started with the exact experiment identity."""
+    env_path = tmp_path / "compose-experiment.env"
+    config = make_config(
+        experiment_id="task7-cmode-refit-20260915g", compose_env_out=env_path
+    )
+    store = InMemoryEvaluationStore()
+    executor = StubEpisodeExecutor([make_outcome(EvalTaskStatus.SUCCEEDED)])
+    asyncio.run(make_runner(store, executor, tmp_path, config).run())
+    assert env_path.read_text(encoding="utf-8") == (
+        "BIRD_EXPERIMENT_ID=task7-cmode-refit-20260915g\n"
+    )
+
+
+def test_run_without_compose_env_out_writes_nothing(tmp_path) -> None:
+    store = InMemoryEvaluationStore()
+    executor = StubEpisodeExecutor([make_outcome(EvalTaskStatus.SUCCEEDED)])
+    asyncio.run(make_runner(store, executor, tmp_path).run())
+    assert not (tmp_path / "compose-experiment.env").exists()

@@ -94,7 +94,17 @@ class OfficialOrchestratorEpisodeExecutor:
                     stdout=asyncio.subprocess.PIPE,
                     stderr=asyncio.subprocess.PIPE,
                 )
-                return_code = await asyncio.wait_for(process.wait(), timeout=self._timeout)
+                try:
+                    stdout, stderr = await asyncio.wait_for(
+                        process.communicate(), timeout=self._timeout
+                    )
+                except TimeoutError:
+                    # a lingering orchestrator keeps calling the paid model API
+                    process.kill()
+                    await process.wait()
+                    return self._infrastructure(attempt, "official_episode_timeout")
+                self._persist_streams(attempt.attempt_id, stdout, stderr)
+                return_code = process.returncode
         except TimeoutError:
             return self._infrastructure(attempt, "official_episode_timeout")
         except OSError:
@@ -132,6 +142,17 @@ class OfficialOrchestratorEpisodeExecutor:
                 wall_clock_ms=_as_ms(record.get("elapsed_seconds"))
             ),
         )
+
+    def _persist_streams(
+        self, attempt_id: Any, stdout: bytes | None, stderr: bytes | None
+    ) -> None:
+        """Pit 68: persist orchestrator subprocess diagnostics (agent-visible
+        content, not GT) so official_process_failed / official_task_error are
+        traceable offline instead of burning paid diagnostic runs."""
+        for suffix, payload in (("stdout", stdout), ("stderr", stderr)):
+            if payload is None:
+                continue
+            (self._output_dir / f"{attempt_id}.{suffix}.txt").write_bytes(payload)
 
     def _infrastructure(self, attempt: AttemptRecord, reason: str) -> EpisodeOutcome:
         return EpisodeOutcome(
