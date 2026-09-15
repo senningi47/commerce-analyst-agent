@@ -401,3 +401,14 @@ N=10 时 c 侧较 Pilot 失控基线 **-83%**。a-mode 无行为级基线拆分�
 3. **Task 5a sim 合规**：compose 拓扑 = 单一 user-simulator 服务服务双模式（**c/a 同配置 by construction**，公平性条款满足）；`USER_SIM_MODEL` env 直通可换（换模 = 一处 env 变更）；官方规程是否允许换模 = 开放项（换前须用户裁定）。
 4. **Task 5b a-mode SQL 诊断**（archeology_scan_7，验证日 episode）：探索期 `execute_sql` **全部成功**（JSONB 键正确、schema 在握）——失败主因**不是 schema/执行**：知识定义查询 3 次全失（`ESI` 变体 → "Knowledge not found"）→ agent **自造领域指标公式**；2 次澄清被 sim 拒答 → 提交猜测公式 → Phase 1 失配。**与 c-mode 失败同源 = 领域知识消解缺口（查询 miss + sim 限制），候选 v4 杠杆：知识 miss 时教 agent 向用户索要定义。**
 5. **C2 重估表（精化锚）**：c 健康 $0.016/集（run h/g 实测中值+sim）、a $0.025/集、spent 7.93 元 → **基准 ~135 元 vs 160 线 ✓（余 16%）；保守（+40% forward）~186 元 = 超线 16%** → riders：off-peak-only / **c 批先行校准锚，a 批前重估** / 每 25 集重估 / 越线安全暂停 / 能力门如实标注。
+
+## 30. Gate C2 行使：A4 c 批 b01–b04（75 集 succeeded），**余额耗尽安全暂停**（2026-09-15 晚窗 20:01–21:38，agent $1.1155）
+
+**授权链**：用户「批准 C2」（riders 随附）。12×25 集子批结构（每批独立实验身份 `a4-c-20260915-bNN` 便于成本归因与每 25 集重估；每模式批量清单使同题跨模式永不同批）。
+
+1. **b01**（20:01–20:23）：24 succeeded + 1 infra——**stderr 落盘首次实战定性**：官方编排器 Windows GBK 默认编码读数据文件崩溃（`UnicodeDecodeError`）→ 红绿修复 `PYTHONUTF8=1` 注入子进程（`1b1b838`）→ 同实验 resume 重试成功（store 契约语义）→ **25/25**。
+2. **b02**（20:27–20:50）：**25/25 零 infra**。**b03**（20:55–21:16）：**25/25 零 infra**。
+3. **b04**（21:21–21:37）：21 succeeded + 4 failed（`official_task_error`）——**stderr 实锤 = `ModelBalanceError provider_balance_insufficient`**：DeepSeek 账户余额耗尽，非任务/模型缺陷。
+4. **安全暂停（rider 触发）**：立即停止批次循环 + 全栈还原（仅产品 PG 运行）。**75/75 succeeded 集、零失忆、能力门 watch = 0/60 reward>0**（与预 A4 发现一致，批内继续自然检验）。
+5. **经济性（spool 实测）**：4 批 93+95+109+93 = 390 turns，**$1.1155 → $0.0116/集**（劣于锚 27%）→ 300 集外推 ~$3.49 agent。今日 agent 侧累计 ~$1.19（C1 系列 0.074 + A4 1.116）≈ 8.4 元；**累计估算 ~15.8 元（待用户余额核对终裁）**。
+6. **恢复计划（等充值）**：preflight b05 → b05–b12（200 集）+ 4 集 sweep（solar_panel_3 / robot_fault_prediction_7 / sports_events_19 / virtual_idol_9）→ ~$2.35 agent → c 批重估 → a 批裁定。
