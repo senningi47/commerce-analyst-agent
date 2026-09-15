@@ -475,6 +475,12 @@ class _Session:
                 dialogue.append(f"[agent ask] {candidate.question}")
                 dialogue.append(f"[user reply] {_answer_text(result)}")
                 continue
+            if candidate.type == "text":
+                # official ADK: a text-only response ends the runner
+                # invocation; the orchestrator's next message continues with
+                # the text retained in session memory (run f verdict)
+                dialogue.append(f"[agent note] {_preview(candidate.content, 2000)}")
+                return candidate.content
             result = await self._port.execute(
                 ToolCall(
                     call_id=f"c_submit_{request_turn}",

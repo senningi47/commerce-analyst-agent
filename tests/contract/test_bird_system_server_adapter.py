@@ -53,6 +53,7 @@ from commerce_agent.orchestration.contracts import (
     BirdCResponse,
     StopOutcome,
     SubmitSqlCandidate,
+    TextCandidate,
 )
 
 CONFIG_ROOT = Path(__file__).parents[2] / "configs" / "model"
@@ -135,7 +136,11 @@ SUBMIT_BODY = {
 }
 
 
-def stub_c_response(candidate: AskUserCandidate | SubmitSqlCandidate) -> BirdCResponse:
+def stub_text_candidate(content: str) -> TextCandidate:
+    return TextCandidate(type="text", content=content)
+
+
+def stub_c_response(candidate: AskUserCandidate | SubmitSqlCandidate | TextCandidate) -> BirdCResponse:
     return BirdCResponse(
         candidate=candidate,
         usage=UsageUnavailable(status="unavailable", reason_code="stub"),
@@ -894,3 +899,70 @@ def _c_model_response(scope: RunScope, calls: tuple[ToolCall, ...]) -> ModelResp
         cost=cost,
         attempts=(attempt,),
     )
+
+
+def test_c_text_only_turn_ends_run_session_and_keeps_memory() -> None:
+    """Official ADK semantics (run f verdict 2026-09-15): a text-only model
+    turn ends the runner invocation instead of failing the episode — the
+    adapter returns the prose, and the orchestrator's next phase message
+    continues with the text retained in session memory."""
+    handler = StubCHandler(
+        [
+            stub_c_response(SubmitSqlCandidate(type="submit_sql", sql="SELECT 1")),
+            stub_c_response(
+                stub_text_candidate("I will fix the join and resubmit.")
+            ),
+            stub_c_response(SubmitSqlCandidate(type="submit_sql", sql="SELECT 2")),
+        ]
+    )
+    port = StubPort(
+        [
+            canned_result(
+                "submit_sql",
+                {"passed": False, "message": "SQL failed Phase 1. Testing wrong.", "reward": 0.0},
+            ),
+            canned_result("submit_sql", SUBMIT_BODY),
+        ]
+    )
+    adapter = make_adapter(c_handler=handler, port=port)
+    adapter.init_session(init_request(state={"db_schema": "SCHEMA_DUMP", "max_turn": 5}))
+
+    first = asyncio.run(
+        adapter.run_session(
+            BirdRunSessionRequest(
+                task_id="task-1",
+                mode="c-interact",
+                message="User Query:\nFind the 2018 delivery bottleneck.",
+            )
+        )
+    )
+    assert first.response == "SQL submitted. Awaiting result."
+
+    second = asyncio.run(
+        adapter.run_session(
+            BirdRunSessionRequest(
+                task_id="task-1",
+                mode="c-interact",
+                message=(
+                    "Your SQL is not correct. You have one more chance. "
+                    "Please fix and call submit_sql."
+                ),
+            )
+        )
+    )
+    assert second.response == "I will fix the join and resubmit."
+
+    third = asyncio.run(
+        adapter.run_session(
+            BirdRunSessionRequest(
+                task_id="task-1",
+                mode="c-interact",
+                message="Your SQL is not correct. Please fix and call submit_sql.",
+            )
+        )
+    )
+    assert third.response == "SQL submitted. Awaiting result."
+    third_context = handler.requests[2].current_phase.content
+    assert "I will fix the join and resubmit." in third_context
+    assert "SELECT 1" in third_context
+    assert "Find the 2018 delivery bottleneck." in third_context

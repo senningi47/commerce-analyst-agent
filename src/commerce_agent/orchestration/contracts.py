@@ -322,8 +322,20 @@ class SubmitSqlCandidate(BaseModel, frozen=True, extra="forbid"):
     sql: str = Field(min_length=1, max_length=100_000)
 
 
+class TextCandidate(BaseModel, frozen=True, extra="forbid"):
+    """BirdC candidate: the model answered in prose.
+
+    Official ADK semantics (run f verdict 2026-09-15): a non-function-call
+    response ENDS the runner invocation instead of failing the episode; the
+    orchestrator's next phase message continues with the text in session
+    memory."""
+
+    type: Literal["text"]
+    content: str = Field(min_length=1, max_length=100_000)
+
+
 BirdCCandidate = Annotated[
-    AskUserCandidate | SubmitSqlCandidate,
+    AskUserCandidate | SubmitSqlCandidate | TextCandidate,
     Field(discriminator="type"),
 ]
 
