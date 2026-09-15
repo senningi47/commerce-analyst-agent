@@ -412,3 +412,13 @@ N=10 时 c 侧较 Pilot 失控基线 **-83%**。a-mode 无行为级基线拆分�
 4. **安全暂停（rider 触发）**：立即停止批次循环 + 全栈还原（仅产品 PG 运行）。**75/75 succeeded 集、零失忆、能力门 watch = 0/60 reward>0**（与预 A4 发现一致，批内继续自然检验）。
 5. **经济性（spool 实测）**：4 批 93+95+109+93 = 390 turns，**$1.1155 → $0.0116/集**（劣于锚 27%）→ 300 集外推 ~$3.49 agent。今日 agent 侧累计 ~$1.19（C1 系列 0.074 + A4 1.116）≈ 8.4 元；**累计估算 ~15.8 元（待用户余额核对终裁）**。
 6. **恢复计划（等充值）**：preflight b05 → b05–b12（200 集）+ 4 集 sweep（solar_panel_3 / robot_fault_prediction_7 / sports_events_19 / virtual_idol_9）→ ~$2.35 agent → c 批重估 → a 批裁定。
+
+## 31. A4 c 批 **COMPLETE**：304/304 succeeded，$0.0113/集（劣于锚 29%），reward 0/300 如实标注（2026-09-15 21:45 → 2026-09-16 00:52 晚窗，agent $3.4567）
+
+**授权链**：用户充值后「已经充值，继续c批吧」。b05–b12 八批 + sweep,每批 preflight（探测+实验 env）→ compose env 重建 agent 容器 → 后台 runner → 聚合入账本。
+
+1. **批次**：b05–b12 每批 **25/25 succeeded 零 infra**（唯一插曲 = b04 的余额耗尽,已由充值解决）；sweep `a4-c-20260915-sweep` 4/4 succeeded（16 turns,$0.057003）。
+2. **终账**：**304 episodes（300 主批 + 4 sweep）,agent $3.4567 = $0.0113/集**（vs 重估锚 $0.016,-29%）；turns 总计 ~1,240；全程 off_peak。
+3. **能力门终态**：**reward>0 = 0/300**（avg 0.0、phase1_passed 0）——与 run g/h 及 a-mode 诊断的知识缺口结论一致（知识 miss → 自造公式 + sim 拒答）。能力门未过,如实标注；改进杠杆 = prompt policy v4（知识 miss → 向用户索要定义）。
+4. **增量重估（c 实测锚）**：spent ≈ 32.4 元（7.93 + c批 24.44）；a 批投影 300 × $0.025 ≈ 53 元；forward（a批+消融+产品）≈ 93 元；**总投影 ≈ 125 元 vs 160 ✓（优于基准 135）**。
+5. **现场**：栈与官方库已 stop（仅产品 PG）；eval 库 13 个实验身份记录完整；spool ~1,590 文件；未 push。
