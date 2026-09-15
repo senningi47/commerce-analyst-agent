@@ -300,3 +300,29 @@ N=10 时 c 侧较 Pilot 失控基线 **-83%**。a-mode 无行为级基线拆分�
 2. **Task 2 红绿**：RED `test_c_run_phase_context_carries_query_dialogue_and_schema`（修复前第二轮上下文实测 = `'2018\n\n[clarification budget: 1 of 5 …]'`——缺陷赤裸复现）→ GREEN：`_phase_content(task_message, dialogue, state)` 渲染 User Query + `[Task schema]`（state.db_schema）+ `[External knowledge]`（state.external_kg）+ 对话累积（`[agent ask]/[user reply]`）+ Task 5 预算行；`_run_c` 保留首条消息并累积 dialogue。
 3. **Task 3**：Ruff 全绿；离线 **867 passed, 140 skipped**（+1）；`bird-system-agent` rebuild + 容器内实证（`_phase_content`×2 / `Clarification dialogue so far` / `Task schema` 命中）✓。
 4. **C1 排程**：修复完成于 08:5x，距 peak（09:00）不足以安全完成付费运行——按 off-peak 纪律**排至下个空闲档（12:00–14:00 或晚间）**，一键清单随 HANDOFF §3 移交；预算 ≤$0.05，判据 = 零失忆句式 + 任意一集 reward>0。风险披露：schema 渲染抬高每轮 prompt token，c 集锚或上浮（C1 实测回填）。
+
+## 21. Day 7 Task 4 / Gate C1：reward=0 未过能力门，失败反馈轮残余缺陷精确定位（2026-09-15 午，付费 Gate 行使，`task7-cmode-refit-20260915`）
+
+**授权链**：用户新会话指示「按 HANDOFF §3 清单执行」；C1 ≤$0.05 已随 Day 7 计划授权（HANDOFF §0.2）。执行窗口 12:34–12:44 北京周二（空闲档 12:00–14:00 内完成全部付费调用）。
+
+1. **前置核验**：① `4287a0b` 之后代码路径零变更（`git diff` 空）→ 按清单**跳过 rebuild**；② config-hash 现场复算 = sha256(`outputs/bird-pilot/task11/task-selection.json`) = `0ce49a52…f6fb` 精确一致；③ 官方库就绪探测（pg_isready accepting 后再跑，坑 67）+ 22 官方域库清点完好；④ 容器内实证 `_phase_content`×2、`bird-c-policy-v2` 在场。
+2. **运行**：experiment `task7-cmode-refit-20260915`，attempt `a5073903-8076-46f2-ac5d-98b1e0e4a2fa`，c 单集 archeology_scan_8，**succeeded 118.4s**，5 模型轮 = 3 ask_user + 2 submit_sql。
+3. **判据结果**：
+   - **提交为真实 SQL：PASS**——两次提交均为复杂 CTE + 真实 schema 列（`processing.system_usage` JSONB 键等），**零 `SELECT 1` 占位符**；澄清提问引用 knowledge #37/#51/#17，任务锚定成立。
+   - **零失忆句式：FAIL**——首 submit 失败后的反馈轮，agent 如实自述 *"I don't have the original question text in this context — only your note that my previous SQL was incorrect"*（dialogue[4]）；第二次提交改为从 state knowledge 即兴构造（pointcloud SRI），脱离任务。
+   - **reward>0：FAIL**（0.0，phase1_passed=false ×2）→ **能力门未过**。按计划 fail 路径：有界诊断 ≤1 轮后停止，交用户裁定。
+4. **有界诊断（≤1 轮，零付费）——残余缺陷 = 修复覆盖 clarify 循环、未覆盖 Phase 边界**。官方每 Phase 一次 run_session（判决书 §3/§19）；submit 失败反馈开启**新 Phase** → `_run_c` 再次调用：局部 `dialogue`（bird_server.py:434）清空、`_phase_content` 把 feedback 消息当 "User Query (official first message)" 渲染（bird_server.py:84），而任务问题只存在于首 Phase 的 message 参数、无跨调用持久化。状态级 `self._state["dialogue_history"]` 跨 Phase 存活且 ask_user 后持续维护（bird_server.py:270-273），但 `_run_c` 未用它播种。**修复方向（待裁定后实施）**：首条官方消息持久化入 state + dialogue 自 state.dialogue_history 播种（红绿）→ rebuild + 容器实证 → C1 重验（新付费授权）。
+5. **成本**（账本 `task7_c1_refit_20260915` 节）：agent 实测 **$0.014710**（spool 878→883 恰 5 文件，快照 `deepseek-flash-usd-2026-09-12`，全程 off_peak；prompt 65,286 / completion 17,634，reasoning 15,838）；sim 估 ~$0.0015（3 ask_user × $0.0005 精化锚，待用户余额核对）；合计 ~$0.016 ≤ $0.05 ✓。
+6. **c 集新锚回填（清单⑤）**：agent **$0.0147/集**——每轮 prompt ~13k（schema+external_kg 渲染），3.6× Task 10 Run 3 锚 $0.0041，§2.24 风险披露实证；sim 调用 60→3（失控期 ~$0.008 → $0.0015）；**合计 ~$0.016/集 vs 旧锚 $0.012**；A4 影响 ≈ +$1.2（288 c 集），可忽略。
+7. **现场收尾**：compose 三服务 + 官方库 5433 已 stop，产品 PG 未动；eval 库新增实验 `task7-cmode-refit-20260915`（1 attempt succeeded，证据保留）；spool +5；**残余修复后的 C1 重验属新一次正向运行，需用户新授权**。
+
+## 22. Day 7 残余修复：Phase 边界会话记忆（零付费红绿，2026-09-15 午续，未 commit）
+
+**授权链**：用户裁定「执行① 批准残余修复」（HANDOFF §3 裁定选项 ①；C1 重验 = 新付费授权，修复本身零付费）。
+
+1. **官方语义定案（判决书补充证据，`cinteract.py` 141/159/179 行一手核验）**：整任务**只 init 一次 ADK 会话**——Phase 1 澄清/submit、debug 重试（"Your SQL is not correct. You have one more chance."）、Phase 2 follow-up 全部打同一会话，session 记忆跨 Phase 累积；debug 轮 agent 可见原问题、澄清对话与自己提交过的 SQL（C1 episode 中 agent 索要 "the SQL I submitted last time" 正是官方本可自带的）。
+2. **RED**（2 条，`tests/contract/test_bird_system_server_adapter.py`）：`test_c_phase_boundary_keeps_task_query_dialogue_and_submit_memory`（失败反馈轮：断言 debug 轮 phase content 含原问题/对话/首提交 SQL/提交结果/新 orchestrator 消息）+ `test_c_follow_up_phase_keeps_session_memory`（成功后 follow-up 轮同机制——坑 70 边界枚举）。首跑双双 FAIL，失败输出精确复现 C1 实况（debug 消息被渲染为 "User Query (official first message)"，任务问题丢失）。
+3. **GREEN**（`bird_server.py` 最小修复面）：`_Session` 持有 `_task_message`（首条官方消息，跨 Phase 持久）与 `_memory`（官方 ADK 会话记忆等价物：ask 对 + submit SQL + 提交结果截断 800 字符）；`_run_c` 首次调用钉住 task_message、dialogue 改引 `self._memory`；`_phase_content` 新增 keyword-only `current_message` 渲染「Orchestrator message for this phase:」（与首条消息相同时跳过）。适配器 **23 passed**（21 存量 + 2 新增）。
+4. **终态**：离线 **869 passed, 140 skipped**（+2）；Ruff 全绿；`bird-system-agent` rebuild + 一次性容器内实证（`Orchestrator message for this phase`×1 / `_task_message`×4 / `_memory`×2 命中）✓。
+5. **哈希**（HANDOFF §7 已同步）：`bird_server.py` = `9aab08b4…ea26f`；`test_bird_system_server_adapter.py` = `112fb706…a470`。
+6. **C1 重验就绪（待用户授权）**：新 experiment `task7-cmode-refit-20260915b`（failed/succeeded 终态不重跑，坑 65 先例）、events 写 `events-c1-refit-b.jsonl`、同 c 单集、同 config-hash、≤$0.05、off-peak；判据不变：零失忆句式 + reward>0。
