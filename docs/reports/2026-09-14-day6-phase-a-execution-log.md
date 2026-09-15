@@ -277,3 +277,17 @@ N=10 时 c 侧较 Pilot 失控基线 **-83%**。a-mode 无行为级基线拆分�
 5. **reward 侧裁定**：A/B/C 增益均为 0（成本杠杆不动 SQL 质量）；19/19 集 reward=0，**任何 Full 变体现启即全 0 分**；最便宜信息单价 = 能力验证 2–4 集（~$0.05–0.10，需新授权）。
 6. **建议序列（呈报用户，裁定权在用户）**：① 现在不启动任何 Full 变体；② 能力验证（reward>0 门）作 Full 前置；③ PASS 后首选 A4（300/模式分层 + sim 合规排查后启用），全量可比性优先则 C；④ 有界失败 → A1 最小工件或搁置。强制 riders：off-peak-only / 每 25 集重估 / Task 10 三修复项入 Day 7 / 首个 a 集兼作成本验证（超 $0.035/集安全暂停）。
 7. **现场**：无代码变更、无 DB 写、无进程残留（本会话零外部状态变更）；PowerContext handoff 见本文件收尾记录与 HANDOFF 头部 revision。
+
+## 19. 能力验证执行：reward>0 未达成，但 c 模式慢性缺陷机制实锤（2026-09-15 晨，付费裁定行使，`task11-capability-validate-20260915a/b`）
+
+**授权链**：用户对 Task 11 裁定清单逐项回复——①批准能力验证（~$0.05–0.10 新授权）②Full 范围按推荐 = A4 ④sim 合规排查按推荐纳入 Day 7（③不适用：A4 无需修 ceiling；⑤余额核对由用户执行，流程已答复）。执行窗：北京周二 07:47–08:50（07:47 起空闲档 ✓；09:00 前完成全部付费调用）。
+
+1. **准备（零付费）**：compose.bird 三服务 + 官方库 `bird_interact_postgresql_full` 起动；**镜像新鲜度容器内实证 ✓**（`_gate_clarification_budget` 2 命中于 `src/commerce_agent/orchestration/bird_server.py`、`prompt-policies-v3` revision 1 命中、三版策略齐备——Task 10 后无代码变更）。选题 `prepare_bird_pilot.py --count 2 --seed 13`（零 API）：`archeology_scan_8`(c) + `archeology_scan_7`(a)，ambiguity 4，与 Pilot 20 + Task 10 M_4 零任务重叠（同库不同题，天然避开同题竞态）；GT 守卫对新 out-dir fail-closed（Task 10 同款坑），`.gitignore` 补 1 行后通过。config-hash = task-selection.json SHA-256 = `0ce49a52…f6fb`。
+2. **Run a（experiment `…a`，concurrency=1，c 先 a 后）**：c 集（archeology_scan_8）**15.5s failed，error_class=official_task_error**——2 个单轮会话后编排器报错，属瞬时 infra（栈冷启动）；按 GC7 废弃。a 集（archeology_scan_7）**succeeded 181s：单会话 11 轮，get_schema+知识×5+7 execute_sql+2 ask_user+2 submit_sql，预算 20 内自主提交**——**v3 策略下首个完整 a-mode episode，行为面健康**；两次提交均达评审、Phase 1 failed，reward 0。
+3. **Run b（experiment `…b`，c 单集重跑）**：**succeeded**：14 ask_user + 2 submit_sql，两次提交达评审 Phase 1 failed，reward 0。首跑失败确认为瞬时 infra。
+4. **判据裁定：reward>0 未达成**（3 有效集 4 次提交全部 Phase 1 failed）。按裁定决策树（有界尝试全 0 → 停止付费）：本轮付费到此为止。
+5. **成本**：agent 实测 **$0.034841**（a 0.029314/11 轮 + c 废弃 0.000695/2 轮 + c 重跑 0.013832/16 轮，band 全程 off_peak）；sim 估 ~$0.022（~22 调用）→ 合计估 **~$0.057**（上限内）。账本新增 `task11_capability_validation` 节。
+6. **关键发现（本轮最大增量，机制实锤）**：**官方 c 模式每轮新建 agent 会话**（spool 实证：重跑 c 集 16 个会话各恰 1 轮、sequence 均从 0 起；a 模式为单会话连续）——每轮上下文 = phase record。重跑 c 集对话回放：**第 0 轮 agent 持有任务上下文**（问出真实澄清问题「efficiency_status 如何判定」，sim 给出实质回答），**第 1 轮起 sim 转入官方 out-of-scope 拒答、agent 逐轮失忆**（自述「I don't have the original question/schema」）→ 提问漂移 → 占位符 `SELECT 1` 提交 → Phase 1 必败。**回溯实证：Task 10 Run 3「修复后」c 集（12 ask+2 submit）与 Run 2 失控集同样含失忆句式**——Task 5 的闸只治了症状（60→14 ask），未触及机制。**c 模式全部历史 reward=0 的机制 = phase record 未携带任务问题**（我方 adapter 会话状态复现 vs 官方语义，待对冻结官方 allowlist 静态核验定性：是复现缺陷还是官方本就如此而需首轮外记忆策略）。
+7. **次要发现**：sim 容器两次 "Could not load schema: All connection attempts failed"（栈冷启动窗口）；sim 第 0 轮仍能实质回答 → schema 加载失败非主因，列为观察项。编排器子进程 stderr 无落盘（可观测性缺口，坑 54 再证：官方 task error 的具体报错不可追溯）。
+8. **对 A4 的影响**：预算面不变（c 集 $0.017 锚点仍成立——每轮小上下文与「小轮」成本类吻合）；**能力面：c-mode reward 结构性为 0**，直至 Day 7 完成「静态核验 → 修复 → rebuild + 容器实证 → 1–2 集再验证（新付费授权）」闭环。a-mode 的 Phase 1 失败为真实 SQL 质量问题。
+9. **现场收尾**：compose.bird 三服务与官方库 stop（回到开场前）；产品 PG 未动；migration 未动；eval 库新增 3 个 attempt 行（2 实验，证据保留）。未 push。commit：选题产物 `chore` commit + 收尾 docs commit；PowerContext handoff revision 见 HANDOFF 头部。

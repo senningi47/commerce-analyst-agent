@@ -10,24 +10,21 @@
 
 项目由 Codex 推进 12 天（2026-08-24 → 09-07），Claude Code 于 09-11 接手，09-13 完成 Task 13 Pilot 主运行。
 
-**精确状态（2026-09-15 更新，以 `HANDOFF.md` 为准）：**
+**精确状态（2026-09-15 晨更新，以 `HANDOFF.md` 为准）：**
 
 ```text
 Day 4 overall: PASS；Day 5 Phase A + Gate P preflight 全 PASS（模型已切 deepseek-flash）
-Task 13 Pilot: 完成（两门 FAIL 为 Day 6 输入基线：预算 457.6 元/160 线（band 经官方定义确认，Pilot 为空闲档计费）、
-         能力 rewards 全 0；付费运行纪律：peak 档 = 2×，一律空闲档调度）
-Day 6: Task 1–11 全部完成（能力门修复线：提交语义排查 / spool 导入接线 / 探针门翻 PASS / v2 decide 三方一致性守卫
-         + 旧探针退役 / c-a 策略修复 / Runner SIGINT 演练=验收门② PASS / SSE 事件面：migration 0006 + api 包 /
-         Task 8 关键 UI 三步 / Task 9 安全 E2E / Task 10 小样本付费验证：submit 通道首次贯通（c 集 12 ask+2 submit
-         到达官方评审，reward 0=SQL 质量结果；两 infra 发现=同题双模式 createdb 竞态 + 镜像陈旧，均已实证处置）/
-         Task 11 Full 重设计对比收官：方向 0 重推基准 201.6 元=1.26×（策略修复已砍 56% 总账；sim 平摊对 a-mode
-         高估披露反转）+ 三方向对比 + 能力验证前置建议，裁定清单交用户）——两项验收门①②均通过；
-         离线 866 passed / 140 skipped；Ruff 全绿；PG 140 passed；migration head=0007
-下一步: 等用户裁定 Full 重设计五项清单（研究笔记 docs/project/research/2026-09-15-full-redesign-options.md §9：
-         能力验证前置 / 范围 A1–A4 或 C / ceiling / sim 合规排查 / 余额核对）；裁定前不付费、不 push、不实施 Day 7
-已预授权: 已全部行使完毕（Day 6 打包授权至 Task 11 收尾）；新会话任何付费/新范围都需重新明确授权
-终态证据: 执行日志 docs/reports/2026-09-14-day6-phase-a-execution-log.md（§13–§18）
-         + docs/reports/2026-09-14-task10-strategy-validation.md + Task 11 研究笔记；未 push
+Task 13 Pilot: 完成（两门 FAIL 为 Day 6 输入基线；付费运行纪律：peak 档 = 2×，一律空闲档调度）
+Day 6: Task 1–11 全部完成 + 能力验证已执行（用户晨间裁定：①批准验证 ②Full=A4 ④sim 排查入 Day 7）
+         Task 11 对比：方向 0 基准 201.6 元=1.26×（策略修复已砍 56%；sim 平摊修正披露）；A4 = 300/模式分层 + sim 排查后启用
+         能力验证：reward>0 未达成（3 有效集 4 提交全败 Phase 1；agent $0.034841 + sim 估 ~$0.022 ≈ $0.057 上限内）
+         决定性发现：官方 c 模式每轮新建会话、phase record 不携带任务问题 → agent 逐轮失忆 → 占位符提交
+         （全历史 c 集同款；Task 5 闸治症状未治机制）；a-mode 首个完整 episode 健康，Phase 1 失败=真实 SQL 质量
+下一步: Day 7 计划 Gate——第一项 = c-mode phase-record 静态核验→修复→rebuild+容器实证→1-2 集再验证（新付费授权）；
+         然后按裁定实施 A4（300/模式分层）；产品 50 题、实验、sim 合规排查、README/面试材料
+用户动作: 余额核对（09-14 Task 10 + 09-15 能力验证的 deepseek-flash 平台消费 → 回填账本）
+已预授权: Day 6 打包授权 + 能力验证授权均已行使完毕；新付费/新范围需重新明确授权
+终态证据: 执行日志（§13–§19）+ Task 10 报告 + Task 11 研究笔记 + 账本 task11_capability_validation 节；未 push
 ```
 
 ---

@@ -1,16 +1,16 @@
-# CommerceAnalyst 项目交接：Day 6 全部完成（Task 11 方案对比已交用户裁定），待用户裁定 Full 启动与否
+# CommerceAnalyst 项目交接：能力验证完成（reward>0 未达成；c 模式 phase-record 缺陷机制实锤），待 Day 7 修复与裁定跟进
 
-> 更新时间：2026-09-15（Asia/Shanghai），更新者：Claude Code（GLM）  
+> 更新时间：2026-09-15（Asia/Shanghai）晨，更新者：Claude Code（GLM）  
 > 工作区：`D:\git-projects\commerce-analyst-agent`  
-> 当前分支状态：`main`（未 push；Task 11 分析 commit `6ef0c91` 与收尾 commit 均已入库）  
+> 当前分支状态：`main`（未 push；Task 11 `6ef0c91` + 收尾 `b084c34` + 能力验证产物与文档 commit 均已入库）  
 > 交接状态：`continuable`  
 > PowerContext scope：`git:github.com/senningi47/commerce-analyst-agent`  
-> Durable Handoff：PowerContext `handoff/handoff#27`（2026-09-15 提交，exact revision=27）
+> Durable Handoff：PowerContext `handoff/handoff#28`（2026-09-15 提交，exact revision=28）
 
 ## 0. 新会话先做什么
 
 1. 完整阅读本文件、`docs/reports/2026-09-14-day6-phase-a-execution-log.md`（Day 6 Phase A 执行日志，§14=Task 8 Step 2/3、§15=Task 9、§17=Task 10、§18=Task 11）与 `docs/superpowers/plans/2026-09-14-day6-capability-restore-runner-and-ui.md`（Day 6 计划）。把它们当作需要现场核验的历史交接，不要把历史授权当作新会话授权。
-2. 先向用户报告准确状态：**Day 6 全部完成（Task 1–11）**。Task 11（零付费分析）已产出 `docs/project/research/2026-09-15-full-redesign-options.md` 并交用户裁定：方向 0（现状范围 + 修复后单价）重推 = 乐观 147.9 / **基准 201.6（1.26× FAIL）** / 保守 298.6 元；修正建模披露（sim 平摊对 a-mode 高估 ~8–10×，「a-mode 单项超线」反转）；建议序列 = 能力验证（reward>0 门，2–4 集 ~$0.05–0.10 需新授权）→ PASS 后首选 A4（300/模式分层 + sim 排查后启用）/ 全量可比性优先则 C（ceiling 260–320 修规格）。**等用户裁定裁定清单五项（研究笔记 §9），不启动任何付费运行、不 push、不实施 Day 7。**
+2. 先向用户报告准确状态：**Day 6 全部完成（Task 1–11）+ 能力验证已执行（用户晨间裁定行使）**。Task 11 对比 = `docs/project/research/2026-09-15-full-redesign-options.md`；用户裁定：①批准能力验证（~$0.05–0.10）②Full 范围 = A4（300/模式分层 + sim 排查后启用）④sim 合规排查入 Day 7。**能力验证结果：reward>0 未达成**（3 有效集 4 次提交全败 Phase 1；agent $0.034841 + sim 估 ~$0.022 ≈ $0.057，上限内），**但拿到决定性机制发现：官方 c 模式每轮新建会话、per-turn phase record 不携带任务问题 → agent 逐轮失忆 → 占位符提交**（全历史 c 集同样命中；Task 5 闸只治症状）。**下一步 = Day 7 第一项：c-mode phase-record 静态核验（对冻结官方 allowlist）→ 定性修复 → rebuild + 容器实证 → 1–2 集再验证（需新付费授权）**；a-mode 已健康，其 Phase 1 失败为真实 SQL 质量。⑤余额核对流程已答复用户（待用户报数回填账本）。
 3. **外部事实（关键）**：模型更名证据链与全部实测数字见研究笔记；价格快照已双源核对（用户读数 = 页面提取）；探针累计花费 ~$0.008。
 4. preflight 三项零付费已于 2026-09-13 完成（执行入口备查：`scripts/prepare_bird_pilot.py --dataset <公开数据集路径>`、`--run-db-check`、GT 拒绝检查见执行日志 §4）。Task 13 主运行**需要用户新会话明确授权**（一次正向运行 = 一次授权额度）。
 5. 根目录 `.env` 只能由已审核脚本或 `uv run --env-file .env ...` 消费。不要手工读取、打印、搜索、hash 或统计它。（本日已追加 Day 5 变量与 `USER_SIM_MODEL=openai/deepseek-flash`，均经用户授权。）
@@ -235,17 +235,27 @@ security/transaction gate `9 passed in 5.59s`；唯一正向 seller-risk scenari
 4. **reward 侧**：A/B/C 增益均 = 0；19/19 集 reward=0，任何 Full 变体现启即全 0 分；最便宜信息单价 = 能力验证 2–4 集（~$0.05–0.10，需新授权）。
 5. **建议序列**：① 现在不启动；② 能力验证（reward>0 门）作前置；③ PASS 后首选 A4、全量可比性优先则 C；④ 有界失败 → A1 最小工件或搁置。强制 riders：off-peak-only / 每 25 集重估 / Task 10 三修复项入 Day 7 / 首个 a 集兼作成本验证（超 $0.035/集安全暂停）。**裁定清单五项在研究笔记 §9，等用户逐项裁定。**
 
+### 2.22 能力验证执行（Claude Code，2026-09-15 晨，付费裁定行使；细节见执行日志 §19）
+
+用户晨间裁定（①批准 ②A4 ④纳入 Day 7）后执行（窗口 07:47–08:50 北京周二，全程 off_peak，09:00 peak 前完成全部付费调用）：
+
+1. **执行**：选题 seed 13（`archeology_scan_8` c + `archeology_scan_7` a，零任务重叠）；镜像容器内实证 ✓；experiment `…a`：c 集 15.5s `official_task_error`（瞬时 infra，GC7 废弃）、a 集 succeeded 181s（**v3 策略下首个完整 a-mode episode**：11 轮、7 SQL 实验、2 澄清、2 提交、预算 20 内）；experiment `…b`：c 重跑 succeeded（14 ask + 2 submit）。
+2. **判据：reward>0 未达成**（4 次提交全败 Phase 1）。成本：agent 实测 **$0.034841** + sim 估 ~$0.022 ≈ **$0.057**（上限内，账本 `task11_capability_validation` 节）。
+3. **决定性机制发现（本轮最大增量）**：**官方 c 模式每轮新建 agent 会话**（spool 实证 16 会话 × 恰 1 轮；a 模式单会话连续）→ 每轮上下文仅 phase record → record 不携带任务问题 → 第 0 轮真实澄清后逐轮失忆（agent 自述无问题/schema）→ 官方 sim out-of-scope 拒答 → 占位符 `SELECT 1` 提交。**回溯：Task 10 Run 2/Run 3 c 集均含同款失忆句式——Task 5 闸治症状未治机制；c 模式全部历史 reward=0 由此解释。** 待静态核验定性：我方 adapter 会话状态复现缺陷 vs 官方本义（若官方本义如此则需跨轮记忆策略）。
+4. **对方案的影响**：预算面不变（c 集 $0.017 锚点成立）；能力面 c-mode 结构性 0 直至修复闭环（Day 7 第一项：静态核验 → 修复 → rebuild + 容器实证 → 1–2 集再验证，新付费授权）；a-mode Phase 1 失败 = 真实 SQL 质量。**A4 Full 启动继续等修复闭环 + 用户裁定。**
+5. **次日坑新增（§6.11）**：编排器子进程 stderr 无落盘（official_task_error 不可追溯）；官方库冷启动窗口内 sim 连不上 5433（schema 加载失败 ×2，观察项非主因）。
+
 ## 3. 当前卡在哪里
 
-**没有技术阻塞；Day 6 全部完成（Task 1–11），停下等用户裁定。**
+**没有技术阻塞；能力验证已执行完毕，等 Day 7（c-mode 修复闭环 + A4 计划）。**
 
-- **等待裁定**：Full 重设计方案对比已呈报（`docs/project/research/2026-09-15-full-redesign-options.md` §9 裁定清单五项）——① 能力验证（reward>0 门）是否批准作 Full 前置（~$0.05–0.10 新授权）；② Full 范围（A1/A2/A3/A4/C/搁置，推荐 A4）；③ 若选 C 的新 ceiling（260/320）；④ sim 模型静态排查是否入 Day 7；⑤ Task 10 sim 侧余额核对。**在新授权到达前：不启动任何付费运行、不 push、不实施 Day 7。**
-- **用户动作（余额核对）**：Task 10 sim 侧权威数字（Task 13 同款流程）→ 回填账本 `task10_strategy_validation`；顺带校准研究笔记 §1 的 sim 单价锚。
-- **能力门现状（裁定输入）**：submit 通道 ✓（Run 3 两次提交到达官方评审）、reward 仍 0（19/19 集）——SQL 质量属任务难度维度，修复杠杆（知识检索利用 / 错误反馈 / a-mode 先提交后迭代整集验证）未验证。
-- **Day 7 修复项（Task 10 实证，Full 启动前置）**：① 同题双模式必须串行；② agent 代码/配置变更后镜像 rebuild + 容器内实证入 preflight 清单；③ `BIRD_EXPERIMENT_ID` 每实验注入 compose env。
-- Task 8/9 现场备注：dev server 与 API 进程已停（重启：`cd web && npm run dev` + `uv run --env-file .env python scripts/run_api.py`，端口 5173/8010）；compose.bird 栈与官方库 5433 已 stop（复跑 Runner 前需重启，见执行日志 §16 清单第 1 步）；PG 测试需双开关 `COMMERCE_AGENT_RUN_POSTGRES_TESTS=1` + `LANGGRAPH_STRICT_MSGPACK=true`。
+- **用户裁定已行使（2026-09-15 晨）**：①能力验证批准（已执行，$0.057/$0.10）②Full = A4 ④sim 排查入 Day 7。**A4 Full 启动继续等待**：c-mode phase-record 修复闭环 + 用户对 A4 执行计划的批准（Day 7 独立计划 Gate）。
+- **Day 7 第一项（能力门）**：c-mode phase-record/session-state 静态核验（对冻结官方 allowlist：官方 c 模式每轮新会话语义 + record 应含内容）→ 定性（我方复现缺陷 or 官方本义）→ 修复（若我方缺陷）→ 镜像 rebuild + 容器实证 → 1–2 集再验证（**需新付费授权**）。
+- **用户动作（余额核对，⑤）**：DeepSeek 平台 → 用量/账单 → 2026-09-14 全天 deepseek-flash 消费（有按调用明细更佳）→ 报数 → 拆分 sim 侧回填账本 `task10_strategy_validation`；顺带校准 sim $0.001/调用锚。能力验证（09-15 晨）消费 ~$0.057 一并核对。
+- **Task 10/11 修复项（Day 7 计划必含）**：① 同题双模式串行；② 代码/配置变更后 rebuild + 容器内实证；③ `BIRD_EXPERIMENT_ID` 每实验注入（本轮 spool 仍是 compose 默认值，导入时确定性改挂）；④ 编排器子进程 stderr 落盘（official_task_error 可追溯）。
+- Task 8/9 现场备注：dev server 与 API 进程已停（重启：`cd web && npm run dev` + `uv run --env-file .env python scripts/run_api.py`，端口 5173/8010）；compose.bird 栈与官方库 5433 已 stop（复跑前重启，栈起动后需等官方库就绪再跑——本轮冷启动竞态教训）；PG 测试双开关 `COMMERCE_AGENT_RUN_POSTGRES_TESTS=1` + `LANGGRAPH_STRICT_MSGPACK=true`。
 - `cybermarket_pattern_12 [a]` unfinished 恢复（可选，需用户确认）；`crypto_exchange_9 [c]` failed 有效不重跑。
-- Day 7（产品 50 题、实验、Full 执行/收尾、README/面试材料、富工件 API 设计、浏览器自动化裁定）需独立计划 Gate；**Full 启动与否 = 用户对裁定清单 ② 的回答**。
+- Day 7（c-mode 修复、A4 执行计划、产品 50 题、实验、README/面试材料、富工件 API、sim 模型合规静态排查）需独立计划 Gate。
 
 ## 4. 当前验证证据（2026-09-11 Task 18 测试数字 + 2026-09-12 Gate G/清理现场，最终源码状态，Claude Code）
 
@@ -276,15 +286,12 @@ security/transaction gate `9 passed in 5.59s`；唯一正向 seller-risk scenari
 
 ## 5. 下一步计划
 
-1. **等待用户裁定**（研究笔记 §9 清单五项）——裁定前零付费、零 push、零 Day 7 实施。
-2. **裁定后按用户选择分流**：
-   - 批准能力验证 → 新付费授权（2–4 集 ~$0.05–0.10，新 experiment，off-peak，镜像已含 Task 5 修复——rebuild 状态需容器内复证实）→ reward>0 判据 → PASS 进所选 Full 方案 / 有界失败回裁定。
-   - Full 方案 A1–A4 → 先出 Day 7 独立计划（含 Task 10 三修复项、分层抽样清单生成、off-peak 排程）；选 C 则先修规格（§16.4 + 总预算两处）。
+1. **Day 7 计划 Gate（用户批准后实施）**，内容顺序：① c-mode phase-record 静态核验 + 修复闭环（能力门第一优先）；② A4 执行计划（300/模式分层抽样清单、off-peak 排程、每 25 集重估、Task 10/11 四修复项前置）；③ sim 模型合规静态排查（裁定④）；④ 产品 50 题与实验；⑤ README/面试材料收尾。
+2. **新付费授权点**：c-mode 修复后的 1–2 集再验证（~$0.02–0.05）；A4 Full 启动（若用户批准执行计划）。
 3. **每 Task 纪律**：TDD 红绿 → owning tests → 全量 suite + Ruff → commit（新会话需重新取得授权）。**agent 侧代码/配置变更后追加：镜像 rebuild + 容器内实证**（Task 10 教训）。
-4. **用户动作**：平台余额核对（Task 10 sim 侧权威数字 → 账本回填）。
+4. **用户动作**：余额核对（Task 10 + 能力验证 sim 侧权威数字 → 账本回填）。
 5. **收尾三件套**（长期规则）：① 更新本文件；② PowerContext handoff 并返回 exact revision；③ `docs/reports/` 执行日志。
 6. **可选（需向用户确认）**：`cybermarket_pattern_12 [a]` 按 §8.5.3 同 experiment（d）恢复。
-7. **Day 7 计划**（独立计划 Gate）：产品 50 题、实验、Full 执行/收尾、README/面试材料、Task 10 三修复项（同题串行/镜像 rebuild 纪律/BIRD_EXPERIMENT_ID 注入）、sim 模型合规静态排查（若裁定纳入）。
 
 ## 6. 踩过的坑，绝对不要再踩
 
@@ -376,6 +383,13 @@ security/transaction gate `9 passed in 5.59s`；唯一正向 seller-risk scenari
 64. **「离线全绿」不覆盖 Docker 镜像层：agent 侧代码/配置变更后必须 rebuild + 容器内实证。** Task 5 的闸与 v3 配置离线全绿，但 `bird-system-agent` 镜像烘焙于 Task 13 期（configs 挂 BIRD_CONFIG_ROOT 无卷、代码 COPY 入镜像）——live 跑的仍是 Pilot 时代行为（60 ask 失控精确复现）。判别方法（零成本）：容器内 `grep` 新代码符号 + `grep` 配置 revision。§16 清单的「离线全绿」前置条件因此升级为「离线全绿 + 镜像重建 + 容器内实证」。坑 54 的「凡首次真实 X」再变体：这次缺的是「部署证据」而非「可观测性」。
 65. **agent 容器的实验身份是 compose 默认值，spool 导入 join 会断。** `BIRD_EXPERIMENT_ID` 未随 run 注入，spool 标记恒为 `bird-system-agent`，`(experiment_id, task_id, mode)` join 找不到 attempt——Task 10 以确定性改挂（唯一候选 + 时间窗 + task/mode，账本披露）绕过。Day 7 修复：Runner 起 run 时把实验 id 写入 compose env。另：**每集一个新 experiment id（字母后缀）是既定先例**（Task 13 a/b/c/d、Task 10 b/c），failed 终态不重跑由 store 契约保证。
 
+### 6.11 能力验证轮新增（2026-09-15 晨，Claude Code）
+
+66. **官方 c 模式每轮新建 agent 会话、上下文仅 phase record。** spool 实证：c 集 16 轮 = 16 个会话各恰 1 轮（sequence 均从 0），a 模式为单会话连续。**任何「在会话内累积记忆」的 c 模式策略假设都不成立**；跨轮信息只能由 phase record 携带——本轮实证 record 未携带任务问题（第 0 轮后 agent 失忆、占位符提交）。修复前先对冻结官方 allowlist 静态核验 record 语义（我方复现缺陷 vs 官方本义）。
+67. **栈冷启动窗口内官方库可能不可达**：compose 起动后立即跑 run，sim 两次 "Could not load schema: All connection attempts failed"（官方库 5433 就绪延迟）。**preflight 清单加一步：db-env/官方库就绪探测后再起 run。**
+68. **编排器子进程 stderr 无落盘**：`official_task_error` 的具体报错不可追溯（runner 事件只有分类）。Day 7 修复：官方 executor 落盘子进程诊断输出（agent 可见内容，非 GT）。
+69. **runner 摘要的 completed 计数含 failed 终态**：`attempted=2 completed=2` 不代表双成功——判定成败以 events JSONL 的 `attempt_finished.status` 或 eval 库 `status` 为准（本轮 c 集 failed 被 summary 掩盖，靠事件流纠正）。
+
 ## 7. 关键文件与 SHA-256
 
 哈希用于发现意外变化。入库状态（2026-09-12 晚）：§7 全部所列源码/测试/文档**均已随 14 个 commit 入库**（Day 4 allowlist → checkpoint 补录 → Day 5 Phase A 十二连）；`HANDOFF.md`、`CLAUDE.md` 本身为收尾更新、保持未跟踪。2026-09-11 由 Claude Code 现场计算并机械复核（15 组报告哈希对 + HANDOFF 交叉核对全部一致）；2026-09-12 复验 11/11 MATCH。
@@ -455,6 +469,8 @@ security/transaction gate `9 passed in 5.59s`；唯一正向 seller-risk scenari
 | `docs/reports/2026-09-14-day6-phase-a-execution-log.md` | `1bfde99757debb8d298ae5107d6c7bb50778261ee045ee457b21e7c79d036d96` | **修改（Task 9 追加 §15；§14 哈希 d52323ac… 为追加前值）** |
 | `docs/project/research/2026-09-15-full-redesign-options.md` | `6785b21fa5db14452a706fff3fde2b0153a0a1363e304329410666ef0e8e2a5d` | **新建（6ef0c91，Task 11 Full 重设计方案对比，交用户裁定）** |
 | `docs/reports/2026-09-14-day6-phase-a-execution-log.md` | `6ae295645d70bdab867441b4ce854b77d556d9f3ad589604961e087ad8a5df42` | **修改（Task 11 追加 §18；前值 1bfde997… 为追加前值）** |
+| `outputs/bird-pilot/task11/task-selection.json` + `task-list.jsonl` + `task-list-c-rerun.jsonl` + `.gitignore`（+1 行 task11/task-data/） | 见能力验证产物 commit | **新建（2026-09-15，seed 13 选题与 Runner 清单；task-data/ GT 拆分 gitignored）** |
+| `docs/reports/2026-09-14-day6-phase-a-execution-log.md` | `c59e959129eaa4106e09cd19c4a002226725ba4b3cb07e48316ba036bdcb38e2` | **修改（能力验证追加 §19；6ae29564… 为 §18 后值）** |
 
 不要覆盖或回退这些文件。若现场哈希不同，先确认是否是用户或其他会话的新修改，再继续工作。
 
@@ -514,3 +530,11 @@ security/transaction gate `9 passed in 5.59s`；唯一正向 seller-risk scenari
 - **新增（入库）**：`docs/project/research/2026-09-15-full-redesign-options.md`（commit `6ef0c91`）。
 - **修改（入库，收尾 commit）**：执行日志 §18、本文件（§0/§2.21/§3/§5/§7/§8.5/头部 revision）、`CLAUDE.md` §0。
 - **现场**：零代码变更、零付费、零 GT 读取、零 DB 写、零进程/容器变更（纯文档轮）；未 push。gitignored 账本未动（Task 10 sim 侧余额核对后由用户数字回填）。
+
+### 8.6 能力验证轮（2026-09-15 晨，付费裁定行使）
+
+- **新增（公开，入库）**：`outputs/bird-pilot/task11/task-selection.json`、`task-list.jsonl`、`task-list-c-rerun.jsonl`、`.gitignore` +1 行（`outputs/bird-pilot/task11/task-data/` GT 拆分 gitignored）。
+- **gitignored**：`outputs/bird-pilot/task11/task-data/`（2 个 GT 拆分）、账本 `task11_capability_validation` 节、`outputs/bird-eval/events-task11-capability*.jsonl`、episodes 2 新文件、spool +19 文件。
+- **付费**：agent 实测 $0.034841（a 11 轮 + c 废弃 2 轮 + c 重跑 16 轮，off_peak 全程）；sim 估 ~$0.022；合计估 ~$0.057（授权 $0.05–0.10 内）。
+- **DB 现场变更**：eval 库新增实验 `task11-capability-validate-20260915a/b` 共 3 attempt 行（a succeeded、c failed、c succeeded，证据保留）；migration 未动（head 0007）。
+- **外部状态收尾**：compose.bird 三服务与官方库 5433 已 stop（回到开场前）；产品 PG 未动。未 push。
