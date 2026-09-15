@@ -291,3 +291,12 @@ N=10 时 c 侧较 Pilot 失控基线 **-83%**。a-mode 无行为级基线拆分�
 7. **次要发现**：sim 容器两次 "Could not load schema: All connection attempts failed"（栈冷启动窗口）；sim 第 0 轮仍能实质回答 → schema 加载失败非主因，列为观察项。编排器子进程 stderr 无落盘（可观测性缺口，坑 54 再证：官方 task error 的具体报错不可追溯）。
 8. **对 A4 的影响**：预算面不变（c 集 $0.017 锚点仍成立——每轮小上下文与「小轮」成本类吻合）；**能力面：c-mode reward 结构性为 0**，直至 Day 7 完成「静态核验 → 修复 → rebuild + 容器实证 → 1–2 集再验证（新付费授权）」闭环。a-mode 的 Phase 1 失败为真实 SQL 质量问题。
 9. **现场收尾**：compose.bird 三服务与官方库 stop（回到开场前）；产品 PG 未动；migration 未动；eval 库新增 3 个 attempt 行（2 实验，证据保留）。未 push。commit：选题产物 `chore` commit + 收尾 docs commit；PowerContext handoff revision 见 HANDOFF 头部。
+
+## 20. Day 7 Phase A：c-mode 判决书 + 修复闭环（零付费，`4287a0b` 同轮）
+
+**授权链**：用户批准 Day 7 计划（「批准执行」）——Phase A 零付费即时实施；C1/C2 付费 Gate 按计划边界行使。
+
+1. **Task 1 判决书**（`docs/project/research/2026-09-15-cmode-phase-record-verdict.md`）：**缺陷 = 我方 adapter**。官方语义（`cinteract.py` run_single_task 104–141 行）：一次 run_session 承载整个 clarify 循环、任务问题在首条消息、`db_schema`/`external_kg` 由官方种子 state 渲染进 instruction、对话靠 ADK 会话记忆累积。我方 `_run_c` 每轮仅以最后一条 sim 回答重建上下文（三者全丢）。**更正**：16 个 spool 文件 = 我方每模型轮新 attempt_id（非官方每轮新会话），机制结论不变。
+2. **Task 2 红绿**：RED `test_c_run_phase_context_carries_query_dialogue_and_schema`（修复前第二轮上下文实测 = `'2018\n\n[clarification budget: 1 of 5 …]'`——缺陷赤裸复现）→ GREEN：`_phase_content(task_message, dialogue, state)` 渲染 User Query + `[Task schema]`（state.db_schema）+ `[External knowledge]`（state.external_kg）+ 对话累积（`[agent ask]/[user reply]`）+ Task 5 预算行；`_run_c` 保留首条消息并累积 dialogue。
+3. **Task 3**：Ruff 全绿；离线 **867 passed, 140 skipped**（+1）；`bird-system-agent` rebuild + 容器内实证（`_phase_content`×2 / `Clarification dialogue so far` / `Task schema` 命中）✓。
+4. **C1 排程**：修复完成于 08:5x，距 peak（09:00）不足以安全完成付费运行——按 off-peak 纪律**排至下个空闲档（12:00–14:00 或晚间）**，一键清单随 HANDOFF §3 移交；预算 ≤$0.05，判据 = 零失忆句式 + 任意一集 reward>0。风险披露：schema 渲染抬高每轮 prompt token，c 集锚或上浮（C1 实测回填）。
