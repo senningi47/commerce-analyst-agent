@@ -77,6 +77,11 @@ class OfficialOrchestratorEpisodeExecutor:
         for name in sorted(self._env_names):
             if name in os.environ:
                 env[name] = os.environ[name]
+        # the official orchestrator opens its data file with the platform
+        # default codec — on Windows that is GBK and any out-of-range byte
+        # kills the episode (A4 b01 finding); pin the child interpreter to
+        # UTF-8 regardless of host locale
+        env["PYTHONUTF8"] = "1"
         return env
 
     async def execute(self, task: EpisodeTask, attempt: AttemptRecord) -> EpisodeOutcome:

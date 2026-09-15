@@ -122,3 +122,14 @@ def test_timeout_kills_child_and_reports_infrastructure(tmp_path: Path) -> None:
     assert outcome.status is EvalTaskStatus.INFRASTRUCTURE_ERROR
     assert outcome.error_class == "official_episode_timeout"
     assert time.monotonic() - started < 15  # killed promptly, not 30s
+
+
+def test_orchestrator_env_pins_utf8_mode(tmp_path: Path) -> None:
+    """Pit 68 follow-up (A4 b01): the official orchestrator opens its data
+    file with the platform default codec — on Windows that is GBK and any
+    out-of-range byte kills the episode with official_process_failed. The
+    executor must pin PYTHONUTF8=1 for the child interpreter."""
+    seed_fake_adk(tmp_path)
+    executor = make_executor(tmp_path)
+    env = executor._env()
+    assert env["PYTHONUTF8"] == "1"
