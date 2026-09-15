@@ -359,3 +359,45 @@ N=10 时 c 侧较 Pilot 失控基线 **-83%**。a-mode 无行为级基线拆分�
 3. **H2 成立**：该轮 reasoning 真实耗尽 16384、content 零字。**水位线 = 官方思考默认 64K**——官方 ADK 栈不覆写 max_tokens，天然 4× 余量，blowout 罕见；我方任何低于 64K 的上限都让偶发 blowout 保持致命（空 content = 杀整集）。run e 比 d 走得更远（4 轮 vs 2–3 轮）证明 16384 有改善但仍不够。
 4. **按坑 73 停止**（不盲试未定性原因）；本授权累计付费 $0.011330。
 5. **待用户裁定的修复选项**：① 上限 16384→**65536**（provider 思考默认 = 官方等效，纯配置；blowout 轮最坏 ~$0.04 off-peak，正常轮不变）；② 我方栈优雅处理空 content 轮（run_session 内重问一轮 = 官方 ADK 循环语义；**触及 Day 3 fail-closed 网关契约，用户设计决定**）；③ ①+②。另：确认官方 agent 模型配置是否真的不设 max_tokens 需读 1 个官方文件（allowlist 扩展，待用户确认）。
+
+## 26. 64K 水位线 run f：水位线起效（submit 首次走通），暴露并修复「纯文本轮」缺陷（2026-09-15 晚，付费 $0.018509 + 修复零付费红绿，commit `26047e2`）
+
+**授权链**：用户「按推荐决策执行下一步，并给予授权」（① 65536 + run f，授权口径 ≤$0.05 系列上限）。
+
+1. **红绿入库**：16384→65536（`ce3bdaf`，ThinkingConfig le=65536 + bird_a/c profile revision v3，canonical 重写）+ 插桩入库（`4a1946e`）+ docs（`38ec763`）。873 passed。
+2. **run f**（`task7-cmode-refit-20260915f`，attempt `d023d724`，18:21–18:24）：failed 158s，agent **$0.018509**（4 轮：3×tool_calls + 1×stop）。**网关解析失败零命中**（诊断日志 0 条）——前两轮的根因已被水位线修复消除。
+3. **水位线起效的一手证据**：clarify 阶段**首次完整走通**——3 轮正常 + submit 达到官方评审（db-env `/submit` 200）；debug 轮模型 reasoning 跑了 **18,297 tokens、completion 18,895**——该轮在 16384 下必死，64K 下正常完成。
+4. **新缺陷（我方 adapter）**：debug 轮模型以**纯文本**作答（finish=stop，无工具调用），`bird_c_responder.py:81` 契约守卫抛 `bird_c_candidate_required` → 400 → 杀整集。**官方 ADK 语义：非工具调用响应 = 结束本轮 runner 调用**，编排器按 phase 状态机继续，不是错误。
+5. **修复（零付费红绿，`26047e2`）**：`TextCandidate`（type="text"）入 `BirdCCandidate` union；responder 对 FinalOutput 轮返回文本 candidate（替代 raise）；`_run_c` 文本轮 → `[agent note]` 记入会话记忆 + 以该文本结束本轮 run_session（编排器下一条消息继续）。responder 拒绝测试 3 个文本用例转正向（stop/length/content_filter × TextCandidate）+ server 级 run f 场景测试（submit→文本轮→记忆延续→再 submit）。**874 passed**；Ruff 全绿；rebuild + 容器实证 ✓。
+6. **停止点**：run g（`…g`，~$0.02–0.05 视 blowout 时机）= 新一次正向运行，按坑 5 等用户授权。
+
+## 27. run g：**首个端到端健康 episode**——判据① PASS（零失忆+真实 SQL），判据② reward=0 未过（真实 SQL 质量）（2026-09-15 晚窗，付费 $0.018851，停于计划 Task 4 纪律）
+
+**授权链**：用户「授权执行下一步」（run g，≤$0.05）。18:39 栈起动 → 容器实证（TextCandidate×2 / 65536×2）→ 18:39 发射。
+
+1. **运行**：`task7-cmode-refit-20260915g`，attempt `accf1991`，**succeeded 161.9s**，4 模型轮 = 2 ask_user + 2 submit_sql，agent **$0.018851**（全程 off_peak）。**边界/诊断日志零命中**——三轮修复后 infra/adapter 层首次全程无错误。
+2. **判据①（对话回放零失忆句式 + 提交为真实 SQL）：PASS**——失忆句式扫描全零（run 1 的 *"I don't have the original question text"* 形态消失）；两次提交均为真实 SQL（`mesh` CTE + `mesh_specs`/`system_usage` JSONB 键 + PRU 计算与 CASE 分级）；**debug 轮产生真实修订**（两版 SQL 7 词差异）后重提；第 4 轮 reasoning 15,181 / completion 15,774——在 8192 与 16384 下都会死，64K 水位线下正常完成（修复链价值的直接实测）。
+3. **判据②（任意一集 reward>0 = 能力门 PASS）：FAIL**——reward = 0.0；两次提交均未过官方 Phase 1，反馈 = *"SQL failed Phase 1. Test case execution failed."*（隐藏测试用例**执行失败** = SQL 运行期错误，非结果不匹配）。**剩余差距 = 真实 SQL 质量**，与 a-mode 发现同类（执行日志 §19）；进一步定位受 GT 隔离约束（任务 schema 在官方 state 内，agent 可见但未持久化到 agent 可读工件）。
+4. **有界诊断结论（≤1 轮，零付费）**：pipeline/adapter/infra 链条已全部健康；能力门差距收敛到单一因素——模型对本题写出可执行且正确的 SQL 的能力。本轮 episode 的澄清预算（max_turn 内 2 次提问）与官方单次 debug 重试均已用尽。
+5. **成本与锚点**：run g $0.018851 ≤ $0.05 ✓；c 集锚更新 **~$0.019/集**（agent）+ sim ~$0.002 ≈ **$0.021/集**（64K 水位线让长 reasoning 轮如实计费）；A4 影响 ~+$1.5，可忽略。
+6. **停止点**：判据②未达成 = 能力门未 PASS。按计划 Task 4 fail 路径停止，交用户裁定（选项见 §3）。
+
+## 28. run h：异库交叉验证——结构健康跨库成立，reward=0 形态一致（2026-09-15 晚窗，付费 $0.009012，停于计划 Task 4 纪律）
+
+**授权链**：用户「按推荐决策执行下一步，并给予授权」（§3 选项 ①：异题再验一集）。
+
+1. **选题**：`cold_chain_pharma_compliance_3` c（Pilot seed-7 选取，ambiguity 2 最低，异库；**复用 Pilot GT 拆分零新 GT 处理**；config-hash = `b1889777…9017` = Pilot 选取文件 sha256，现场复算精确一致）；单题清单 `outputs/bird-pilot/pilot-task-list-c-refit.jsonl`（公开，待 commit）。
+2. **运行**：`task7-cmode-refit-20260915h`，attempt `6332977d`，**succeeded 74.1s**，4 轮 = 2 ask + 2 submit，agent **$0.009012**（off_peak），零边界错误。
+3. **结果**：reward = 0.0——但 **sim 真实回应了第一问**（"on-time delivery performance"），两次提交均为 `shipment_overview` JSONB 上的真实 SQL，debug 轮修订后重提。判据①再次 PASS；判据②再次 *"Test case execution failed"*。
+4. **跨库结论（两独立题/两库一致）**：结构健康（无失忆/无占位符/无 infra 杀/adapter 零错）已稳定成立；reward=0 形态一致 = **c 模式在冻结工具集下对 JSONB 内键是盲的**（无执行工具）——官方设计预期 agent 用 ask_user 消解此类未知，而 user-sim 的回答能力有限（第二问被拒答）。剩余差距 = c 模式约束下的真实 SQL 质量，与 a-mode 发现同类。
+5. **停止点**：按计划 Task 4 fail 路径停止。能力门 reward>0 未达成；后续属策略/质量问题（prompt policy v4 或多集机会），非管线缺陷——管线侧 C1 修复闭环**全部完成并实测起效**。
+
+## 29. Day 7 Task 5+6 零付费收官：四修复项 + A4 清单 + C2 重估表 + sim/a-mode 排查（2026-09-15 晚，commit `89814c5` 等）
+
+用户「按推荐决策执行下一步」（§3 选项 ②+③：Task 6 零付费先行 + A4 批内自然检验能力门）后：
+
+1. **四修复项（红绿，`89814c5`，885 passed）**：① `compose_env_out`——Runner 起 run 时写 `BIRD_EXPERIMENT_ID` compose env 文件（CLI 默认 events 同目录 `compose-experiment.env`，坑 65）；② `RunnerConfig` 校验——同题双模式 + concurrency>1 直接拒绝（坑 63）；③ `_official.py`——子进程 stdout/stderr 以 `communicate()` 捕获并落盘 `{attempt_id}.stdout/stderr.txt`（agent 可见目录），**timeout 路径补 kill 防孤儿编排器继续烧模型 API**（坑 58/68）；④ `scripts/preflight_bird_stack.py`——官方库就绪探测（重试+25 库基线 fail-closed+凭据不回显）+ 实验身份 env 暂存（坑 67/65）。新增测试 11 条。
+2. **A4 清单（零付费）**：`prepare_bird_pilot.py --count 600 --seed 20260915 --out-dir outputs/bird-pilot/a4` → **600 集 = 300c+300a，22 库全覆盖（每库 13–14 题）**，与历史选取重叠 30 题（informational）；每模式批量清单派生（`task-list-c/a.jsonl`），同题跨模式永不同批 → 串行纪律天然满足；GT 拆分入 gitignored `a4/task-data/`（.gitignore +1 行）。
+3. **Task 5a sim 合规**：compose 拓扑 = 单一 user-simulator 服务服务双模式（**c/a 同配置 by construction**，公平性条款满足）；`USER_SIM_MODEL` env 直通可换（换模 = 一处 env 变更）；官方规程是否允许换模 = 开放项（换前须用户裁定）。
+4. **Task 5b a-mode SQL 诊断**（archeology_scan_7，验证日 episode）：探索期 `execute_sql` **全部成功**（JSONB 键正确、schema 在握）——失败主因**不是 schema/执行**：知识定义查询 3 次全失（`ESI` 变体 → "Knowledge not found"）→ agent **自造领域指标公式**；2 次澄清被 sim 拒答 → 提交猜测公式 → Phase 1 失配。**与 c-mode 失败同源 = 领域知识消解缺口（查询 miss + sim 限制），候选 v4 杠杆：知识 miss 时教 agent 向用户索要定义。**
+5. **C2 重估表（精化锚）**：c 健康 $0.016/集（run h/g 实测中值+sim）、a $0.025/集、spent 7.93 元 → **基准 ~135 元 vs 160 线 ✓（余 16%）；保守（+40% forward）~186 元 = 超线 16%** → riders：off-peak-only / **c 批先行校准锚，a 批前重估** / 每 25 集重估 / 越线安全暂停 / 能力门如实标注。
