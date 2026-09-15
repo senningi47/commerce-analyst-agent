@@ -154,3 +154,17 @@ def test_loader_rejects_noncanonical_or_unknown_config(tmp_path: Path) -> None:
     path.write_text(path.read_text(encoding="utf-8") + "\n", encoding="utf-8")
     with pytest.raises(RevisionMismatch):
         ProfileRegistry.load(root)
+
+
+def test_bird_tracks_have_output_headroom_above_reasoning_budget(
+    registry: ProfileRegistry,
+) -> None:
+    """2026-09-15 verdicts: reasoning blowouts emptied the content at both
+    8192 and 16384 (runs d/e); the provider thinking-mode default output is
+    64K (official ADK does not override max_tokens), so both BIRD tracks sit
+    at the official-equivalent 65536 while retail keeps its reviewed budget."""
+    for key in (RunProfileKey.BIRD_A, RunProfileKey.BIRD_C):
+        rule = registry.get(key).inference_rules[0]
+        assert rule.inference.max_output_tokens == 65536
+    retail = registry.get(RunProfileKey.RETAIL).inference_rules[0]
+    assert retail.inference.max_output_tokens == 8192
