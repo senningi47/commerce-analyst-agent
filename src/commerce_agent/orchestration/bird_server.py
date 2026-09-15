@@ -73,13 +73,19 @@ def _phase_content(
     task_message: str,
     dialogue: Sequence[str],
     state: Mapping[str, object],
+    *,
+    current_message: str | None = None,
 ) -> str:
     """Official c-interact per-turn context (cinteract.py `run_single_task`).
 
     The official agent sees the phase-1 message (user query) for the whole
-    phase, the orchestrator-seeded `db_schema`/`external_kg` (c-mode has no
-    schema tools), and the accumulated clarification dialogue. The live
-    clarification budget line is the Task 5 policy layer.
+    task — the ADK session memory carries it across the debug and follow-up
+    `run_agent_session` calls (141/159/179) — plus the orchestrator-seeded
+    `db_schema`/`external_kg` (c-mode has no schema tools) and the accumulated
+    session dialogue including its own submits. `current_message` is the new
+    orchestrator message of *this* phase (debug feedback / follow-up); it is
+    skipped when it is the phase-1 message itself. The live clarification
+    budget line is the Task 5 policy layer.
     """
     parts = [f"User Query (official first message):\n{task_message}"]
     schema = state.get("db_schema")
@@ -92,6 +98,8 @@ def _phase_content(
         parts.append(f"[External knowledge]\n{knowledge}")
     elif knowledge:
         parts.append(f"[External knowledge]\n{json.dumps(knowledge, ensure_ascii=False)}")
+    if current_message is not None and current_message != task_message:
+        parts.append(f"Orchestrator message for this phase:\n{current_message}")
     if dialogue:
         parts.append("Clarification dialogue so far:\n" + "\n".join(dialogue))
     max_turn = _clarification_budget(state)
@@ -419,6 +427,11 @@ class _Session:
         self._c_handler: BirdCHandler | None = (
             factory.build_c(run_scope=self._run_scope) if mode == "c" else None
         )
+        # official ADK-session memory equivalents: one session spans every
+        # phase of a task (clarify, debug, follow-up), so the phase-1 message
+        # and the dialogue/submit transcript persist across `run()` calls
+        self._task_message: str | None = None
+        self._memory: list[str] = []
 
     async def run(self, message: str) -> str:
         if self.mode == "c":
@@ -431,7 +444,9 @@ class _Session:
         handler = self._c_handler
         if handler is None:  # pragma: no cover - constructor guarantees presence
             raise RuntimeError("c handler missing")
-        dialogue: list[str] = []  # official ADK-session memory equivalent
+        if self._task_message is None:
+            self._task_message = message
+        dialogue = self._memory  # official ADK-session memory equivalent
         while self.model_turns < _MAX_MODEL_TURNS:
             self.model_turns += 1
             self.state["model_turns"] = self.model_turns
@@ -442,7 +457,9 @@ class _Session:
                     attempt_id=self._attempt_ids(),
                     current_phase=_phase_datum(
                         f"bird-session:{self.session_id}:turn{request_turn}",
-                        _phase_content(message, dialogue, self.state),
+                        _phase_content(
+                            self._task_message, dialogue, self.state, current_message=message
+                        ),
                     ),
                 )
             )
@@ -458,13 +475,15 @@ class _Session:
                 dialogue.append(f"[agent ask] {candidate.question}")
                 dialogue.append(f"[user reply] {_answer_text(result)}")
                 continue
-            await self._port.execute(
+            result = await self._port.execute(
                 ToolCall(
                     call_id=f"c_submit_{request_turn}",
                     name="submit_sql",
                     arguments_json=_canonical_json({"sql": candidate.sql}),
                 )
             )
+            dialogue.append(f"[agent submit_sql]\n{candidate.sql}")
+            dialogue.append(f"[submit result] {_preview(result.content_json, 800)}")
             return _C_SUBMIT_FORCED_RESPONSE
         self.state["model_turns"] = self.model_turns
         return _C_MAX_TURNS_TEXT

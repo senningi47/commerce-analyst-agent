@@ -361,6 +361,122 @@ def test_c_run_phase_context_carries_query_dialogue_and_schema() -> None:
     assert "clarification budget" in second
 
 
+def test_c_phase_boundary_keeps_task_query_dialogue_and_submit_memory() -> None:
+    """Official c-interact semantics (cinteract.py run_single_task 141/159):
+    the whole task runs in ONE ADK session, so the Phase-1 debug round
+    (`run_agent_session(instance_id, debug_msg)` after a failed submit) still
+    sees the original user query, the accumulated clarification dialogue, and
+    the agent's own submitted SQL with its result. The adapter's memory
+    equivalent must persist across `run_session` calls and render the new
+    orchestrator message alongside the retained memory."""
+    handler = StubCHandler(
+        [
+            stub_c_response(AskUserCandidate(type="ask_user", question="Which year?")),
+            stub_c_response(
+                SubmitSqlCandidate(type="submit_sql", sql="SELECT year FROM deliveries")
+            ),
+            stub_c_response(SubmitSqlCandidate(type="submit_sql", sql="SELECT 2")),
+        ]
+    )
+    port = StubPort(
+        [
+            canned_result("ask_user", {"answer": "2018"}),
+            canned_result(
+                "submit_sql",
+                {
+                    "passed": False,
+                    "message": "SQL failed Phase 1. Testing wrong.",
+                    "reward": 0.0,
+                },
+            ),
+            canned_result("submit_sql", SUBMIT_BODY),
+        ]
+    )
+    adapter = make_adapter(c_handler=handler, port=port)
+    adapter.init_session(
+        init_request(state={"db_schema": "SCHEMA_DUMP", "external_kg": "KG_DUMP", "max_turn": 5})
+    )
+
+    asyncio.run(
+        adapter.run_session(
+            BirdRunSessionRequest(
+                task_id="task-1",
+                mode="c-interact",
+                message="User Query:\nFind the 2018 delivery bottleneck.",
+            )
+        )
+    )
+    asyncio.run(
+        adapter.run_session(
+            BirdRunSessionRequest(
+                task_id="task-1",
+                mode="c-interact",
+                message=(
+                    "Your SQL is not correct. You have one more chance. "
+                    "Please fix and call submit_sql."
+                ),
+            )
+        )
+    )
+
+    debug = handler.requests[2].current_phase.content
+    assert "Find the 2018 delivery bottleneck." in debug
+    assert "SCHEMA_DUMP" in debug
+    assert "KG_DUMP" in debug
+    assert "Which year?" in debug
+    assert "2018" in debug
+    assert "SELECT year FROM deliveries" in debug
+    assert "SQL failed Phase 1" in debug
+    assert "Your SQL is not correct." in debug
+
+
+def test_c_follow_up_phase_keeps_session_memory() -> None:
+    """After a passed Phase 1 the official orchestrator sends the follow-up
+    message into the SAME session (cinteract.py 175-179): the agent still sees
+    the original query and its Phase-1 submit."""
+    handler = StubCHandler(
+        [
+            stub_c_response(SubmitSqlCandidate(type="submit_sql", sql="SELECT 1")),
+            stub_c_response(SubmitSqlCandidate(type="submit_sql", sql="SELECT 2")),
+        ]
+    )
+    port = StubPort(
+        [
+            canned_result("submit_sql", SUBMIT_BODY),
+            canned_result("submit_sql", {**SUBMIT_BODY, "phase_completed": 2}),
+        ]
+    )
+    adapter = make_adapter(c_handler=handler, port=port)
+    adapter.init_session(init_request(state={}))
+
+    asyncio.run(
+        adapter.run_session(
+            BirdRunSessionRequest(
+                task_id="task-1",
+                mode="c-interact",
+                message="User Query:\nFind the bottleneck.",
+            )
+        )
+    )
+    asyncio.run(
+        adapter.run_session(
+            BirdRunSessionRequest(
+                task_id="task-1",
+                mode="c-interact",
+                message=(
+                    "Phase 1 is complete. Here is a follow-up question:\n\n"
+                    "Which region?\n\nGenerate the PostgreSQL query and call submit_sql."
+                ),
+            )
+        )
+    )
+
+    follow_up = handler.requests[1].current_phase.content
+    assert "Find the bottleneck." in follow_up
+    assert "SELECT 1" in follow_up
+    assert "Which region?" in follow_up
+
+
 def test_c_run_resets_submitted_flag_next_call() -> None:
     handler = StubCHandler(
         [
