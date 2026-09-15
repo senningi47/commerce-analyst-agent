@@ -316,6 +316,51 @@ def test_c_run_clarify_then_submit_updates_state() -> None:
     assert submit_args == {"sql": "SELECT 1"}
 
 
+def test_c_run_phase_context_carries_query_dialogue_and_schema() -> None:
+    """Official c-interact semantics (cinteract.py run_single_task): the agent
+    sees the phase-1 message (user query) for the whole phase, the officially
+    seeded `db_schema`/`external_kg` state, and the accumulated clarification
+    dialogue — not just the latest simulator reply."""
+    handler = StubCHandler(
+        [
+            stub_c_response(AskUserCandidate(type="ask_user", question="Which year?")),
+            stub_c_response(SubmitSqlCandidate(type="submit_sql", sql="SELECT 1")),
+        ]
+    )
+    port = StubPort(
+        [
+            canned_result("ask_user", {"answer": "2018"}),
+            canned_result("submit_sql", SUBMIT_BODY),
+        ]
+    )
+    adapter = make_adapter(c_handler=handler, port=port)
+    adapter.init_session(
+        init_request(state={"db_schema": "SCHEMA_DUMP", "external_kg": "KG_DUMP", "max_turn": 5})
+    )
+
+    asyncio.run(
+        adapter.run_session(
+            BirdRunSessionRequest(
+                task_id="task-1",
+                mode="c-interact",
+                message="User Query:\nFind the 2018 delivery bottleneck.",
+            )
+        )
+    )
+
+    first = handler.requests[0].current_phase.content
+    second = handler.requests[1].current_phase.content
+    assert "Find the 2018 delivery bottleneck." in first
+    assert "Find the 2018 delivery bottleneck." in second
+    assert "SCHEMA_DUMP" in first
+    assert "SCHEMA_DUMP" in second
+    assert "KG_DUMP" in first
+    assert "Which year?" not in first
+    assert "Which year?" in second
+    assert "2018" in second
+    assert "clarification budget" in second
+
+
 def test_c_run_resets_submitted_flag_next_call() -> None:
     handler = StubCHandler(
         [

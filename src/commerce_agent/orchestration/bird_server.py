@@ -21,7 +21,7 @@ sets come from `load_official_contract()`) as an in-memory session harness:
 from __future__ import annotations
 
 import json
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, Sequence
 from decimal import Decimal
 from hashlib import sha256
 from typing import Literal, Protocol
@@ -69,16 +69,39 @@ def _clarification_budget(state: Mapping[str, object]) -> int | None:
     return raw
 
 
-def _phase_content(feedback: str, state: Mapping[str, object]) -> str:
-    """Feedback plus the live clarification budget line (Task 5 policy layer)."""
+def _phase_content(
+    task_message: str,
+    dialogue: Sequence[str],
+    state: Mapping[str, object],
+) -> str:
+    """Official c-interact per-turn context (cinteract.py `run_single_task`).
+
+    The official agent sees the phase-1 message (user query) for the whole
+    phase, the orchestrator-seeded `db_schema`/`external_kg` (c-mode has no
+    schema tools), and the accumulated clarification dialogue. The live
+    clarification budget line is the Task 5 policy layer.
+    """
+    parts = [f"User Query (official first message):\n{task_message}"]
+    schema = state.get("db_schema")
+    if isinstance(schema, str) and schema.strip():
+        parts.append(f"[Task schema]\n{schema}")
+    elif schema:
+        parts.append(f"[Task schema]\n{json.dumps(schema, ensure_ascii=False)}")
+    knowledge = state.get("external_kg")
+    if isinstance(knowledge, str) and knowledge.strip():
+        parts.append(f"[External knowledge]\n{knowledge}")
+    elif knowledge:
+        parts.append(f"[External knowledge]\n{json.dumps(knowledge, ensure_ascii=False)}")
+    if dialogue:
+        parts.append("Clarification dialogue so far:\n" + "\n".join(dialogue))
     max_turn = _clarification_budget(state)
-    if max_turn is None:
-        return feedback
-    used = int(state.get("_ask_user_turns", 0))
-    return (
-        f"{feedback}\n\n[clarification budget: {used} of {max_turn} ask_user turns "
-        "used; once exhausted you must call submit_sql]"
-    )
+    if max_turn is not None:
+        used = int(state.get("_ask_user_turns", 0))
+        parts.append(
+            f"[clarification budget: {used} of {max_turn} ask_user turns "
+            "used; once exhausted you must call submit_sql]"
+        )
+    return "\n\n".join(parts)
 
 
 def _canonical_json(value: object) -> str:
@@ -408,7 +431,7 @@ class _Session:
         handler = self._c_handler
         if handler is None:  # pragma: no cover - constructor guarantees presence
             raise RuntimeError("c handler missing")
-        feedback = message
+        dialogue: list[str] = []  # official ADK-session memory equivalent
         while self.model_turns < _MAX_MODEL_TURNS:
             self.model_turns += 1
             self.state["model_turns"] = self.model_turns
@@ -419,7 +442,7 @@ class _Session:
                     attempt_id=self._attempt_ids(),
                     current_phase=_phase_datum(
                         f"bird-session:{self.session_id}:turn{request_turn}",
-                        _phase_content(feedback, self.state),
+                        _phase_content(message, dialogue, self.state),
                     ),
                 )
             )
@@ -432,7 +455,8 @@ class _Session:
                         arguments_json=_canonical_json({"question": candidate.question}),
                     )
                 )
-                feedback = _answer_text(result)
+                dialogue.append(f"[agent ask] {candidate.question}")
+                dialogue.append(f"[user reply] {_answer_text(result)}")
                 continue
             await self._port.execute(
                 ToolCall(
