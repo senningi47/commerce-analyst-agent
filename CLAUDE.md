@@ -20,12 +20,12 @@ Day 6: Task 1–11 全部完成 + 能力验证已执行（用户晨间裁定：�
          能力验证：reward>0 未达成（3 有效集 4 提交全败 Phase 1；agent $0.034841 + sim 估 ~$0.022 ≈ $0.057 上限内）
          决定性发现：官方 c 模式每轮新建会话、phase record 不携带任务问题 → agent 逐轮失忆 → 占位符提交
          （全历史 c 集同款；Task 5 闸治症状未治机制）；a-mode 首个完整 episode 健康，Phase 1 失败=真实 SQL 质量
-Day 7 进展: 计划已批准执行；Phase A 完成——c-mode 判决书=我方 adapter 缺陷已修复（fix 4287a0b）
-         C1 已执行（reward=0）→ 残余缺陷=失败反馈 Phase 边界上下文丢失，已经用户批准修复完成（零付费红绿
-         2 RED→GREEN：_Session 跨 Phase 记忆 + current_message；869 passed；rebuild+容器实证 ✓；官方语义
-         定案=整任务一个 ADK 会话，cinteract.py 141/159/179）；c 集新锚 $0.016/集（A4 影响 +~$1.2 可忽略）
-用户动作: 授权 C1 重验（task7-cmode-refit-20260915b，≤$0.05，off-peak；判据=失败反馈轮零失忆+reward>0）；
-         commit 授权（bird_server.py+测试+docs 未入库）；Task 5/6 零付费可穿插
+Day 7 进展: 计划已批准执行；Phase A 完成——c-mode 判决书=我方 adapter 缺陷已修复并入库（0f99076+bd38072）
+         C1 重验 b/c 两连败 → 方案1 插桩定性=输出预算耗尽（8192→16384 修复）→ run e（晚窗 $0.011330）
+         证实 16384 仍被单轮 reasoning 吃满（finish=length+空 content）；官方文档=思考默认输出 64K
+         （官方 ADK 不设 max_tokens，天然 4× 余量）→ 水位线裁定呈用户；phase-memory 与 16384 均未证伪
+用户动作: 裁定水位线——①64K=65536（官方等效，纯配置，推荐）②空轮优雅处理（触 Day 3 契约）③两者；
+         commit 授权（插桩+16384+run e 结果未入库）
 用户动作: 批准 Day 7 计划 + Gate C1/C2 授权（C2 启动前重估表再呈一次）；余额核对已闭环（累计已花 7.40 元）
 已预授权: Day 6 打包授权 + 能力验证授权均已行使完毕；新付费/新范围需重新明确授权
 终态证据: 执行日志（§13–§19）+ Task 10 报告 + Task 11 研究笔记 + 账本 task11_capability_validation 节；未 push

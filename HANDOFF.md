@@ -1,16 +1,16 @@
-# CommerceAnalyst 项目交接：残余修复完成（Phase 边界会话记忆，零付费红绿+rebuild 实证）——C1 重验等用户授权
+# CommerceAnalyst 项目交接：run e 证实 16384 仍被 reasoning 吃满——水位线=官方思考默认 64K（修复选项呈用户）
 
-> 更新时间：2026-09-15（Asia/Shanghai）午后，更新者：Claude Code（GLM）  
+> 更新时间：2026-09-15（Asia/Shanghai）晚，更新者：Claude Code（GLM）  
 > 工作区：`D:\git-projects\commerce-analyst-agent`  
-> 当前分支状态：`main`（未 push；HEAD=`98ec6e3`；本轮残余修复零源码 commit——`bird_server.py`+测试已改、869 passed、镜像已 rebuild，待逐项授权入库）  
-> 交接状态：`continuable`——**阻塞点 = C1 重验的新付费授权（≤$0.05）**  
+> 当前分支状态：`main`（未 push；HEAD=`bd38072`；插桩+16384 修复+run e 结果均未 commit）  
+> 交接状态：`blocked-on-user`——**裁定输出上限水位线（64K 配置 / 空轮优雅处理 / 两者）**  
 > PowerContext scope：`git:github.com/senningi47/commerce-analyst-agent`  
 > Durable Handoff：PowerContext `handoff/handoff#30`（2026-09-15 提交，exact revision=30；#29 为 Day 7 计划产出轮）
 
 ## 0. 新会话先做什么
 
 1. 完整阅读本文件、`docs/reports/2026-09-14-day6-phase-a-execution-log.md`（Day 6 Phase A 执行日志，§14=Task 8 Step 2/3、§15=Task 9、§17=Task 10、§18=Task 11）与 `docs/superpowers/plans/2026-09-14-day6-capability-restore-runner-and-ui.md`（Day 6 计划）。把它们当作需要现场核验的历史交接，不要把历史授权当作新会话授权。
-2. 先向用户报告准确状态：**C1 已执行（reward=0）→ 残余缺陷（失败反馈 Phase 边界上下文丢失）已经用户批准修复完成（零付费红绿：2 RED→GREEN，`_Session` 跨 Phase 记忆 + `current_message` 渲染；869 passed；rebuild+容器实证 ✓）——C1 重验（新 experiment `…b`，≤$0.05，off-peak）等用户授权**。官方语义定案：整任务一个 ADK 会话，debug/follow-up 轮共享全部记忆（`cinteract.py` 141/159/179）。余额核对闭环（累计 7.40 元）与 Day 7 计划批准状态不变。
+2. 先向用户报告准确状态：**run e（晚窗，$0.011330）证实 16384 仍被 reasoning 吃满（第 5 轮 finish=length + 空 content）——H1 provider 钳制已被官方文档证据排除（max_tokens 上限 384K），H2 成立；水位线 = 官方思考默认输出 64K（官方 ADK 不覆写 max_tokens，天然 4× 余量）**。修复选项呈用户：① 上限 65536（纯配置=官方等效）② 空轮优雅处理（触 Day 3 fail-closed 契约）③ 两者。授权累计 $0.011330 已停。两轮修复（0f99076 phase-memory + 16384）均未被证伪——死因始终在输出预算。
 3. **外部事实（关键）**：模型更名证据链与全部实测数字见研究笔记；价格快照已双源核对（用户读数 = 页面提取）；探针累计花费 ~$0.008。
 4. preflight 三项零付费已于 2026-09-13 完成（执行入口备查：`scripts/prepare_bird_pilot.py --dataset <公开数据集路径>`、`--run-db-check`、GT 拒绝检查见执行日志 §4）。Task 13 主运行**需要用户新会话明确授权**（一次正向运行 = 一次授权额度）。
 5. 根目录 `.env` 只能由已审核脚本或 `uv run --env-file .env ...` 消费。不要手工读取、打印、搜索、hash 或统计它。（本日已追加 Day 5 变量与 `USER_SIM_MODEL=openai/deepseek-flash`，均经用户授权。）
@@ -279,16 +279,44 @@ security/transaction gate `9 passed in 5.59s`；唯一正向 seller-risk scenari
 2. **红绿**：2 条 RED（失败反馈轮 + follow-up 轮，坑 70 边界枚举）首跑 FAIL 且失败输出精确复现 C1 实况 → GREEN：`_Session` 持久 `_task_message` + `_memory`（ask 对 + submit SQL + 提交结果截断），`_phase_content` 新增 `current_message` 渲染槽。适配器 23/23。
 3. **终态**：离线 **869 passed, 140 skipped**；Ruff 全绿；rebuild + 容器内实证（新符号 3 组全命中）✓。
 4. **C1 重验 staged**：新 experiment `task7-cmode-refit-20260915b` + `events-c1-refit-b.jsonl` + 同单集/config-hash、≤$0.05、off-peak——**等用户授权后按 §3 清单执行**。
+
+### 2.27 C1 重验执行：provider_response_invalid 两连败，INCONCLUSIVE（Claude Code，2026-09-15 午后，付费 Gate 行使；细节见执行日志 §23）
+
+用户「两者一起授权」后：入库 `0f99076`（fix）+ `bd38072`（docs）→ 13:22 重验 b（97s failed，2 轮 $0.004848）→ GC7 补跑 c（65s failed，1 轮 $0.003392）→ 两连败同因 **`provider_response_invalid`**（网关解析 DeepSeek 响应失败，503 → 编排器 official_task_error）→ 按纪律停止。
+
+1. **修复未被证伪**：失败在 provider 响应解析（`gateway.py` `_parse_output`/`_finish_reason`），episode 未活到 debug 轮——phase-memory 修复 live 未验证。Task 10 Run 1（旧镜像）同 reason 先例 → 非本次修复引入。疑似：长 reasoning 下 tool_call arguments 截断。
+2. **精确触发未知**：失败响应不留存（Day 3 fail-closed 设计）；需插桩诊断（sanitized 元数据落盘）才能定性。
+3. **成本**：重验授权内 $0.00824 ≤ $0.05 ✓（首验 $0.014710 已入 §2.25 节）。
+4. **裁定选项**：①插桩诊断 + 1 次付费运行 ~$0.01；②纯重试；③转 Task 5/6 零付费、验证排晚窗。
+
+### 2.28 方案1 执行：插桩定性 + 输出预算修复（Claude Code，2026-09-15 午后，诊断付费 + 修复零付费，未 commit）
+
+用户裁定「执行方案1」后完成（细节见执行日志 §24）：
+
+1. **插桩红绿**：gateway 两个 fail-closed 解析点落 `protocol_diagnostic` sanitized 日志（零响应内容）；2 RED → GREEN。
+2. **诊断运行 d 一发命中**：`site=output_parse error=ValidationError`（FinalOutput 空串）+ `finish_reason='length'` + 回显匹配。**根因 = reasoning 吃满 8192 输出预算 → finish=length + content 空 → 输出校验炸**；非协议损坏、非重试语义问题。Task 10 Run 1 同解释。$0.008127 ≤ ~$0.01 ✓。
+3. **修复红绿（零付费）**：`ThinkingConfig` le 8192→16384 + run-profiles bird_a/bird_c 推理 16384（profile revision v2，canonical 重写，retail 不动）。**不抬正常轮成本**（成功轮本就 <8192）。终态 873 passed + Ruff 绿 + rebuild 实证 ✓。
+4. **C1 重验 staged**：experiment `…e` + `events-c1-refit-e.jsonl`，~$0.015 全程锚，**排晚窗（18:00 后），等授权**。残余风险：16384 下 reasoning 仍可能耗尽（概率大降，插桩可立即取证）。
+
+### 2.29 C1 重验 run e：16384 仍不足，水位线=官方思考默认 64K（Claude Code，2026-09-15 晚窗，付费 $0.011330，停于纪律）
+
+用户「授权执行下一步」后 18:04 晚窗执行（细节见执行日志 §25）：
+
+1. **运行**：`…e` / attempt `7e6c1ef7`，failed 196s——4 正常轮后第 5 轮 `finish_reason='length'` + 空 content，同 `FinalOutput` 校验炸。插桩当场定性。
+2. **H1 排除 / H2 成立**：官方文档（更名探针双源核验）`max_tokens` 上限 384K → provider 如实接受 16384；该轮 reasoning 真实吃满 16384。**官方思考默认输出 64K（max effort 128K）**——官方 ADK 不覆写 max_tokens，天然 4× 余量。
+3. **结论**：低于 64K 的上限都让偶发 reasoning blowout 保持致命；两轮修复（phase-memory + 16384）未被证伪，死因始终在输出预算。
+4. **裁定选项**：① 65536（纯配置=官方等效，blowout 轮最坏 ~$0.04 off-peak）② 空轮优雅处理（触 Day 3 fail-closed 契约）③ ①+②；可选：读 1 个官方 agent 配置文件确认官方不设 max_tokens（allowlist 扩展待确认）。
 5. **成本/锚点**：agent 实测 **$0.014710**（spool 878→883，off_peak，prompt ~13k/轮）；sim 估 ~$0.0015；合计 ~$0.016 ≤$0.05 ✓。**c 集新锚 $0.016/集**（agent $0.0147 = 3.6× 旧锚，schema 渲染实证；sim 调用 60→3）；A4 影响 +~$1.2 可忽略。账本 `task7_c1_refit_20260915` 节。
 6. **现场**：栈与官方库已 stop；eval 库新增实验（1 attempt succeeded，证据保留）；**下一步付费运行需用户新授权**。
 
 ## 3. 当前卡在哪里
 
-**阻塞点 = C1 重验的新付费授权（≤$0.05）。** 残余修复已完成（零付费红绿 + rebuild + 容器实证，见 §2.26 / 执行日志 §22）；**付费运行等用户明确授权**。
+**阻塞点 = 用户裁定输出上限水位线**（run e 证实 16384 仍被 reasoning 吃满；官方思考默认 64K）。
 
-- **C1 重验一键清单（staged）**：① 确认 off-peak 窗口 + 栈起动（compose.bird 三服务 + 官方库 5433，就绪探测后跑，坑 67）② 免 rebuild 判定（`98ec6e3` 后若仅文档变更可跳过；本轮 rebuild 已含残余修复，容器内 `_task_message`/`_memory` 已实证）③ Runner：同 §2.26 的命令但 `--experiment task7-cmode-refit-20260915b --events outputs/bird-eval/events-c1-refit-b.jsonl`（新 experiment 合法，坑 65）④ 判据：失败反馈轮零失忆句式 + **任意一集 reward>0 = 能力门 PASS** ⑤ 回填账本。
-- **后续零付费**：Task 5（sim 合规排查 + a-mode SQL 诊断）、Task 6（A4 清单 + 重估表 + 四修复项）可在等待/穿插执行。
-- **现场**：compose.bird 栈与官方库 5433 已 stop（重验前重启）；产品 PG 运行；dev/API 进程停。
+- **裁定选项**：① `max_output_tokens` 16384→**65536**（bird_a/bird_c；纯配置=官方等效；blowout 轮最坏 ~$0.04 off-peak，正常轮不变——**推荐**）② 我方栈优雅处理空 content 轮（run_session 内重问一轮 = 官方 ADK 循环语义；触及 Day 3 fail-closed 网关契约）③ ①+②。可选：读 1 个官方 agent 配置文件（allowlist 扩展）钉死官方是否设 max_tokens。
+- **裁定后**：红绿 + rebuild + 容器实证（零付费）→ C1 重验 `…f`（付费，~$0.015 锚）。
+- **commit 待授权**：插桩 + 16384 + run e 结果（6 源码文件 + docs）。
+- **现场**：compose.bird 栈与官方库 5433 已 stop；产品 PG 运行。
 - **可选**：`cybermarket_pattern_12 [a]` 恢复（待确认）。
 
 ## 4. 当前验证证据（2026-09-11 Task 18 测试数字 + 2026-09-12 Gate G/清理现场，最终源码状态，Claude Code）
@@ -320,8 +348,8 @@ security/transaction gate `9 passed in 5.59s`；唯一正向 seller-risk scenari
 
 ## 5. 下一步计划
 
-1. **C1 重验授权**（用户，≤$0.05，off-peak）→ 按 §3 一键清单执行 `task7-cmode-refit-20260915b`；判据 = 失败反馈轮零失忆 + reward>0。
-2. **零付费穿插**：Task 5（sim 合规 + a-mode SQL 诊断）、Task 6（A4 清单 + 重估表 + 四修复项）；四修复项已可与残余修复同批入库（待 commit 授权）。
+1. **用户裁定水位线**（当前阻塞）：推荐 ① 65536（官方思考默认）→ 零付费红绿 + rebuild → C1 重验 `…f`（付费 ~$0.015）。
+2. **commit 授权**：插桩 + 16384 + run e 结果（可与裁定打包）。
 3. **付费 Gate**：C2（A4+消融+产品，Task 7 前重估表呈用户）。
 4. **每 Task 纪律**（继承）：off-peak、镜像 rebuild + 容器实证、每 25 集重估、收尾三件套；commit 逐项授权。
 5. **可选**：`cybermarket_pattern_12 [a]` 恢复（需确认）。
@@ -427,6 +455,10 @@ security/transaction gate `9 passed in 5.59s`；唯一正向 seller-risk scenari
 
 70. **「修复」必须覆盖状态机的全部边界，不只主路径。** `_phase_content` 修复验证了 clarify 循环（单次 run_session 内），但 submit 失败反馈会开启**新 Phase**——局部 `dialogue` 清空、首条消息（任务问题）无跨调用持久化，失忆句式在失败反馈轮精确复现。同类修复先枚举「哪些入口会重新进入该函数」（clarify 轮 / 失败反馈轮 / 新 Phase），逐一写 RED 测试。判据「零失忆句式」必须包含失败反馈轮的对话回放。
 71. **Windows Git Bash 会把容器内绝对路径 `/app/...` 改写为宿主路径（MSYS 路径转换）**，`docker compose exec <c> grep ... /app/...` 静默找不到文件——前缀 `MSYS_NO_PATHCONV=1` 禁用转换（本轮实证：裸跑报 `D:/Git/app/...: No such file or directory`）。
+72. **fail-closed 解析路径必须自带插桩，否则「不可追溯」会变成连续付费盲烧。** `provider_response_invalid` 已三现（Task 10 Run 1 旧镜像 + C1 重验 b/c 新镜像），每次只剩 sanitized reason、原始响应不留存（Day 3 设计）→ 精确触发（截断 arguments / 回显不匹配 / finish_reason 未知值）无法离线定性，每次复现都要烧一次付费运行。凡新增「拒绝/解析失败」分支，落盘 sanitized 元数据（finish_reason 字符串、异常类、raise 位置）应与分支同批交付。
+73. **GC7 补跑只对「瞬时」成立；同因连续两次即转系统性，立即停。** b（97s）失败 → 补跑 c（65s）同因——第二次失败把「赌瞬时」路径关闭，继续跑就是盲烧。停止点应在第二次失败，不在第三次。
+74. **`provider_response_invalid` 根因 = 输出预算耗尽，不是协议/语义问题**（插桩一手证据）：reasoning 吃满 `max_output_tokens`（8192）→ finish_reason=length + content 空串 → `FinalOutput(content='')` pydantic `string_too_short` → ValidationError 是 ValueError 子类，被网关 `except (ValueError,…)` 吞成不可重试 protocol error。**给「thinking 开启」的 profile 留输出余量**（现 16384）；凡「成功轮 completion 贴近上限」就是崩溃前兆（晨跑 7133/8192 已亮灯）。另：pydantic 模型的 ValidationError 会伪装成 ValueError 被宽 except 捕获——校验炸点与协议错误要分开定性，插桩日志里的异常类名是关键线索。
+75. **「调大 max_tokens」必须对照官方等效水位，而不是「翻倍看看」。** run e 证明 16384 仍会被单轮 reasoning 吃满——官方 ADK 不覆写 max_tokens，provider 思考默认输出 **64K**（max effort 128K，更名探针双源核验）才是等效水位；低于它的任何上限都让偶发 blowout 保持致命。判别「provider 钳制」与「模型真跑满」只需失败响应的 usage.completion_tokens——**插桩日志一开始就该带 usage 字段**（本轮补）。
 
 ## 7. 关键文件与 SHA-256
 
@@ -475,7 +507,7 @@ security/transaction gate `9 passed in 5.59s`；唯一正向 seller-risk scenari
 | `tests/unit/orchestration/test_retail_graph.py` | `df647d62c8a422e02ada4351ef8533faf98ae0352e605742d8371e2f8701d6cd` | **修改（84180e2，Task 4 legacy 测试对齐 + 死代码清理）** |
 | `scripts/probe_deepseek_gateway.py` + `tests/unit/scripts/test_probe_deepseek_gateway.py` + `tests/integration/deepseek/test_retail_probe.py` | — | **删除（84180e2，Day 3 旧探针退役；前两个 tracked git rm，最后一个未跟踪磁盘删除）** |
 | `configs/model/prompt-policies.v3.json` | `c8dfc65f5d52186827233f6260b7806fc786560810284be2e6585dcf4ddd66f3` | **新建（ad961e8，Task 5 bird-a/bird-c 官方策略整合；v2 文件保留作历史）** |
-| `configs/model/run-profiles.v2.json` | `d231b61685b8ffb0b12a772528c52b090558d6035993ef60cc90eaf4e5138cb6` | **修改（ad961e8，bird profiles 的 prompt_policy_revision → v2 策略名）** |
+| `configs/model/run-profiles.v2.json` | `45b3d308893a7053c6fe7e1fc21f791fa85ffd697d19f4848c53aa19f073f573` | **修改（2.28 输出预算：bird_a/bird_c 推理 16384 + profile revision v2，canonical 重写；未 commit。前值 d231b616… = ad961e8）** |
 | `src/commerce_agent/context_builder/profiles.py` | `81fd32aeb800e0ed9a0fd1d2fc14091c1f6a074729c6f2a19cadff35d3c9f5c8` | **修改（ad961e8，_FILES/revision 校验/_POLICY_REVISIONS 切 v3）** |
 | `src/commerce_agent/orchestration/bird_server.py` | `9aab08b44487d29e8abd0fe7a92641b67094c35527cb859be3ffce44993ea26f` | **修改（2.26 残余修复：Phase 边界会话记忆，未 commit；前值 3569b4b7… = ad961e8 闸修复）** |
 | `tests/contract/test_bird_prompt_policy.py` | `86fa18b0fe0f84431e649b11a1e2967a85e8b8c565b6fc4748adfca91dbfc3ea` | **新建（ad961e8，策略守卫 6 条）** |
@@ -594,3 +626,20 @@ security/transaction gate `9 passed in 5.59s`；唯一正向 seller-risk scenari
 - **判据终态**：适配器 23 passed（+2）；离线 **869 passed, 140 skipped**；Ruff 全绿。
 - **DB/付费**：零 DB 变更、零 API 请求；栈未起动（仅 build）。
 - **下一步**：C1 重验（`task7-cmode-refit-20260915b`）等用户付费授权。
+
+### 8.9 C1 重验轮（2026-09-15 午后，付费 Gate 行使 b/c 两连败）
+
+- **入库**：`0f99076`（fix：bird_server.py + 测试，+141/−6）+ `bd38072`（docs：执行日志 §21/§22 + HANDOFF + CLAUDE）。`--check` 例外已披露（HANDOFF 头部既有 Markdown 硬换行风格）。
+- **付费**：b `task7-cmode-refit-20260915b`（attempt `5aac285d`，97s failed，agent $0.004848）+ c `…c`（GC7 补跑，attempt `316e3ae4`，65s failed，agent $0.003392）——重验授权内合计 **$0.008240** ≤ $0.05；两败同因 `provider_response_invalid`（网关边界日志 503）。
+- **DB 现场变更**：eval 库新增 2 实验 2 attempt 行（failed/official_task_error，证据保留）。
+- **gitignored 产物**：`events-c1-refit-b/c.jsonl`、episodes 2 空壳、spool +3 文件、账本 `task7_c1_refit_20260915.reruns` 节。
+- **修改（未 commit，待授权）**：执行日志 §23、本文件（头部/§0.2/§2.27/§3/§5/§6.12 坑 72–73/§8.9）、`CLAUDE.md` §0。
+- **外部状态收尾**：栈与官方库已 stop；产品 PG 未动。
+
+### 8.10 方案1 轮：插桩定性 + 输出预算修复（2026-09-15 午后，诊断付费 $0.008127 + 修复零付费，未 commit）
+
+- **修改（待 commit 授权）**：`src/commerce_agent/model/gateway.py`（插桩 `_log_protocol_diagnostic`，哈希 `886c1517…`）、`src/commerce_agent/model/contracts.py`（ThinkingConfig le 16384，`57849aa6…`）、`configs/model/run-profiles.v2.json`（bird_a/c 16384 + revision v2，`45b3d308…`，§7 已更新）、`tests/unit/model/test_gateway.py`（+2，`c5de626c…`）、`tests/unit/model/test_contracts.py`（+1，`894df49e…`）、`tests/unit/context_builder/test_profiles.py`（+1，`4eee27ef…`）、执行日志 §24、本文件（头部/§0.2/§2.28/§3/§5/§6.12 坑 74/§7/§8.10）、`CLAUDE.md` §0。
+- **付费**：诊断运行 d（`task7-cmode-refit-20260915d`，attempt `83b6e31d`，failed 126s）agent $0.008127 ≤ ~$0.01 ✓；DB 新增 1 实验 1 attempt 行（failed/official_task_error，证据保留）；gitignored：`events-c1-refit-d.jsonl`、episode 空壳、spool +3、账本 `reruns.instrumented_diagnostic` 节。
+- **镜像**：rebuild ×2（插桩后 + 修复后）；容器实证 `protocol_diagnostic`×4 / `bird-c-profile-v2` / `"max_output_tokens":16384`×2 ✓。
+- **判据终态**：**873 passed, 140 skipped**（+2 插桩、+2 修复）；Ruff 全绿。
+- **外部状态收尾**：栈与官方库已 stop；产品 PG 未动；14:00 后未再发起任何付费调用。

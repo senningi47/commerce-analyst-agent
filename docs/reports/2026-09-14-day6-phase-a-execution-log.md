@@ -326,3 +326,36 @@ N=10 时 c 侧较 Pilot 失控基线 **-83%**。a-mode 无行为级基线拆分�
 4. **终态**：离线 **869 passed, 140 skipped**（+2）；Ruff 全绿；`bird-system-agent` rebuild + 一次性容器内实证（`Orchestrator message for this phase`×1 / `_task_message`×4 / `_memory`×2 命中）✓。
 5. **哈希**（HANDOFF §7 已同步）：`bird_server.py` = `9aab08b4…ea26f`；`test_bird_system_server_adapter.py` = `112fb706…a470`。
 6. **C1 重验就绪（待用户授权）**：新 experiment `task7-cmode-refit-20260915b`（failed/succeeded 终态不重跑，坑 65 先例）、events 写 `events-c1-refit-b.jsonl`、同 c 单集、同 config-hash、≤$0.05、off-peak；判据不变：零失忆句式 + reward>0。
+
+## 23. Day 7 C1 重验：连续两次 `provider_response_invalid`，修复未被证伪但被 infra 阻塞（2026-09-15 午后，付费 Gate 行使，b/c 两实验）
+
+**授权链**：用户「两者一起授权」（C1 重验 ≤$0.05 + commit）。13:22–13:28 空闲档执行。
+
+1. **入库**：`0f99076`（fix：`_Session` 跨 Phase 记忆 + `current_message`，2 文件 +141/−6）+ `bd38072`（docs：执行日志 §21/§22 + HANDOFF + CLAUDE）。`--check` 披露：HANDOFF 头部 3 行尾随双空格为该文件既有 Markdown 硬换行风格（HEAD 版本本就有 5 行同款），有意保留。
+2. **b**（`task7-cmode-refit-20260915b`，attempt `5aac285d`）：failed 97s `official_task_error`；2 模型轮（$0.004848）；agent 容器边界日志：`503 ModelProtocolError reason=provider_response_invalid`。episode 空壳（评测未运行）。
+3. **c**（GC7 同授权补跑，attempt `316e3ae4`）：failed 65s，同因 `provider_response_invalid`；1 模型轮（$0.003392）。
+4. **诊断（零付费，代码级）**：网关 `provider_response_invalid` = DeepSeek HTTP 响应解析失败（`gateway.py:170-192/217-238` 两个 raise 点：payload/finish/usage 结构，或 `_parse_output` 内 `json.loads(tool_call.arguments)` 截断、模型回显不匹配）。失败响应不留存（Day 3 fail-closed 设计，charge_ambiguous）。**先例：Task 10 Run 1 第 8 轮同 reason（旧镜像）——类别早于本次修复，修复未被证伪**（失败发生在 provider 响应解析，episode 未活到 debug 轮，修复 live 未验证）。疑似触发：长 reasoning 输出下 tool_call arguments 截断。sim "Could not load schema" 每轮一次 = 坑 67 已知观察项（ask 仍 200，非主因）。
+5. **成本**：重验授权内 agent 实测 **$0.008240**（b+c，off_peak）≤ $0.05；sim 未及调用。账本 `task7_c1_refit_20260915.reruns` 节。
+6. **停止纪律**：连续两次同因 → 非纯瞬时；按计划 fail → 有界诊断 → 停，交用户裁定。精确触发需一次插桩诊断（解析失败时落 sanitized 元数据：finish_reason 字符串 + 异常类 + raise 位置，rebuild 后 1 次付费运行 ~$0.01）。**c-mode 能力门验证状态 = INCONCLUSIVE（被 infra 阻塞，非判据失败）**。
+
+## 24. 插桩诊断定性 + 输出预算修复（2026-09-15 午后，方案 1 行使：诊断付费 $0.008127 + 修复零付费红绿，未 commit）
+
+**授权链**：用户裁定「执行方案1」（插桩诊断 ~$0.01 + 定性；修复红绿零付费随行）。
+
+1. **插桩（红绿）**：`gateway.py` 两个 fail-closed 解析点落 `protocol_diagnostic` sanitized 日志（site / 异常类 / detail / finish_reason 原始串 / 回显匹配 / payload 键集——**零响应内容**）。2 条 RED（payload_parse + output_parse，含 PRIVATE 哨兵零泄漏断言）→ GREEN（`_log_protocol_diagnostic` + `_json_or_none`）。gateway 19/19。
+2. **诊断运行 d**（`task7-cmode-refit-20260915d`，attempt `83b6e31d`）：failed 126s；3 模型轮 $0.008127 后第 4 轮命中。**插桩一手证据**：`site=output_parse error=ValidationError`——pydantic `FinalOutput.content` `string_too_short`（空串），`finish_reason='length'`，`model_echo_match=True`。
+3. **定性（与两个假设都不同）**：**根因 = 输出预算耗尽，非协议损坏、非重试语义问题**——模型 reasoning 吃满 8192 输出上限 → finish=length + content 空串 → `FinalOutput(content='')` pydantic 校验炸（ValidationError 是 ValueError 子类，被网关吞成不可重试的 `provider_response_invalid`）。晨跑成功轮最大 completion 7133 已贴线；Task 10 Run 1 第 8 轮同解释（a 模式同 8192 上限）。**Day 3 冻结重试语义无需修订**。
+4. **修复（零付费红绿）**：`ThinkingConfig.max_output_tokens` le 8192→**16384**（`model/contracts.py`，red：16384 拒绝→16385 仍拒绝）+ `run-profiles.v2.json` bird_a/bird_c 推理 `max_output_tokens: 16384`、profile revision → `bird-a/c-profile-v2`（canonical 形式程序化重写，retail 不动）。配置面调高**不抬正常轮成本**（成功轮本就 <8192），仅把「致命截断轮」变为「更长计费轮」。终态：**873 passed, 140 skipped**；Ruff 全绿；rebuild + 容器实证（`protocol_diagnostic`×4 / `bird-c-profile-v2` / 16384×2）✓。
+5. **哈希**：gateway `886c1517…` / model contracts `57849aa6…` / run-profiles `45b3d308…` / test_gateway `c5de626c…` / test_contracts `894df49e…` / test_profiles `4eee27ef…`。
+6. **成本**：诊断授权内 $0.008127 ≤ ~$0.01 ✓（重验授权 $0.00824 早前已记）；账本 `reruns.instrumented_diagnostic` 节。
+7. **排程**：修复后 C1 重验（experiment `…e`，~$0.015 全程锚）= 下一个付费授权；**14:00 已入 peak，按纪律排晚窗（18:00 后）**。残余风险披露：16384 下 reasoning 仍可能耗尽（概率大降）；若再现，插桩会立即给出同款证据。
+
+## 25. C1 重验 run e：16384 仍被 reasoning 吃满——官方默认 64K 才是水位线（2026-09-15 晚窗，付费行使 $0.011330，停于纪律）
+
+**授权链**：用户「授权执行下一步」（C1 重验，晚窗）。18:04 栈起动 + 就绪探测 + 容器实证（16384×2 / v2 revision 在场）→ 18:05 发射。
+
+1. **运行**：`task7-cmode-refit-20260915e`，attempt `7e6c1ef7`，**failed 196s**；4 模型轮正常（completion 4838/339/5589/7499，reasoning 4637/190/5374/7071，$0.011330），第 5 轮 `finish_reason='length'` + 空 content → 同一 `FinalOutput` 校验炸。
+2. **H1（provider 钳制）排除**：① 更名探针双源核验的官方文档（研究笔记 37 行）：`max_tokens` 上限 384K、**思考默认输出 64K（max effort 128K）**——provider 如实接受 16384；② 请求编码路径核验（`gateway.py:358` 直通 + :288 对 393216 校验通过）；③ 容器内配置实证 16384×2。
+3. **H2 成立**：该轮 reasoning 真实耗尽 16384、content 零字。**水位线 = 官方思考默认 64K**——官方 ADK 栈不覆写 max_tokens，天然 4× 余量，blowout 罕见；我方任何低于 64K 的上限都让偶发 blowout 保持致命（空 content = 杀整集）。run e 比 d 走得更远（4 轮 vs 2–3 轮）证明 16384 有改善但仍不够。
+4. **按坑 73 停止**（不盲试未定性原因）；本授权累计付费 $0.011330。
+5. **待用户裁定的修复选项**：① 上限 16384→**65536**（provider 思考默认 = 官方等效，纯配置；blowout 轮最坏 ~$0.04 off-peak，正常轮不变）；② 我方栈优雅处理空 content 轮（run_session 内重问一轮 = 官方 ADK 循环语义；**触及 Day 3 fail-closed 网关契约，用户设计决定**）；③ ①+②。另：确认官方 agent 模型配置是否真的不设 max_tokens 需读 1 个官方文件（allowlist 扩展，待用户确认）。
