@@ -1,16 +1,16 @@
-# CommerceAnalyst 项目交接：能力验证完成（reward>0 未达成；c 模式 phase-record 缺陷机制实锤），待 Day 7 修复与裁定跟进
+# CommerceAnalyst 项目交接：Day 7 Phase A 完成（c-mode 判决书=我方缺陷并已修复；C1 再验证排下个空闲档）
 
 > 更新时间：2026-09-15（Asia/Shanghai）晨，更新者：Claude Code（GLM）  
 > 工作区：`D:\git-projects\commerce-analyst-agent`  
-> 当前分支状态：`main`（未 push；Task 11 `6ef0c91` + 收尾 `b084c34` + 能力验证产物与文档 commit 均已入库）  
+> 当前分支状态：`main`（未 push；Day 7 计划 `2b6c6c26` + 修复 `4287a0b` + 收尾 docs 均已入库）  
 > 交接状态：`continuable`  
 > PowerContext scope：`git:github.com/senningi47/commerce-analyst-agent`  
-> Durable Handoff：PowerContext `handoff/handoff#28`（2026-09-15 提交，exact revision=28）
+> Durable Handoff：PowerContext `handoff/handoff#30`（2026-09-15 提交，exact revision=30；#29 为 Day 7 计划产出轮）
 
 ## 0. 新会话先做什么
 
 1. 完整阅读本文件、`docs/reports/2026-09-14-day6-phase-a-execution-log.md`（Day 6 Phase A 执行日志，§14=Task 8 Step 2/3、§15=Task 9、§17=Task 10、§18=Task 11）与 `docs/superpowers/plans/2026-09-14-day6-capability-restore-runner-and-ui.md`（Day 6 计划）。把它们当作需要现场核验的历史交接，不要把历史授权当作新会话授权。
-2. 先向用户报告准确状态：**能力验证完毕 + 余额核对闭环 + Day 7 计划已产出待批准**。用户裁定（09-15）：①能力验证批准（已执行，reward>0 未达成但 c-mode phase-record 缺陷机制实锤——见 §2.22）②Full=A4 ④sim 排查入 Day 7。余额核对（用户报数）：09-14 平台 0.65 元（拆 sim $0.0659，估算带内 ✓）+ 09-15 晨 0.32 元（sim $0.0104，每调用 ~$0.0005 → **sim 锚下修：c 集合计 $0.012 / A4 重推基准 ~82 元、保守 ~125 元 vs 160 线**）；累计已花 **7.40 元**。**Day 7 计划已入库（`docs/superpowers/plans/2026-09-15-day7-cmode-fix-a4-and-closure.md`，commit `2b6c6c26`）：5 Phase 10 Task，两付费 Gate（C1 再验证 ≤$0.05、C2 A4+消融），等用户批准计划与两 Gate 授权后实施。**
+2. 先向用户报告准确状态：**Day 7 Phase A 完成（c-mode 判决书=我方 adapter 缺陷，已修复 rebuild 实证）+ 余额核对闭环（累计 7.40 元）**。用户裁定（09-15）：①能力验证批准（已执行，reward>0 未达成但 c-mode phase-record 缺陷机制实锤——见 §2.22）②Full=A4 ④sim 排查入 Day 7。余额核对（用户报数）：09-14 平台 0.65 元（拆 sim $0.0659，估算带内 ✓）+ 09-15 晨 0.32 元（sim $0.0104，每调用 ~$0.0005 → **sim 锚下修：c 集合计 $0.012 / A4 重推基准 ~82 元、保守 ~125 元 vs 160 线**）；累计已花 **7.40 元**。**Day 7：计划已批准并执行中——Phase A 完成（判决书 §2.24 / 修复 `4287a0b` / rebuild 实证），Phase B C1 再验证（≤$0.05 已随计划授权）排下个空闲档，一键清单见 §3；随后 Task 5/6（零付费）→ C2 前重估表呈用户。**
 3. **外部事实（关键）**：模型更名证据链与全部实测数字见研究笔记；价格快照已双源核对（用户读数 = 页面提取）；探针累计花费 ~$0.008。
 4. preflight 三项零付费已于 2026-09-13 完成（执行入口备查：`scripts/prepare_bird_pilot.py --dataset <公开数据集路径>`、`--run-db-check`、GT 拒绝检查见执行日志 §4）。Task 13 主运行**需要用户新会话明确授权**（一次正向运行 = 一次授权额度）。
 5. 根目录 `.env` 只能由已审核脚本或 `uv run --env-file .env ...` 消费。不要手工读取、打印、搜索、hash 或统计它。（本日已追加 Day 5 变量与 `USER_SIM_MODEL=openai/deepseek-flash`，均经用户授权。）
@@ -253,15 +253,24 @@ security/transaction gate `9 passed in 5.59s`；唯一正向 seller-risk scenari
 2. **锚点精化**：sim 每调用与上下文长度相关 → c 集 sim $0.013→**$0.008**、c 集合计 $0.017→**$0.012**（a 集 $0.023 不变）；**A4 重推更新：基准 ~82 元 / 保守 ~125 元 vs 160 线**（原 91.6/135.6）。研究笔记 §11 已回填。
 3. **Day 7 计划产出（待批准）**：`docs/superpowers/plans/2026-09-15-day7-cmode-fix-a4-and-closure.md`——5 Phase 10 Task：A 静态核验→修复（红绿）→rebuild+实证（零付费）；B 再验证（**Gate C1 ≤$0.05**，判据 reward>0）；C sim 合规排查 + a-mode 诊断 + A4 清单/重估/四修复项（零付费）；D A4 分批执行 + 消融 + 产品 50 题（**Gate C2**，启动前重估表呈用户）；E 收尾报告/README/面试材料。预算工作数字：基准 ~116 元 vs 160 线（余 28%）。
 
+### 2.24 Day 7 Phase A：判决书 + c-mode 修复闭环（Claude Code，2026-09-15 晨，零付费，用户批准计划后）
+
+用户「批准执行」Day 7 计划后，Phase A（Task 1–3）当轮完成（fix commit `4287a0b`）：
+
+1. **Task 1 判决书**（`docs/project/research/2026-09-15-cmode-phase-record-verdict.md`）：**缺陷 = 我方 adapter**，官方语义无缺陷。官方一次 run_session 承载整个 clarify 循环：问题在首条消息（`User Query:\n{amb_user_query}`）、`db_schema`/`external_kg` 在官方种子 state（c 模式无 schema 工具，state 是唯一通道）、对话靠 ADK 会话记忆累积。我方 `_run_c` 每轮仅以最后 sim 回答重建上下文（三者全丢）。**更正**：16 spool 文件 = 我方每模型轮新 attempt_id（非官方多会话），机制结论不变。
+2. **Task 2 红绿**：RED = 修复前第二轮上下文实测 `'2018\n\n[clarification budget: 1 of 5 …]'`；GREEN = `_phase_content(task_message, dialogue, state)`（User Query + Task schema + External knowledge + 对话累积 + 预算行）+ `_run_c` 保留消息累积 dialogue。适配器 21 条全绿。
+3. **Task 3**：Ruff 全绿；离线 **867 passed, 140 skipped**；镜像 rebuild + 容器内实证 ✓。
+4. **C1 排程**：距 peak 不足，按纪律排下个空闲档（一键清单见 §3）；风险披露：schema 渲染抬高每轮 token，c 集锚或上浮（C1 实测回填）。
+
 ## 3. 当前卡在哪里
 
-**无技术阻塞；Day 7 计划已产出，等用户批准计划与两付费 Gate。**
+**无阻塞；Day 7 Phase A 完成（判决书 + 修复 + rebuild 实证），C1 排下个空闲档。**
 
-- **等待**：① Day 7 计划批准（`docs/superpowers/plans/2026-09-15-day7-cmode-fix-a4-and-closure.md`）；② Gate C1 授权（c-mode 再验证 ≤$0.05）；③ Gate C2 授权（A4 Full + 消融 + 产品 50 题，启动前重估表再呈一次）。批准前：零付费、零 push。
-- **执行顺序**：Task 1 静态核验（先列官方文件清单经用户确认）→ 2 修复红绿 → 3 rebuild+实证 → 4 再验证（C1）→ 5/6 并行 → 7 A4 分批（C2）→ 8 产品 → 9 收尾。
-- **用户动作**：无未决动作（余额核对已闭环；`cybermarket_pattern_12 [a]` 恢复仍为可选项待确认）。
-- **Task 8/9 现场备注**：dev server 与 API 进程已停（重启：`cd web && npm run dev` + `uv run --env-file .env python scripts/run_api.py`）；compose.bird 栈与官方库 5433 已 stop（复跑前重启 + 就绪探测，坑 67）；PG 测试双开关。
-- **Day 7 四修复项**（Task 6 落地）：`BIRD_EXPERIMENT_ID` 注入 / 同题串行 / 子进程 stderr 落盘 / 官方库就绪探测。
+- **C1 一键清单（付费 Gate ≤$0.05，已授权，待 off-peak 窗口 12:00–14:00 或晚间）**：① 确认空闲档 + 栈起动（compose.bird 三服务 + 官方库 5433，**起动后等官方库就绪再跑**，坑 67）② 容器内实证 grep `_phase_content`（rebuild 已含修复，若代码无新变更可跳过 rebuild）③ Runner：`uv run --env-file .env python -m commerce_agent.evaluation --experiment task7-cmode-refit-20260915 --purpose ablation_repair --config-hash 0ce49a5253ccf20df55db5a961595790b244412b86f285d09c091b0bb852f6fb --task-list outputs/bird-pilot/task11/task-list-c-rerun.jsonl --events outputs/bird-eval/events-c1-refit.jsonl --executor official --store postgres --adk-root _upstream/BIRD-Interact/BIRD-Interact-ADK --task-data-dir outputs/bird-pilot/task11/task-data --episode-output-dir outputs/bird-eval/episodes --concurrency 1`（c 单集 archeology_scan_8 复用）④ 判据：对话回放零失忆句式 + **任意一集 reward>0 = 能力门 PASS** ⑤ C1 后回填 c 集新锚（schema 渲染抬高 token，或上浮）。
+- **C2**：Task 6 重估表呈用户后启动（A4 分批 + 消融 + 产品）。
+- **后续 Task**：5（sim 合规排查 + a-mode SQL 诊断）、6（A4 清单 + 四修复项）零付费，可在 C1 前穿插。
+- **现场**：compose.bird 栈与官方库 5433 已 stop（C1 前重启）；产品 PG 运行；dev/API 进程停；PG 测试双开关。
+- **可选**：`cybermarket_pattern_12 [a]` 恢复（待确认）。
 
 ## 4. 当前验证证据（2026-09-11 Task 18 测试数字 + 2026-09-12 Gate G/清理现场，最终源码状态，Claude Code）
 

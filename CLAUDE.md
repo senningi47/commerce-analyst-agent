@@ -20,9 +20,9 @@ Day 6: Task 1–11 全部完成 + 能力验证已执行（用户晨间裁定：�
          能力验证：reward>0 未达成（3 有效集 4 提交全败 Phase 1；agent $0.034841 + sim 估 ~$0.022 ≈ $0.057 上限内）
          决定性发现：官方 c 模式每轮新建会话、phase record 不携带任务问题 → agent 逐轮失忆 → 占位符提交
          （全历史 c 集同款；Task 5 闸治症状未治机制）；a-mode 首个完整 episode 健康，Phase 1 失败=真实 SQL 质量
-下一步: Day 7 计划已入库待批准（docs/superpowers/plans/2026-09-15-day7-cmode-fix-a4-and-closure.md：A 静态核验→修复→
-         rebuild+实证 零付费 / B 再验证 Gate C1 ≤$0.05 / C sim 合规+a-mode 诊断+A4 清单与重估+四修复项 /
-         D A4 分批执行 Gate C2 / E 收尾报告 README 面试材料）；预算基准 ~116 元 vs 160 线（sim 锚精化后）
+Day 7 进展: 计划已批准执行；Phase A 完成——c-mode 判决书=我方 adapter 缺陷（问题/schema/对话三丢）已修复
+         （_phase_content 渲染官方语义全量上下文，fix 4287a0b，867 passed）；C1 再验证（Gate ≤$0.05 已授权）
+         排下个空闲档（一键清单 HANDOFF §3）；之后 Task 5/6 零付费 → C2 前重估表呈用户
 用户动作: 批准 Day 7 计划 + Gate C1/C2 授权（C2 启动前重估表再呈一次）；余额核对已闭环（累计已花 7.40 元）
 已预授权: Day 6 打包授权 + 能力验证授权均已行使完毕；新付费/新范围需重新明确授权
 终态证据: 执行日志（§13–§19）+ Task 10 报告 + Task 11 研究笔记 + 账本 task11_capability_validation 节；未 push
