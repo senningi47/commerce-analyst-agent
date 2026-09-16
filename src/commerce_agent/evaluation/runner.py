@@ -35,7 +35,10 @@ class RunnerConfig(BaseModel, frozen=True, extra="forbid"):
     purpose: str
     config_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
     task_list: tuple[EpisodeTask, ...] = Field(min_length=1)
-    concurrency: int = Field(default=2, ge=1, le=2)  # spike-frozen at 2 (v0.3 §16.2)
+    # v0.3 §16.2 spike froze 2; raised to 4 by user ruling 2026-09-16 for the
+    # a-batch, conditional on the live pilot batch showing no new infra
+    # failures (revert on anomaly). Same-task cross-mode stays serial below.
+    concurrency: int = Field(default=2, ge=1, le=4)
     stop_grace_seconds: int = Field(default=60, ge=1)
     task_order_seed: int = 0
     compose_env_out: Path | None = None

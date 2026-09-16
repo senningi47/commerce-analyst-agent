@@ -309,6 +309,15 @@ def test_register_experiment_called_once_with_frozen_identity(tmp_path) -> None:
     assert store.experiment("pilot-day5") == ("pilot", CONFIG_HASH)
 
 
+def test_concurrency_cap_accepts_4_rejects_5() -> None:
+    """2026-09-16 user ruling: the §16.2 spike cap moved 2 -> 4 for the
+    a-batch speed-up, conditional on the live pilot batch showing no new
+    infra failures. Pin the accepted ceiling so drift is explicit."""
+    make_config(concurrency=4)
+    with pytest.raises(ValidationError):
+        make_config(concurrency=5)
+
+
 def test_same_task_both_modes_requires_serial_concurrency() -> None:
     """Pit 63: the official task DB name omits the mode — same-task c/a
     episodes racing concurrently drop/create the same database. Fail fast at
