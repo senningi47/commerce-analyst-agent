@@ -49,6 +49,8 @@ _C_MAX_TURNS_TEXT = "Maximum turns reached. Task ended."
 _A_MAX_TURNS_TEXT = "Maximum interaction turns reached. Task ended."
 _A_TASK_DONE_TEXT = "Task completed."  # official before_model_callback task_done branch
 _A_BUDGET_EXHAUSTED_TEXT = "Budget exhausted. Task ended."  # official budget<0 branch
+_C_ABLATION_STOP_TEXT = "No repair attempted (ablation condition A)."
+_A_ABLATION_STOP_TEXT = "Stopped after failed submission (ablation condition A)."
 
 _INTERNAL_MODE: dict[str, Literal["a", "c"]] = {
     "a-interact": "a",
@@ -306,6 +308,10 @@ class BirdSessionStatePort:
                 self._state["phase2_completed"] = True
                 self._state["task_done"] = True
         self._state["_last_submit_raw"] = body.get("message", "")
+        # ablation condition A watches the pass/fail of the last submission;
+        # recorded for every submit (passed and failed) so the stop gates see
+        # the same signal in both modes
+        self._state["_last_submit_passed"] = body.get("passed") is True
 
     def _gate_clarification_budget(self, call: ToolCall) -> ToolResult | None:
         max_turn = _clarification_budget(self._state)
@@ -376,6 +382,29 @@ class _BudgetStopGate:
         return None
 
 
+class _ConditionalStopGate:
+    """Ablation §17.2 condition A wrapper for a-mode: stop the turn loop
+    right after a failed submission instead of running the official repair
+    turn. Delegates to the inner gate first so official stop primitives keep
+    precedence; disabled gates are pure pass-throughs (no behavior change)."""
+
+    def __init__(
+        self, *, inner: BirdAModelTurnGate, state: dict[str, object], enabled: bool
+    ) -> None:
+        self._inner = inner
+        self._state = state
+        self._enabled = enabled
+
+    async def stop_model_turn(self) -> StopOutcome | None:
+        if self._enabled and self._state.get("_last_submit_passed") is False:
+            return StopOutcome(
+                kind=StopKind.COMPLETED,
+                reason_code="ablation_stop_on_submit_fail",
+                retryable=False,
+            )
+        return await self._inner.stop_model_turn()
+
+
 def _phase_datum(source_ref: str, content: str) -> ContextDatum:
     return ContextDatum(
         kind="phase",
@@ -409,6 +438,7 @@ class _Session:
         task_id: str,
         state: dict[str, object],
         attempt_ids: Callable[[], UUID],
+        stop_on_submit_fail: bool = False,
     ) -> None:
         self.mode = mode
         self.task_id = task_id
@@ -417,6 +447,7 @@ class _Session:
         self.model_turns = int(state.get("model_turns", 0))
         self._factory = factory
         self._attempt_ids = attempt_ids
+        self._stop_on_submit_fail = stop_on_submit_fail
         self._run_scope = factory.build_run_scope(mode=mode, task_id=task_id)
         contract = load_official_contract()
         self._costs = {action.name: action.coin_cost for action in contract.actions}
@@ -441,6 +472,11 @@ class _Session:
     async def _run_c(self, message: str) -> str:
         self.state["_submitted_this_phase"] = False  # official pre-run reset
         self.state["_ask_user_turns"] = 0  # per-phase clarification budget reset
+        if self._stop_on_submit_fail and self.state.get("_last_submit_passed") is False:
+            # ablation condition A: the official debug phase arrives here; the
+            # repair chance is declined without any model call, so the
+            # orchestrator reads phase1_completed=False and ends the episode
+            return _C_ABLATION_STOP_TEXT
         handler = self._c_handler
         if handler is None:  # pragma: no cover - constructor guarantees presence
             raise RuntimeError("c handler missing")
@@ -511,7 +547,11 @@ class _Session:
             tool_port=self._port,
             max_model_calls=request.max_model_calls,
             max_tool_calls=request.max_tool_calls,
-            model_turn_gate=_BudgetStopGate(self.state),
+            model_turn_gate=_ConditionalStopGate(
+                inner=_BudgetStopGate(self.state),
+                state=self.state,
+                enabled=self._stop_on_submit_fail,
+            ),
         )
         outcome = await handler.run(request)
         if outcome.status == "completed" and outcome.final_output is not None:
@@ -521,6 +561,10 @@ class _Session:
                 "official_task_done"
             ):
                 return _A_TASK_DONE_TEXT
+            if outcome.stop.kind == StopKind.COMPLETED and outcome.stop.reason_code == (
+                "ablation_stop_on_submit_fail"
+            ):
+                return _A_ABLATION_STOP_TEXT
             if outcome.stop.kind == StopKind.BUDGET_EXHAUSTED and outcome.stop.reason_code == (
                 "coin_budget_signal"
             ):
@@ -550,9 +594,11 @@ class BirdSystemServerAdapter:
         *,
         factory: BirdRuntimeFactory,
         attempt_id_factory: Callable[[], UUID] | None = None,
+        stop_on_submit_fail: bool = False,
     ) -> None:
         self._factory = factory
         self._attempt_ids: Callable[[], UUID] = attempt_id_factory or uuid4
+        self._stop_on_submit_fail = stop_on_submit_fail
         self._sessions: dict[tuple[str, str], _Session] = {}
 
     def init_session(self, request: BirdInitSessionRequest) -> BirdInitSessionResponse:
@@ -572,6 +618,7 @@ class BirdSystemServerAdapter:
             task_id=request.task_id,
             state=dict(request.state or {}),
             attempt_ids=self._attempt_ids,
+            stop_on_submit_fail=self._stop_on_submit_fail,
         )
         self._sessions[key] = session
         return BirdInitSessionResponse(

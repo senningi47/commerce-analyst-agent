@@ -44,6 +44,8 @@ from commerce_agent.orchestration.bird_server import (
     BirdRunSessionResponse,
     BirdSessionStatePort,
     BirdSystemServerAdapter,
+    _BudgetStopGate,
+    _ConditionalStopGate,
 )
 from commerce_agent.orchestration.contracts import (
     AskUserCandidate,
@@ -51,6 +53,7 @@ from commerce_agent.orchestration.contracts import (
     BirdARunRequest,
     BirdCRequest,
     BirdCResponse,
+    StopKind,
     StopOutcome,
     SubmitSqlCandidate,
     TextCandidate,
@@ -694,6 +697,122 @@ def test_a_run_uses_official_turn_budget_and_forwards_gate() -> None:
     assert request.max_model_calls == 60
     assert request.max_tool_calls == 60
     assert factory.build_a_kwargs["model_turn_gate"] is not None
+
+
+def _failed_submit_result() -> ToolResult:
+    return canned_result(
+        "submit_sql",
+        {
+            "passed": False,
+            "message": "SQL failed Phase 1. Test case execution failed.",
+            "reward": 0.0,
+        },
+    )
+
+
+def test_c_ablation_stop_skips_model_after_failed_submit() -> None:
+    """Ablation §17.2 condition A (stop on first failed submission): after a
+    failed submit, the next orchestrator message (the official debug phase)
+    must end the episode without any model call — the repair chance is
+    declined, not spent."""
+    handler = StubCHandler(
+        [stub_c_response(SubmitSqlCandidate(type="submit_sql", sql="SELECT 1"))]
+    )
+    adapter = BirdSystemServerAdapter(
+        factory=HarnessFactory(c_handler=handler, port=StubPort([_failed_submit_result()])),
+        attempt_id_factory=lambda: KNOWN_ATTEMPT_ID,
+        stop_on_submit_fail=True,
+    )
+
+    first = asyncio.run(
+        adapter.run_session(
+            BirdRunSessionRequest(task_id="task-1", mode="c-interact", message="phase 1")
+        )
+    )
+    second = asyncio.run(
+        adapter.run_session(
+            BirdRunSessionRequest(task_id="task-1", mode="c-interact", message="debug chance")
+        )
+    )
+
+    assert first.state["_last_submit_passed"] is False
+    assert second.response == "No repair attempted (ablation condition A)."
+    assert len(handler.requests) == 1
+
+
+def test_c_ablation_flag_off_keeps_debug_model_call() -> None:
+    handler = StubCHandler(
+        [
+            stub_c_response(SubmitSqlCandidate(type="submit_sql", sql="SELECT 1")),
+            stub_c_response(SubmitSqlCandidate(type="submit_sql", sql="SELECT 2")),
+        ]
+    )
+    adapter = BirdSystemServerAdapter(
+        factory=HarnessFactory(
+            c_handler=handler,
+            port=StubPort([_failed_submit_result(), _failed_submit_result()]),
+        ),
+        attempt_id_factory=lambda: KNOWN_ATTEMPT_ID,
+    )
+
+    asyncio.run(
+        adapter.run_session(
+            BirdRunSessionRequest(task_id="task-1", mode="c-interact", message="phase 1")
+        )
+    )
+    second = asyncio.run(
+        adapter.run_session(
+            BirdRunSessionRequest(task_id="task-1", mode="c-interact", message="debug chance")
+        )
+    )
+
+    assert len(handler.requests) == 2
+    assert second.response == "SQL submitted. Awaiting result."
+
+
+def test_a_ablation_gate_stops_after_failed_submit() -> None:
+    state: dict[str, object] = {"budget_remaining": 10.0}
+    inner = StubPort([_failed_submit_result()])
+    port = BirdSessionStatePort(
+        inner=inner, state=state, mode="a", costs={"submit_sql": Decimal(3)}
+    )
+    asyncio.run(port.execute(_call("submit_sql", {"sql": "SELECT 1"})))
+    assert state["_last_submit_passed"] is False
+
+    gate = _ConditionalStopGate(inner=_BudgetStopGate(state), state=state, enabled=True)
+    stop = asyncio.run(gate.stop_model_turn())
+    assert stop is not None
+    assert stop.kind == StopKind.COMPLETED
+    assert stop.reason_code == "ablation_stop_on_submit_fail"
+
+    off = _ConditionalStopGate(inner=_BudgetStopGate(state), state=state, enabled=False)
+    assert asyncio.run(off.stop_model_turn()) is None
+
+
+def test_a_run_maps_ablation_stop_to_official_text() -> None:
+    outcome = BirdARunOutcome(
+        status="stopped",
+        stop=StopOutcome(
+            kind="completed", reason_code="ablation_stop_on_submit_fail", retryable=False
+        ),
+        model_calls=3,
+        tool_calls=2,
+        prompt_policy_hash="a" * 64,
+        rendered_prompt_hash="b" * 64,
+        tool_hash="c" * 64,
+        context_hash="d" * 64,
+        config_hash="e" * 64,
+        attempt_id=uuid4(),
+    )
+    adapter = make_adapter(a_handler=StubAHandler([outcome]), port=StubPort([]))
+
+    response = asyncio.run(
+        adapter.run_session(
+            BirdRunSessionRequest(task_id="task-1", mode="a-interact", message="solve")
+        )
+    )
+
+    assert response.response == "Stopped after failed submission (ablation condition A)."
 
 
 def test_a_run_maps_task_done_gate_stop_to_official_text() -> None:

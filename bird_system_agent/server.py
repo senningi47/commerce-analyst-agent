@@ -181,7 +181,13 @@ def main() -> None:  # pragma: no cover - container entry point
     from commerce_agent.orchestration.bird_server import BirdSystemServerAdapter
 
     factory = DeepSeekBirdRuntimeFactory.from_env()
-    app = create_app(BirdSystemServerAdapter(factory=factory), on_shutdown=factory.aclose)
+    # ablation §17.2 condition A ("first failed submission ends the episode")
+    # is opt-in per run via env, so Full-style runs keep official semantics
+    ablation_a = os.environ.get("BIRD_ABLATION_CONDITION", "").strip().lower() == "a"
+    app = create_app(
+        BirdSystemServerAdapter(factory=factory, stop_on_submit_fail=ablation_a),
+        on_shutdown=factory.aclose,
+    )
     uvicorn.run(
         app,
         host="0.0.0.0",
