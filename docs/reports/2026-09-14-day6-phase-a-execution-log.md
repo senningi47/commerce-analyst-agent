@@ -422,3 +422,15 @@ N=10 时 c 侧较 Pilot 失控基线 **-83%**。a-mode 无行为级基线拆分�
 3. **能力门终态**：**reward>0 = 0/300**（avg 0.0、phase1_passed 0）——与 run g/h 及 a-mode 诊断的知识缺口结论一致（知识 miss → 自造公式 + sim 拒答）。能力门未过,如实标注；改进杠杆 = prompt policy v4（知识 miss → 向用户索要定义）。
 4. **增量重估（c 实测锚）**：spent ≈ 32.4 元（7.93 + c批 24.44）；a 批投影 300 × $0.025 ≈ 53 元；forward（a批+消融+产品）≈ 93 元；**总投影 ≈ 125 元 vs 160 ✓（优于基准 135）**。
 5. **现场**：栈与官方库已 stop（仅产品 PG）；eval 库 13 个实验身份记录完整；spool ~1,590 文件；未 push。
+
+## 32. A4 a 批截停收官：223/300 + v4 验证 + 并发升档 2→4（2026-09-16，午窗+晚窗，agent $6.1506）
+
+**授权链**：①「a 批照跑」（12:21）→ ②「授权 v4 验证」（13:5x）→ ③「A」并发升档（21:3x）→ ④ GC7 同因两现自动停（22:45）→ ⑤「②」截停（b10–b12 不跑）。完整细节见 `docs/reports/2026-09-16-a4-a-batch-truncated-and-v4-validation.md`。
+
+1. **b01（午窗）**：25/25 succeeded，$0.0274/集（首个 a 集成本验证 PASS <$0.035）；b02 会越 14:00 peak 线 → 纪律停栈，peak 暂停。
+2. **v4 验证**：prompt-policies.v4（bird-a-policy-v3 知识 miss→问用户）零付费实现（888 passed + rebuild 实证）→ 3 集验证 $0.056447：核心 scenario 未被触发（零硬 miss）、广义行为 2/3 激活且 sim 真实作答、reward 0/3 → **回退 v2**（300 集单一策略版优先），v4 归档为将来杠杆。
+3. **b02–b07（晚窗，并发 2）**：全 25/25 或 22/22 succeeded 零 infra；b04 出现首个 `ContextBudgetExceeded`（fake_account_24，8 turns 后强制上下文超 64K prompt 预算）。
+4. **并发升档**：`RunnerConfig.concurrency` 冻结 le=2（v0.3 §16.2）→ 用户「A」裁定 → le=4 一行 + 钉测试 + 887 passed（宿主侧，零镜像影响）→ b08 试点 **25/25 零 infra、~18 分钟/批（2.3×）**；§16.2 条件升档口的活体证据。
+5. **b09 同因两现 → GC7 停**：sports_events_8 同死 `ContextBudgetExceeded`（10 turns）→ 立即停批呈报 → 用户「②」截停：**223/300 succeeded + 2 failed + 75 unrun；reward 0/225；agent $6.1506 = 43.5 元；总投影 ≈116/160 ✓**。
+6. **telemetry 导入**：225/225 assigned，0 unassigned/ambiguous（BIRD_EXPERIMENT_ID 接线首战全中）；eval 视图 sum $6.1506 与 spool 精确一致。
+7. **现场**：栈与官方库 stop（仅产品 PG）；a 批 10 实验身份完整；commit 待授权。

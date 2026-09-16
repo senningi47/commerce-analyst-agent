@@ -1,16 +1,16 @@
-# CommerceAnalyst 项目交接：run e 证实 16384 仍被 reasoning 吃满——水位线=官方思考默认 64K（修复选项呈用户）
+# CommerceAnalyst 项目交接：**A4 a 批截停 223/300**——v4 验证（reward 中性，回退 v2）+ 并发 2→4（2.3×）+ ContextBudgetExceeded 两现定性；收官路径 = 消融/产品/最终报告
 
-> 更新时间：2026-09-15（Asia/Shanghai）晚，更新者：Claude Code（GLM）  
+> 更新时间：2026-09-16 23:15（Asia/Shanghai），更新者：Claude Code（GLM）  
 > 工作区：`D:\git-projects\commerce-analyst-agent`  
-> 当前分支状态：`main`（未 push；HEAD=`bd38072`；插桩+16384 修复+run e 结果均未 commit）  
-> 交接状态：`blocked-on-user`——**裁定输出上限水位线（64K 配置 / 空轮优雅处理 / 两者）**  
+> 当前分支状态：`main`（未 push；a 批全程 + 截停已入账本与报告，commit 待用户授权）  
+> 交接状态：`ready-for-closure`——a 批已按用户裁定②截停（223/300 + 2 确定性失败 + 75 unrun），下一步 = 消融/产品 50 题/最终报告与材料  
 > PowerContext scope：`git:github.com/senningi47/commerce-analyst-agent`  
 > Durable Handoff：PowerContext `handoff/handoff#30`（2026-09-15 提交，exact revision=30；#29 为 Day 7 计划产出轮）
 
 ## 0. 新会话先做什么
 
-1. 完整阅读本文件、`docs/reports/2026-09-14-day6-phase-a-execution-log.md`（Day 6 Phase A 执行日志，§14=Task 8 Step 2/3、§15=Task 9、§17=Task 10、§18=Task 11）与 `docs/superpowers/plans/2026-09-14-day6-capability-restore-runner-and-ui.md`（Day 6 计划）。把它们当作需要现场核验的历史交接，不要把历史授权当作新会话授权。
-2. 先向用户报告准确状态：**run e（晚窗，$0.011330）证实 16384 仍被 reasoning 吃满（第 5 轮 finish=length + 空 content）——H1 provider 钳制已被官方文档证据排除（max_tokens 上限 384K），H2 成立；水位线 = 官方思考默认输出 64K（官方 ADK 不覆写 max_tokens，天然 4× 余量）**。修复选项呈用户：① 上限 65536（纯配置=官方等效）② 空轮优雅处理（触 Day 3 fail-closed 契约）③ 两者。授权累计 $0.011330 已停。两轮修复（0f99076 phase-memory + 16384）均未被证伪——死因始终在输出预算。
+1. 完整阅读本文件、`docs/reports/2026-09-14-day6-phase-a-execution-log.md`（Day 6 Phase A 执行日志，§30/§31=A4 c 批、§32=A4 a 批截停）与 `docs/reports/2026-09-16-a4-a-batch-truncated-and-v4-validation.md`（a 批收官报告：v4 验证 / 并发升档 / 上下文溢出定性）。把它们当作需要现场核验的历史交接，不要把历史授权当作新会话授权。
+2. 先向用户报告准确状态：**A4 a 批按裁定②截停——223/300 succeeded + 2 集确定性 `ContextBudgetExceeded` 失败（fake_account_24 / sports_events_8）+ 75 集未跑（b10–b12）；reward 0/225 如实标注；agent $6.1506 ≈ 43.5 元（telemetry 225/225 精确归属）；spent ≈75.9 元，总投影 ≈116/160 ✓**。v4（知识 miss→问用户）已验证=行为激活但 reward 中性，已回退 v2 并归档。并发 cap 2→4 经用户裁定升档（§16.2 偏差已披露，b08 试点 2.3× 零 infra）。**下一步 = 消融 / 产品 50 题 / 最终报告与材料（见 §5）。**
 3. **外部事实（关键）**：模型更名证据链与全部实测数字见研究笔记；价格快照已双源核对（用户读数 = 页面提取）；探针累计花费 ~$0.008。
 4. preflight 三项零付费已于 2026-09-13 完成（执行入口备查：`scripts/prepare_bird_pilot.py --dataset <公开数据集路径>`、`--run-db-check`、GT 拒绝检查见执行日志 §4）。Task 13 主运行**需要用户新会话明确授权**（一次正向运行 = 一次授权额度）。
 5. 根目录 `.env` 只能由已审核脚本或 `uv run --env-file .env ...` 消费。不要手工读取、打印、搜索、hash 或统计它。（本日已追加 Day 5 变量与 `USER_SIM_MODEL=openai/deepseek-flash`，均经用户授权。）
@@ -306,18 +306,67 @@ security/transaction gate `9 passed in 5.59s`；唯一正向 seller-risk scenari
 2. **H1 排除 / H2 成立**：官方文档（更名探针双源核验）`max_tokens` 上限 384K → provider 如实接受 16384；该轮 reasoning 真实吃满 16384。**官方思考默认输出 64K（max effort 128K）**——官方 ADK 不覆写 max_tokens，天然 4× 余量。
 3. **结论**：低于 64K 的上限都让偶发 reasoning blowout 保持致命；两轮修复（phase-memory + 16384）未被证伪，死因始终在输出预算。
 4. **裁定选项**：① 65536（纯配置=官方等效，blowout 轮最坏 ~$0.04 off-peak）② 空轮优雅处理（触 Day 3 fail-closed 契约）③ ①+②；可选：读 1 个官方 agent 配置文件确认官方不设 max_tokens（allowlist 扩展待确认）。
+
+### 2.30 64K 水位线 run f +「纯文本轮」缺陷修复（Claude Code，2026-09-15 晚，付费 $0.018509 + 修复零付费；细节见执行日志 §26）
+
+用户「按推荐决策执行下一步，并给予授权」后：
+
+1. **入库**：`4a1946e`（插桩）+ `ce3bdaf`（64K 水位线：ThinkingConfig le=65536 + bird_a/c profile v3）+ `38ec763`（docs）。
+2. **run f**（`…f` / attempt `d023d724`，18:21–18:24 晚窗）：failed 158s，$0.018509。**诊断日志零命中 = 输出预算根因已消除**；clarify 阶段**首次完整走通**（submit 达官方评审），debug 轮 reasoning 18.3K / completion 18.9K（16384 下必死，64K 下正常）。
+3. **新缺陷**：debug 轮模型纯文本作答（无工具调用）→ `bird_c_candidate_required` 400 杀整集。官方语义：非工具调用响应 = 结束 runner 调用，非错误。
+4. **修复（`26047e2`，零付费红绿）**：`TextCandidate` 入 union + responder 文本分支 + `_run_c` 文本轮记 `[agent note]` 入记忆并结束本轮 run_session。**874 passed**；Ruff 绿；rebuild + 容器实证 ✓。
+5. **run g staged**：`task7-cmode-refit-20260915g` + `events-c1-refit-g.jsonl`，~$0.02–0.05——**等授权**（坑 5）。
+
+### 2.31 run g：首个端到端健康 episode（Claude Code，2026-09-15 晚窗，付费 $0.018851；细节见执行日志 §27）
+
+用户「授权执行下一步」后 18:39 晚窗执行：
+
+1. **运行**：`…g` / attempt `accf1991`，**succeeded 161.9s**——2 ask + 2 submit，agent **$0.018851**（off_peak），边界/诊断日志零命中。
+2. **判据① PASS**：零失忆句式、两次提交均为真实 SQL（mesh CTE + PRU CASE）、debug 轮真实修订重提、第 4 轮 reasoning 15.2K 在 64K 下正常完成（8192/16384 下必死）。
+3. **判据② FAIL**：reward=0,两次 *"Test case execution failed"*（SQL 运行期错误,非结果不匹配）→ **能力门未 PASS；剩余差距 = 真实 SQL 质量**（与 a-mode 发现同类）。GT 隔离内无法更深定位（任务 schema 在官方 state、未持久化到 agent 可读工件）。
+4. **锚点**：c 集 ~$0.019/集 agent + ~$0.002 sim ≈ **$0.021/集**；A4 影响 ~+$1.5 可忽略。
+5. **裁定选项（§3）**：再验一集（异题更干净）/ 转 Task 5/6 零付费 / 接受现状进 C2 重估表（能力门状态如实标注）。
+
+### 2.32 run h：异库交叉验证（Claude Code，2026-09-15 晚窗，付费 $0.009012；细节见执行日志 §28）
+
+用户「按推荐决策执行下一步，并给予授权」（§3 选项 ① 异题再验）后：
+
+1. **选题**：cold_chain_pharma_compliance_3 c（Pilot seed-7 选取、ambiguity 2、异库；复用 Pilot GT 拆分零新 GT 处理；config-hash `b1889777…9017` = Pilot 选取 sha256 现场复算一致）；新单题清单 `outputs/bird-pilot/pilot-task-list-c-refit.jsonl`（公开，待 commit）。
+2. **运行**：`…h` / attempt `6332977d`，**succeeded 74.1s**，agent **$0.009012**——sim 真实回应第一问（"on-time delivery performance"），真实 SQL，debug 修订重提，零失忆/零 infra。
+3. **判据**：①再次 PASS；②reward=0（同 *"Test case execution failed"*）。**跨库结论：结构健康稳定成立；reward=0 根因收敛 = c 模式对 JSONB 内键盲（无执行工具，官方预期 ask_user 消解，sim 能力有限）+ SQL 质量**。
+4. **两集合计 $0.027863 ≤$0.05 ✓**；c 集健康锚 $0.009–0.019/集（题相关）。
+
+### 2.33 Day 7 Task 5+6 零付费收官（Claude Code，2026-09-15 晚；细节见执行日志 §29）
+
+用户「按推荐决策执行下一步」（②+③ 组合）后：
+
+1. **四修复项**（`89814c5`，红绿 11 新测试，885 passed）：`compose_env_out`（坑 65）/ 同题双模式并发拒绝（坑 63）/ 子进程流落盘 + timeout kill（坑 68+58）/ `scripts/preflight_bird_stack.py` 官方库就绪探测 + 25 库基线（坑 67）。
+2. **A4 清单**（`bc8db94`）：600 集 = 300c+300a、22 库全覆盖、seed 20260915；每模式批量清单；GT 拆分 gitignored。
+3. **Task 5**：sim c/a 同配置成立（单一服务拓扑 by construction）、模型可换性确认（开放项：官方规程允许性）；a-mode 失败主因 = 知识查询 miss → 自造公式 + sim 拒答（与 c-mode 同源）。
+4. **C2 重估表**：基准 ~135/160 ✓（余 16%）；保守 ~186 超线 16%；riders 四条呈批。
 5. **成本/锚点**：agent 实测 **$0.014710**（spool 878→883，off_peak，prompt ~13k/轮）；sim 估 ~$0.0015；合计 ~$0.016 ≤$0.05 ✓。**c 集新锚 $0.016/集**（agent $0.0147 = 3.6× 旧锚，schema 渲染实证；sim 调用 60→3）；A4 影响 +~$1.2 可忽略。账本 `task7_c1_refit_20260915` 节。
 6. **现场**：栈与官方库已 stop；eval 库新增实验（1 attempt succeeded，证据保留）；**下一步付费运行需用户新授权**。
 
+### 2.34 A4 a 批执行与截停：223/300 + v4 验证 + 并发 2→4（Claude Code，2026-09-16，付费行使 + 两次用户裁定；细节见 `docs/reports/2026-09-16-a4-a-batch-truncated-and-v4-validation.md` 与执行日志 §32）
+
+用户裁定链：①「a 批照跑」→「授权 v4 验证」→「A」并发升档 →（GC7 自动停）→「②」截停。沿 c 批模式（12×25 子批、每批 preflight + compose env 重建 agent 容器 + 后台 runner + 聚合入账本）：
+
+1. **b01（午窗）**：25/25 succeeded，$0.0274/集，首个 a 集成本验证 PASS（<$0.035）；b02 会越 14:00 peak 线 → 只跑 b01，停栈（晚窗富余 15h，零排期压力）。
+2. **v4 验证（cap $0.20 实花 $0.056）**：prompt-policies.v4 零付费实现（RED→GREEN，888 passed，rebuild 容器实证）→ 3 集验证：核心 scenario 零触发（知识全命中）、广义行为 2/3 激活且 sim 真实作答、reward 0/3 → **回退 v2**（reward 中性 + 300 集单一策略版优先），v4 归档 `outputs/bird-eval/prompt-policies.v4-20260916.json`。
+3. **b02–b07（并发 2）**：零 infra；b04 首现 `ContextBudgetExceeded`（fake_account_24）。b08 起用户裁定并发 2→4：`RunnerConfig` 冻结 cap le=2（v0.3 §16.2）→ 一行改 le=4 + 钉测试 + 887 passed（宿主侧零镜像影响，规格偏差已披露）→ b08 试点 25/25 零 infra **~18 分钟/批（2.3×）**。
+4. **b09 同因两现 → GC7 停**：sports_events_8 同死 ContextBudgetExceeded（对话依赖的任务级确定性失败：第 ~10 轮强制上下文超 64K prompt 预算；同库他集均成功；同配置重试必复发；修复需动 runs d/e 的 64K 输出冻结决策，不划算）→ 用户裁定②截停。
+5. **终账**：**223/300 succeeded + 2 failed + 75 unrun（b10–b12 清单已派生未用）；reward 0/225；agent $6.1506 = 43.5 元（$0.0273/attempt，off_peak 100%）**；telemetry 导入 225/225 零歧义；spent ≈75.9 元，**总投影 ≈116/160 ✓**；栈与官方库已 stop。
+6. **新坑**：见 §6.13（77/78）。
+
 ## 3. 当前卡在哪里
 
-**阻塞点 = 用户裁定输出上限水位线**（run e 证实 16384 仍被 reasoning 吃满；官方思考默认 64K）。
+**无阻塞——a 批已按用户裁定②截停收官（223/300 + 2 确定性失败 + 75 unrun），进入收尾段。**
 
-- **裁定选项**：① `max_output_tokens` 16384→**65536**（bird_a/bird_c；纯配置=官方等效；blowout 轮最坏 ~$0.04 off-peak，正常轮不变——**推荐**）② 我方栈优雅处理空 content 轮（run_session 内重问一轮 = 官方 ADK 循环语义；触及 Day 3 fail-closed 网关契约）③ ①+②。可选：读 1 个官方 agent 配置文件（allowlist 扩展）钉死官方是否设 max_tokens。
-- **裁定后**：红绿 + rebuild + 容器实证（零付费）→ C1 重验 `…f`（付费，~$0.015 锚）。
-- **commit 待授权**：插桩 + 16384 + run e 结果（6 源码文件 + docs）。
-- **现场**：compose.bird 栈与官方库 5433 已 stop；产品 PG 运行。
-- **可选**：`cybermarket_pattern_12 [a]` 恢复（待确认）。
+- **a 批终账**：agent $6.1506 = 43.5 元（225 attempts / 2,301 turns，off_peak 100%）；reward 0/225 如实标注；telemetry 225/225 精确归属。
+- **增量重估**：spent ≈75.9 元；forward（消融 17 + 产品 23）≈ 40 元；**总投影 ≈116/160 ✓（余 ~28%）**。
+- **能力门终态**：A4 全程 reward>0 = 0/525（c 300 + a 225）；机制 = 知识缺口（查询 miss/定义不全 → 自造公式 + sim 拒答）+ SQL 运行期质量；v4 杠杆已验证「行为激活、reward 中性」，归档备用。
+- **上下文溢出（新）**：bird_a 强制上下文在长对话第 ~10 轮可超 64K prompt 预算（2/225 ≈ 0.9%，确定性，同配置不可救）；修复需动 64K 输出冻结决策，裁定不修，两集如实标注。
+- **待用户**：本轮全部改动 commit 授权（见 §8.11 清单）；sim 侧余额核对（a 批 ~$0.9-1.5 估）。
 
 ## 4. 当前验证证据（2026-09-11 Task 18 测试数字 + 2026-09-12 Gate G/清理现场，最终源码状态，Claude Code）
 
@@ -348,11 +397,11 @@ security/transaction gate `9 passed in 5.59s`；唯一正向 seller-risk scenari
 
 ## 5. 下一步计划
 
-1. **用户裁定水位线**（当前阻塞）：推荐 ① 65536（官方思考默认）→ 零付费红绿 + rebuild → C1 重验 `…f`（付费 ~$0.015）。
-2. **commit 授权**：插桩 + 16384 + run e 结果（可与裁定打包）。
-3. **付费 Gate**：C2（A4+消融+产品，Task 7 前重估表呈用户）。
-4. **每 Task 纪律**（继承）：off-peak、镜像 rebuild + 容器实证、每 25 集重估、收尾三件套；commit 逐项授权。
-5. **可选**：`cybermarket_pattern_12 [a]` 恢复（需确认）。
+1. **本轮 commit 授权**（用户）→ 清单见 §8.11。
+2. **消融 120 集**（Day 7 Phase D，付费 ~17 元）：rag_ab 目的；a 侧基线现为 223 集主运行（可用）；执行前重估呈批。
+3. **产品 50 题**（~23 元）：Product closed loops 评测；执行前细估。
+4. **Task 9 最终报告 + README/面试材料**（Day 7 Phase E）：A4 口径 = c 300/300 全量 + a 223/300 + 2 确定性失败 + 75 裁定未跑；能力门如实标注；v4 与并发升档作为过程决策入材料。
+5. **可选**：v4 在消融框架内的正式对照（rag_ab 天然支持）；`cybermarket_pattern_12 [a]` 恢复裁定。
 
 ## 6. 踩过的坑，绝对不要再踩
 
@@ -459,6 +508,13 @@ security/transaction gate `9 passed in 5.59s`；唯一正向 seller-risk scenari
 73. **GC7 补跑只对「瞬时」成立；同因连续两次即转系统性，立即停。** b（97s）失败 → 补跑 c（65s）同因——第二次失败把「赌瞬时」路径关闭，继续跑就是盲烧。停止点应在第二次失败，不在第三次。
 74. **`provider_response_invalid` 根因 = 输出预算耗尽，不是协议/语义问题**（插桩一手证据）：reasoning 吃满 `max_output_tokens`（8192）→ finish_reason=length + content 空串 → `FinalOutput(content='')` pydantic `string_too_short` → ValidationError 是 ValueError 子类，被网关 `except (ValueError,…)` 吞成不可重试 protocol error。**给「thinking 开启」的 profile 留输出余量**（现 16384）；凡「成功轮 completion 贴近上限」就是崩溃前兆（晨跑 7133/8192 已亮灯）。另：pydantic 模型的 ValidationError 会伪装成 ValueError 被宽 except 捕获——校验炸点与协议错误要分开定性，插桩日志里的异常类名是关键线索。
 75. **「调大 max_tokens」必须对照官方等效水位，而不是「翻倍看看」。** run e 证明 16384 仍会被单轮 reasoning 吃满——官方 ADK 不覆写 max_tokens，provider 思考默认输出 **64K**（max effort 128K，更名探针双源核验）才是等效水位；低于它的任何上限都让偶发 blowout 保持致命。判别「provider 钳制」与「模型真跑满」只需失败响应的 usage.completion_tokens——**插桩日志一开始就该带 usage 字段**（本轮补）。
+76. **文本轮不是错误。** 官方 ADK 的 runner 调用遇非工具调用响应（finish=stop/length/content_filter 且有文本）会**正常结束本轮**，编排器按 phase 状态机继续；我方 responder 曾把它当契约违约 fail-closed 400 杀整集（run f）。c-mode 三种模型响应形态都要有官方语义的归宿：工具调用 → 执行；文本 → 结束本轮 + 记忆保留；空内容 → 网关校验拦截（这才是真正的协议级失败）。
+
+### 6.13 A4 a 批轮新增（2026-09-16，Claude Code）
+
+77. **a-mode 长对话的强制上下文可以超 64K prompt 预算（`ContextBudgetExceeded` → agent 500 → official_task_error）。** 2/225 ≈ 0.9%（fake_account_24 第 8 轮、sports_events_8 第 10 轮），对话依赖、任务级确定性（同配置重试同位复发）、非 family 级（同库他集成功）、非瞬时（GC7 补跑无意义只会再烧 ~$0.07）。64K prompt = 128K 窗口 − 64K 输出余量（runs d/e 冻结修复），抬 prompt 上限必复发 reasoning 爆炸——修复风险大于 2 集损失，裁定不修、如实标注。判别入口：容器日志 `boundary 500` + `ContextBudgetExceeded` traceback（stderr 落盘只有 httpx 500 客户端侧）。
+78. **「离线全绿」不覆盖运行参数的冻结面：改任何被 pydantic/守卫钉死的参数前先 grep 约束。** 并发 2→4 的指令在 `RunnerConfig` 冻结 cap（v0.3 §16.2）处被拒（b08 首射零消耗失败、events 都没建）。规格留有条件升档口（「错误率不升且 P95 明显改善」）；升档 = 一行 + 钉测试 + 试点批活体验证 + 披露。另：TaskOutput 阻塞等待 10 分钟硬上限 vs ~40 分钟批次 = 正常轮询周期，不是运行故障（完成通知机制兜底）。
+
 
 ## 7. 关键文件与 SHA-256
 
@@ -643,3 +699,13 @@ security/transaction gate `9 passed in 5.59s`；唯一正向 seller-risk scenari
 - **镜像**：rebuild ×2（插桩后 + 修复后）；容器实证 `protocol_diagnostic`×4 / `bird-c-profile-v2` / `"max_output_tokens":16384`×2 ✓。
 - **判据终态**：**873 passed, 140 skipped**（+2 插桩、+2 修复）；Ruff 全绿。
 - **外部状态收尾**：栈与官方库已 stop；产品 PG 未动；14:00 后未再发起任何付费调用。
+
+### 8.11 A4 a 批轮（2026-09-16，付费行使 + 截停，commit 待授权）
+
+- **源码（待 commit）**：`src/commerce_agent/evaluation/runner.py`（concurrency cap le=2→le=4，用户裁定 + §16.2 偏差披露）、`tests/unit/evaluation/test_runner.py`（+1 cap 钉测试）；判定终态 **887 passed, 140 skipped** + Ruff 全绿（v4 的 888 含 3 守卫，回退后 886+1）。
+- **配置（无净变化）**：v4 实现期间动过 `profiles.py`/`run-profiles.v2.json`/`test_profiles.py`/`test_bird_prompt_policy.py`/新增 `prompt-policies.v4.json`，验证后**全部 git checkout 回 HEAD**，v4 JSON 归档至 gitignored `outputs/bird-eval/prompt-policies.v4-20260916.json`。
+- **新增（公开，待 commit）**：`outputs/bird-pilot/a4/task-list-a-b01…b12.jsonl`（12×25 顺序切片，同批异题）、`task-list-a-v4check.jsonl`（3 集）、`task-list-a-b02-rest.jsonl`（22 集）、`docs/reports/2026-09-16-a4-a-batch-truncated-and-v4-validation.md`、执行日志 §32、本文件、`CLAUDE.md` §0。
+- **gitignored 产物**：events ×10（b01–b09 + v4check）、episodes 225+2 失败空壳（含 stderr/stdout 落盘）、spool +225 文件、账本 `a4_a_batch_20260916` + `v4_validation_20260916` 节、`agg_a4a.py`/`import_a4a_telemetry.py` 助手。
+- **DB 现场变更（a 批授权范围内）**：eval 库新增 10 实验身份 225 attempt 行（223 succeeded + 2 failed，证据保留）+ telemetry merge 225/225；migration head 仍 0007；产品 PG 业务表零变化。
+- **付费**：agent 实测 **$6.150604**（off_peak 100%）+ v4 验证 $0.056447（授权 $0.20 内）已在内；sim 侧待用户余额核对。
+- **外部状态收尾**：compose.bird 三服务与官方库 5433 已 stop（回到开场前）；产品 PG 未动；无残留进程。

@@ -10,25 +10,22 @@
 
 项目由 Codex 推进 12 天（2026-08-24 → 09-07），Claude Code 于 09-11 接手，09-13 完成 Task 13 Pilot 主运行。
 
-**精确状态（2026-09-15 晨更新，以 `HANDOFF.md` 为准）：**
+**精确状态（2026-09-16 深夜更新，以 `HANDOFF.md` 为准）：**
 
 ```text
 Day 4 overall: PASS；Day 5 Phase A + Gate P preflight 全 PASS（模型已切 deepseek-flash）
 Task 13 Pilot: 完成（两门 FAIL 为 Day 6 输入基线；付费运行纪律：peak 档 = 2×，一律空闲档调度）
-Day 6: Task 1–11 全部完成 + 能力验证已执行（用户晨间裁定：①批准验证 ②Full=A4 ④sim 排查入 Day 7）
-         Task 11 对比：方向 0 基准 201.6 元=1.26×（策略修复已砍 56%；sim 平摊修正披露）；A4 = 300/模式分层 + sim 排查后启用
-         能力验证：reward>0 未达成（3 有效集 4 提交全败 Phase 1；agent $0.034841 + sim 估 ~$0.022 ≈ $0.057 上限内）
-         决定性发现：官方 c 模式每轮新建会话、phase record 不携带任务问题 → agent 逐轮失忆 → 占位符提交
-         （全历史 c 集同款；Task 5 闸治症状未治机制）；a-mode 首个完整 episode 健康，Phase 1 失败=真实 SQL 质量
-Day 7 进展: 计划已批准执行；Phase A 完成——c-mode 判决书=我方 adapter 缺陷已修复并入库（0f99076+bd38072）
-         C1 重验 b/c 两连败 → 方案1 插桩定性=输出预算耗尽（8192→16384 修复）→ run e（晚窗 $0.011330）
-         证实 16384 仍被单轮 reasoning 吃满（finish=length+空 content）；官方文档=思考默认输出 64K
-         （官方 ADK 不设 max_tokens，天然 4× 余量）→ 水位线裁定呈用户；phase-memory 与 16384 均未证伪
-用户动作: 裁定水位线——①64K=65536（官方等效，纯配置，推荐）②空轮优雅处理（触 Day 3 契约）③两者；
-         commit 授权（插桩+16384+run e 结果未入库）
-用户动作: 批准 Day 7 计划 + Gate C1/C2 授权（C2 启动前重估表再呈一次）；余额核对已闭环（累计已花 7.40 元）
-已预授权: Day 6 打包授权 + 能力验证授权均已行使完毕；新付费/新范围需重新明确授权
-终态证据: 执行日志（§13–§19）+ Task 10 报告 + Task 11 研究笔记 + 账本 task11_capability_validation 节；未 push
+Day 6: Task 1–11 全部完成；c-mode 失忆机制定位并修复（phase-memory + 64K 水位线 + 文本轮）；run g/h 结构健康跨库成立
+Day 7: 四修复项 + A4 清单 600 集入库（885 passed 基线）
+A4 c 批: COMPLETE 304/304 succeeded，agent $3.4567 = $0.0113/集；reward 0/300（知识缺口，如实标注）
+A4 a 批: 用户裁定②截停——**223/300 succeeded + 2 集确定性 ContextBudgetExceeded（fake_account_24/sports_events_8）+ 75 unrun（b10–b12）**
+         reward 0/225 如实标注；agent $6.1506 = 43.5 元（$0.0273/attempt，off_peak 100%）
+         v4（知识 miss→问用户）验证=行为激活 2/3、reward 中性 → 回退 v2 归档备用（$0.056/授权 $0.20）
+         并发 cap 2→4（用户裁定，§16.2 偏差披露）：b08 试点 25/25 零 infra，~18 分钟/批（2.3×）
+         telemetry 导入 225/225 精确归属；spent ≈75.9 元，总投影 ≈116/160 ✓
+用户动作: ①a批照跑 ②授权 v4 验证 ③「A」并发升档 ④「②」截停——本轮四项授权全部行使完毕
+已预授权: 无遗留；消融/产品 50 题为 Day 7 Phase D/E 付费项，执行前呈批
+终态证据: a 批收官报告（2026-09-16-a4-a-batch-truncated-and-v4-validation.md）+ 执行日志 §30–§32 + 账本两节；commit 待授权；未 push
 ```
 
 ---
