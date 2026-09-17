@@ -1,4 +1,4 @@
-# CommerceAnalyst 项目交接：**A4 a 批截停 223/300**——v4 验证（reward 中性，回退 v2）+ 并发 2→4（2.3×）+ ContextBudgetExceeded 两现定性；收官路径 = 消融/产品/最终报告
+# CommerceAnalyst 项目交接：**项目收官**——A4（c 全量/a 截停 223）+ 消融（修复价值 0）+ 产品评测（全量 Schema 胜出）全部完成；最终报告/README/面试材料已入库
 
 > 更新时间：2026-09-16 23:15（Asia/Shanghai），更新者：Claude Code（GLM）  
 > 工作区：`D:\git-projects\commerce-analyst-agent`  
@@ -379,6 +379,15 @@ security/transaction gate `9 passed in 5.59s`；唯一正向 seller-risk scenari
 4. **封闭 10 题（A 配置一次，$0.0093）**：1/10 正确。主导失败 = 单步 harness 无修复环下的策略合规缺口（~60% 函数拒绝、~26% 未按工具应答），如实测量。
 5. **账目**：agent $0.0595 ≈ 0.42 元（cap 5 元内）；产品轨无 BIRD 栈参与；产品 PG 只读零变化。
 
+### 2.37 Phase E 收官：最终报告 + README + 面试材料（Claude Code，2026-09-17 深夜，零付费）
+
+用户「继续」后完成 Task 9：
+
+1. `docs/reports/2026-09-17-final-report.md`——DoD 逐项判定（工程交付完整/评测如实/能力门未达机制定位清楚）、三段评测终表、过程决策与预算纪律、诚实边界、遗留清单。
+2. `README.md`（新建）——架构双轨、评测结果表、仓库结构、快速开始、文档索引。
+3. `docs/interview-prep.md`——90 秒叙事、8 个深挖 Q&A、数字速查、复盘（如果重来）。
+4. 收官 commit（见 §8.14）；HANDOFF/CLAUDE 终态刷新。
+
 ## 3. 当前卡在哪里
 
 **无阻塞——a 批截停（223/300）+ 消融 §17.2（120/120）+ 产品评测 §17.1（A/B + 封闭 10）全部收官；剩余 = 最终报告/README/面试材料（Phase E）。**
@@ -389,7 +398,7 @@ security/transaction gate `9 passed in 5.59s`；唯一正向 seller-risk scenari
 - **能力门终态**：A4 + 消融全程 reward>0 = 0/645；机制 = 知识缺口 + SQL 运行期质量；v4 杠杆已验证「行为激活、reward 中性」归档备用；修复杠杆经消融实证同样无效。
 - **产品评测终态（新）**：§10.2 预注册判据否决路线 2 检索（正确率 5.0% vs 7.5%、recall 0.910<1.0、token −62.5%）→ **全量 Schema 胜出**（规格预期）；单步 harness 无修复环 → 策略合规缺口 ~60% 如实测量；构建期发现并修复产品真缺陷（AND/OR 被函数白名单误杀）。
 - **上下文溢出**：bird_a 长对话 0.9% 确定性失败（2 集），裁定不修、如实标注。
-- **待用户**：产品 50 题付费门呈批（§5）；sim 侧余额核对。
+- **待用户（均非阻塞）**：push 授权；Day 1–2 工件/4 份早期计划补录裁定；sim 侧余额核对。
 
 ## 4. 当前验证证据（2026-09-11 Task 18 测试数字 + 2026-09-12 Gate G/清理现场，最终源码状态，Claude Code）
 
@@ -418,11 +427,12 @@ security/transaction gate `9 passed in 5.59s`；唯一正向 seller-risk scenari
 
 命令级细节、负向授权矩阵（8 场景 × 0 写入）、状态转移、ACL 矩阵、SellerRef 敏感度比较、backtest historical-only、SqlReasoner/reconciliation 证据：全部在报告 §5-§13，逐条可回指。
 
-## 5. 下一步计划
+## 5. 下一步计划（CLOSED——均为可选后续）
 
-1. **本轮（产品评测）commit 授权**（用户）→ 策略修复 + 题集 v2 + runner 修正 + 报告/文档（§8.13）。
-2. **Task 9 最终报告 + README/面试材料**（Day 7 Phase E）：A4 口径（c 300/300 + a 223/300 + 2 确定性失败 + 75 裁定未跑）、消融 §17.2（修复价值 0）、产品 §17.1（A 胜出、token −62.5% 但 recall 降）、策略缺陷发现与修复——全部作为过程决策与诚实结论入材料。
-3. **可选**：4 份早期计划文件（Day 2a/2b/3/5）补录裁定；`cybermarket_pattern_12 [a]` 恢复裁定；sql_generate 提示内嵌白名单摘要 + SqlReasoner 修复环接入产品评测（v2 改进项）。
+1. **可选**：push 授权（80+ commits 本地）。
+2. **可选**：仓库补录——Day 1–2 工件（bootstrap/import 脚本、data/knowledge、部分早期测试）与 4 份早期计划（Day 2a/2b/3/5）。
+3. **可选（能力杠杆）**：v4 + SqlReasoner 修复环接入产品评测与 BIRD 轨后重测（预算另批）。
+4. **可选**：`cybermarket_pattern_12 [a]` 恢复。
 
 ## 6. 踩过的坑，绝对不要再踩
 
@@ -749,3 +759,10 @@ security/transaction gate `9 passed in 5.59s`；唯一正向 seller-risk scenari
 - **付费**：agent **$0.059496 ≈ 0.42 元**（cap 5 元内；A/B×40 $0.0502 + 封闭 $0.0093；首轮 v1/v2 发射零模型调用零成本）。sim 无（产品轨单步无 simulator）。
 - **判定终态**：**907 passed, 140 skipped** + Ruff 全绿。
 - **现场**：无栈参与；产品 PG 只读零业务变化；无残留进程。
+
+### 8.14 Phase E 收官轮（2026-09-17 深夜，零付费，commit 待授权）
+
+- **待 commit**：`docs/reports/2026-09-17-final-report.md`（最终报告）、`README.md`（新建）、`docs/interview-prep.md`（面试材料）、本文件、`CLAUDE.md`。
+- **零付费零 DB 变更零进程变更**；测试终态 907 passed / 140 skipped + Ruff 全绿。
+- **项目终账**：agent 实测累计 ≈$7.94 ≈ 56.1 元（a 批 6.15 + 消融 1.67 + 产品 0.06 + 历史门控与验证）；平台核对口径累计 ≈88.1 元 / 160 线。
+- **未 push**（80+ commits 本地）。
