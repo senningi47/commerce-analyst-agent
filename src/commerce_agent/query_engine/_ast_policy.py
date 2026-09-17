@@ -273,6 +273,11 @@ def _validate_identity_projections(
 
 def _validate_functions(statement: exp.Select) -> None:
     for function in statement.find_all(exp.Func):
+        # Boolean operators subclass Func in this sqlglot version; they are
+        # operators, not functions, and ordinary multi-condition filters
+        # (status AND time window) must stay expressible.
+        if isinstance(function, (exp.And, exp.Or, exp.Not)):
+            continue
         if function.sql_name().upper() not in ALLOWED_FUNCTIONS:
             raise SqlPolicyViolation("function_denied", "Function is not allowed")
 

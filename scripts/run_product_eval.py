@@ -26,6 +26,7 @@ from pathlib import Path
 from uuid import uuid4
 
 import httpx
+import psycopg
 from pydantic import SecretStr
 
 from commerce_agent.context_builder.builder import ContextBuilder, compute_config_hash
@@ -93,6 +94,7 @@ async def _run(args: argparse.Namespace) -> int:
     engine = QueryEngine(
         policy=AstPolicy(), executor=PostgresExecutor(SecretStr(dsn))
     )
+    gold_conn = psycopg.connect(dsn, connect_timeout=10)
 
     evidence = _catalog_evidence(config_root)
     glossary = load_glossary(repo / "data" / "product-eval" / "glossary-zh.json")
@@ -149,10 +151,13 @@ async def _run(args: argparse.Namespace) -> int:
                     cost_usd = None
                     gold_rows, recall, hits = None, 0.0, ()
                     try:
-                        gold = await engine.execute(
-                            QueryRequest(sql=item["gold_sql"])
-                        )
-                        digest = result_digest(gold.rows)
+                        with gold_conn.cursor() as cur:
+                            cur.execute(item["gold_sql"])
+                            gold_columns = [d[0] for d in cur.description]
+                            gold_rows = [
+                                dict(zip(gold_columns, row)) for row in cur.fetchall()
+                            ]
+                        digest = result_digest(gold_rows)
                         if digest != item["gold_result_sha256"]:
                             error_class = "gold_digest_mismatch"
                         recall, hits = _recall(
@@ -172,7 +177,7 @@ async def _run(args: argparse.Namespace) -> int:
                                 glossary=glossary,
                                 registry=registry,
                                 builder=builder,
-                                run_scope=_scope(args.experiment, condition, config_hash),
+                                run_scope=_scope(args.experiment, condition, config_hash, item["question_id"]),
                                 attempt_id=uuid4(),
                             )
                             response = await gateway.complete(context.model_request)
@@ -184,7 +189,6 @@ async def _run(args: argparse.Namespace) -> int:
                             agent_rows = result.rows
                         except Exception as error:  # noqa: BLE001
                             error_class = f"agent_{type(error).__name__}"
-                    gold_rows = gold_rows or []
                     score = score_execution(
                         question_id=item["question_id"],
                         condition=condition,
@@ -214,6 +218,7 @@ async def _run(args: argparse.Namespace) -> int:
                     )
                     report.flush()
                     written += 1
+        gold_conn.close()
         print(f"report: {report_path} ({written} rows); agent-side total ${total_cost:.6f}")
     return 0
 
@@ -264,14 +269,14 @@ def _recall(*, condition: str, question: str, corpus, gold_tables: list[str]):
     return gold_table_recall(hits, gold_tables), hits
 
 
-def _scope(experiment: str, condition: str, config_hash: str):
+def _scope(experiment: str, condition: str, config_hash: str, subject_id: str):
     from commerce_agent.model.contracts import RunScope
 
     return RunScope(
         run_id=uuid4(),
         track="retail",
         mode="retail",
-        subject_id=condition,
+        subject_id=subject_id,
         experiment_id=experiment,
         config_hash=config_hash,
     )
@@ -287,7 +292,9 @@ def main() -> int:
     parser.add_argument("--limit", type=int, default=None)
     parser.add_argument("--out", default="outputs/product-eval")
     args = parser.parse_args()
-    return asyncio.run(_run(args))
+    # pit 59: psycopg async rejects the win32 Proactor loop; run on Selector
+    with asyncio.Runner(loop_factory=asyncio.SelectorEventLoop) as runner:
+        return runner.run(_run(args))
 
 
 if __name__ == "__main__":
