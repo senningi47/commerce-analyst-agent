@@ -13,6 +13,7 @@ dependencies = [
   "pydantic>=2.10,<3",
   "pydantic-settings==2.15.0",
   "python-dotenv==1.2.3",
+  "rank-bm25==0.2.2",
   "sqlalchemy>=2.0,<3",
   "sqlglot>=30.17,<31",
   "uvicorn>=0.30,<1",
