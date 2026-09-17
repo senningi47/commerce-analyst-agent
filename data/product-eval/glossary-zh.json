@@ -1,0 +1,188 @@
+{
+ "revision_id": "retail-glossary-zh-v1",
+ "note": "Bilingual (zh) business glossary bridging operator vocabulary to catalog documents. §10.2 anticipates a mixed zh/latin corpus; route-2 lexical retrieval requires this layer. Entries are generic term mappings (not question-specific). target_doc_id resolves to a catalog document for Gold-table coverage.",
+ "entries": [
+  {
+   "glossary_id": "g.customers",
+   "terms": [
+    "客户",
+    "顾客",
+    "买家",
+    "客户城市",
+    "客户州"
+   ],
+   "target_doc_id": "table.customers",
+   "target_kind": "table"
+  },
+  {
+   "glossary_id": "g.orders",
+   "terms": [
+    "下单",
+    "交付",
+    "季度",
+    "年",
+    "日期",
+    "时间",
+    "月",
+    "每年",
+    "每月",
+    "签收",
+    "订单",
+    "订单状态",
+    "购买时间"
+   ],
+   "target_doc_id": "table.orders",
+   "target_kind": "table"
+  },
+  {
+   "glossary_id": "g.order_items",
+   "terms": [
+    "订单项",
+    "商品额",
+    "价格",
+    "货品",
+    "明细"
+   ],
+   "target_doc_id": "table.order_items",
+   "target_kind": "table"
+  },
+  {
+   "glossary_id": "g.order_payments",
+   "terms": [
+    "支付",
+    "付款",
+    "支付金额",
+    "分期",
+    "支付方式"
+   ],
+   "target_doc_id": "table.order_payments",
+   "target_kind": "table"
+  },
+  {
+   "glossary_id": "g.order_reviews",
+   "terms": [
+    "评价",
+    "评论",
+    "评分",
+    "星级"
+   ],
+   "target_doc_id": "table.order_reviews",
+   "target_kind": "table"
+  },
+  {
+   "glossary_id": "g.products",
+   "terms": [
+    "产品",
+    "商品目录",
+    "重量",
+    "类别名"
+   ],
+   "target_doc_id": "table.products",
+   "target_kind": "table"
+  },
+  {
+   "glossary_id": "g.translation",
+   "terms": [
+    "英文类别",
+    "类别翻译",
+    "英文翻译"
+   ],
+   "target_doc_id": "table.product_category_name_translation",
+   "target_kind": "table"
+  },
+  {
+   "glossary_id": "g.sellers",
+   "terms": [
+    "卖家",
+    "商家",
+    "卖家州",
+    "卖家城市"
+   ],
+   "target_doc_id": "table.sellers",
+   "target_kind": "table"
+  },
+  {
+   "glossary_id": "g.metric.payment_amount",
+   "terms": [
+    "支付金额",
+    "付款金额"
+   ],
+   "target_doc_id": "metric.payment_amount",
+   "target_kind": "metric"
+  },
+  {
+   "glossary_id": "g.metric.item_amount",
+   "terms": [
+    "商品额",
+    "货值"
+   ],
+   "target_doc_id": "metric.item_amount",
+   "target_kind": "metric"
+  },
+  {
+   "glossary_id": "g.metric.freight_amount",
+   "terms": [
+    "运费",
+    "运费总额",
+    "平均运费"
+   ],
+   "target_doc_id": "metric.freight_amount",
+   "target_kind": "metric"
+  },
+  {
+   "glossary_id": "g.metric.order_count",
+   "terms": [
+    "订单数",
+    "单量"
+   ],
+   "target_doc_id": "metric.order_count",
+   "target_kind": "metric"
+  },
+  {
+   "glossary_id": "g.metric.gmv",
+   "terms": [
+    "gmv",
+    "成交总额"
+   ],
+   "target_doc_id": "metric.gmv",
+   "target_kind": "metric"
+  },
+  {
+   "glossary_id": "g.dq.review_dedupe",
+   "terms": [
+    "去重",
+    "唯一评论",
+    "review_id 非唯一"
+   ],
+   "target_doc_id": "data_quality.review_id_non_unique",
+   "target_kind": "data_quality"
+  },
+  {
+   "glossary_id": "g.dq.translation_gap",
+   "terms": [
+    "缺少翻译",
+    "未翻译类别"
+   ],
+   "target_doc_id": "data_quality.category_translation_gaps",
+   "target_kind": "data_quality"
+  },
+  {
+   "glossary_id": "g.dq.monetary_mismatch",
+   "terms": [
+    "金额不一致",
+    "支付与商品额差异"
+   ],
+   "target_doc_id": "data_quality.monetary_mismatch",
+   "target_kind": "data_quality"
+  },
+  {
+   "glossary_id": "g.dq.review_whitespace",
+   "terms": [
+    "空白评论",
+    "评论内容"
+   ],
+   "target_doc_id": "data_quality.review_whitespace_null",
+   "target_kind": "data_quality"
+  }
+ ]
+}
