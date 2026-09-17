@@ -358,15 +358,26 @@ security/transaction gate `9 passed in 5.59s`；唯一正向 seller-risk scenari
 5. **终账**：**223/300 succeeded + 2 failed + 75 unrun（b10–b12 清单已派生未用）；reward 0/225；agent $6.1506 = 43.5 元（$0.0273/attempt，off_peak 100%）**；telemetry 导入 225/225 零歧义；spent ≈75.9 元，**总投影 ≈116/160 ✓**；栈与官方库已 stop。
 6. **新坑**：见 §6.13（77/78）。
 
+### 2.35 消融 §17.2 COMPLETE：120/120，修复价值 = 0（Claude Code，2026-09-17，付费门行使；细节见 `docs/reports/2026-09-17-ablation-repair-120.md` 与执行日志 §33）
+
+用户「授权消融」（cap 25 元）后分两窗执行（A 条件估时贴 14:00 peak 线 → 按 off-peak rider 分窗）：
+
+1. **条件 A 实现（零付费，`e0b3844`/`d70b429`/`e87391b`）**：官方 ADK 无修复旋钮 → adapter 实现「首次失败停止」——c-mode debug 轮零模型调用返回终止文本；a-mode `_ConditionalStopGate` 在失败提交后下一模型轮前拦截；默认关闭、`BIRD_ABLATION_CONDITION=a` opt-in；4 新测试 891 passed + rebuild 实证。
+2. **选取**：seed 20260916，155 个 c/a 配对任务分层抽 30 题（30 库族各 1，GT 拆分已在盘零新处理）；config-hash = pool 文件 sha256。
+3. **结果**：B（修复）60/60 + A（停止）60/60 = **120/120 succeeded 零 infra**；**P1 两条件 0/60 vs 0/60——修复救回 0 集**（§17.2 描述性结论：当前能力下修复价值 = 0）；reward 0/120 如实标注；B 多烧 2.4–2.7× 轮次/费用零 P1 增益；A 格恰 1.00 submit/集 = 停止语义活体确认。
+4. **账目**：agent **$1.673449 ≈ 11.8 元**（cap 25 元内）；telemetry 120/120 精确归属（坑 79 修正后 DB 与 spool 逐分一致）；栈已 stop。
+5. **执行修正**：混合清单触坑 63 → 拆单模式串行（坑 80）；B/a shell `&` 发射按坑 58 双时点核验。
+
 ## 3. 当前卡在哪里
 
-**无阻塞——a 批已按用户裁定②截停收官（223/300 + 2 确定性失败 + 75 unrun），进入收尾段。**
+**无阻塞——a 批截停收官（223/300）+ 消融 §17.2 COMPLETE（120/120），收尾段剩余 = 产品 50 题 + 最终报告。**
 
 - **a 批终账**：agent $6.1506 = 43.5 元（225 attempts / 2,301 turns，off_peak 100%）；reward 0/225 如实标注；telemetry 225/225 精确归属。
-- **增量重估**：spent ≈75.9 元；forward（消融 17 + 产品 23）≈ 40 元；**总投影 ≈116/160 ✓（余 ~28%）**。
-- **能力门终态**：A4 全程 reward>0 = 0/525（c 300 + a 225）；机制 = 知识缺口（查询 miss/定义不全 → 自造公式 + sim 拒答）+ SQL 运行期质量；v4 杠杆已验证「行为激活、reward 中性」，归档备用。
-- **上下文溢出（新）**：bird_a 强制上下文在长对话第 ~10 轮可超 64K prompt 预算（2/225 ≈ 0.9%，确定性，同配置不可救）；修复需动 64K 输出冻结决策，裁定不修，两集如实标注。
-- **待用户**：本轮全部改动 commit 授权（见 §8.11 清单）；sim 侧余额核对（a 批 ~$0.9-1.5 估）。
+- **消融终账（新）**：120/120 succeeded，agent $1.6734 = 11.8 元（cap 25 元内）；**修复救回 0 集**（P1 A 0/60 vs B 0/60）——§17.2 描述性结论 = 当前能力下修复价值 0，修复经济学为负（2.4–2.7× 费用零增益）。
+- **增量重估**：spent ≈87.7 元（75.9 + 11.8）；forward（产品 ~23）≈ 23 元；**总投影 ≈111/160 ✓（余 ~31%）**。
+- **能力门终态**：A4 + 消融全程 reward>0 = 0/645；机制 = 知识缺口 + SQL 运行期质量；v4 杠杆已验证「行为激活、reward 中性」归档备用；修复杠杆经消融实证同样无效。
+- **上下文溢出**：bird_a 长对话 0.9% 确定性失败（2 集），裁定不修、如实标注。
+- **待用户**：产品 50 题付费门呈批（§5）；sim 侧余额核对。
 
 ## 4. 当前验证证据（2026-09-11 Task 18 测试数字 + 2026-09-12 Gate G/清理现场，最终源码状态，Claude Code）
 
@@ -397,11 +408,10 @@ security/transaction gate `9 passed in 5.59s`；唯一正向 seller-risk scenari
 
 ## 5. 下一步计划
 
-1. **本轮 commit 授权**（用户）→ 清单见 §8.11。
-2. **消融 120 集**（Day 7 Phase D，付费 ~17 元）：rag_ab 目的；a 侧基线现为 223 集主运行（可用）；执行前重估呈批。
-3. **产品 50 题**（~23 元）：Product closed loops 评测；执行前细估。
-4. **Task 9 最终报告 + README/面试材料**（Day 7 Phase E）：A4 口径 = c 300/300 全量 + a 223/300 + 2 确定性失败 + 75 裁定未跑；能力门如实标注；v4 与并发升档作为过程决策入材料。
-5. **可选**：v4 在消融框架内的正式对照（rag_ab 天然支持）；`cybermarket_pattern_12 [a]` 恢复裁定。
+1. **本轮（消融）commit 授权**（用户）→ 报告 + 执行日志 §33 + HANDOFF/CLAUDE 刷新（§8.12）。
+2. **产品 50 题**（Day 7 Phase D Task 8 / §17.1，付费 ~23 元）：产品轨 A/B 40 题 × 2 条件 + 封闭 10 题；执行前细估呈批。
+3. **Task 9 最终报告 + README/面试材料**（Day 7 Phase E）：A4 口径 = c 300/300 全量 + a 223/300 + 2 确定性失败 + 75 裁定未跑；消融 §17.2 描述性结论（修复价值 0）；能力门如实标注；v4/并发升档/截停裁定作为过程决策入材料。
+4. **可选**：4 份早期计划文件（Day 2a/2b/3/5）从未入库——补录与否待用户裁定；`cybermarket_pattern_12 [a]` 恢复裁定。
 
 ## 6. 踩过的坑，绝对不要再踩
 
@@ -514,6 +524,8 @@ security/transaction gate `9 passed in 5.59s`；唯一正向 seller-risk scenari
 
 77. **a-mode 长对话的强制上下文可以超 64K prompt 预算（`ContextBudgetExceeded` → agent 500 → official_task_error）。** 2/225 ≈ 0.9%（fake_account_24 第 8 轮、sports_events_8 第 10 轮），对话依赖、任务级确定性（同配置重试同位复发）、非 family 级（同库他集成功）、非瞬时（GC7 补跑无意义只会再烧 ~$0.07）。64K prompt = 128K 窗口 − 64K 输出余量（runs d/e 冻结修复），抬 prompt 上限必复发 reasoning 爆炸——修复风险大于 2 集损失，裁定不修、如实标注。判别入口：容器日志 `boundary 500` + `ContextBudgetExceeded` traceback（stderr 落盘只有 httpx 500 客户端侧）。
 78. **「离线全绿」不覆盖运行参数的冻结面：改任何被 pydantic/守卫钉死的参数前先 grep 约束。** 并发 2→4 的指令在 `RunnerConfig` 冻结 cap（v0.3 §16.2）处被拒（b08 首射零消耗失败、events 都没建）。规格留有条件升档口（「错误率不升且 P95 明显改善」）；升档 = 一行 + 钉测试 + 试点批活体验证 + 披露。另：TaskOutput 阻塞等待 10 分钟硬上限 vs ~40 分钟批次 = 正常轮询周期，不是运行故障（完成通知机制兜底）。
+79. **c 模式 spool 是每模型轮一个文件，导入器「1 session = 1 attempt」假设对 c 格欠记 ~4×。** 消融首次导入 assigned=120 但 156 记录 unassigned——多记录组窗口匹配只消费首个；A/c 实测 DB $0.0262 vs 真值 $0.1075。修正 = 导入侧按 (experiment,task,mode) 预聚合为集级记录再归属（merge_telemetry 是 jsonb 顶层键替换，重跑安全）；修正后 DB 四格与 spool 聚合逐分一致。判别信号：unassigned 计数 > 0 且同 (task,mode) 多 session。c 批当年只做 spool 聚合未做 DB 导入，不受影响。
+80. **同题双模式的 Runner 清单必须按模式拆分串行。** 60 集 c+a 混合清单在并发 4 下被坑 63 守卫直接拒绝（同 task 跨 mode 并发撞官方 task DB 命名）；拆 c-30/a-30 两份串行即可。另：shell `&` 发射长任务后必须按坑 58 双时点核验存活（events 增长 + 库内行数 + 容器存在）。
 
 
 ## 7. 关键文件与 SHA-256
@@ -709,3 +721,12 @@ security/transaction gate `9 passed in 5.59s`；唯一正向 seller-risk scenari
 - **DB 现场变更（a 批授权范围内）**：eval 库新增 10 实验身份 225 attempt 行（223 succeeded + 2 failed，证据保留）+ telemetry merge 225/225；migration head 仍 0007；产品 PG 业务表零变化。
 - **付费**：agent 实测 **$6.150604**（off_peak 100%）+ v4 验证 $0.056447（授权 $0.20 内）已在内；sim 侧待用户余额核对。
 - **外部状态收尾**：compose.bird 三服务与官方库 5433 已 stop（回到开场前）；产品 PG 未动；无残留进程。
+
+### 8.12 消融轮（2026-09-17，付费门行使 + 文档，commit 待授权）
+
+- **已入库（授权执行下一步时）**：`43e840a`（并发 cap）、`b52a568`（a 批文档）、`e0b3844`（条件 A）、`d70b429`（compose 接线）、`e87391b`（消融选取工件）。
+- **待 commit（消融收官）**：`docs/reports/2026-09-17-ablation-repair-120.md`、执行日志 §33、本文件、`CLAUDE.md`。
+- **付费**：agent **$1.673449 ≈ 11.8 元**（cap 25 元内；B $1.1885 午窗 + A $0.4850 晚窗，off_peak 100%）；sim 待余额核对。
+- **DB 现场变更（消融授权内）**：eval 库新增 2 实验身份 120 attempt 行 + telemetry（坑 79 预聚合修正后 120/120 精确归属）；migration head 仍 0007。
+- **gitignored 产物**：events ×4、episodes 120、spool +276、账本 `ablation_reestimate_20260917` + `ablation_repair_20260917` 节、`import_ablation_telemetry.py`（含坑 79 预聚合修正）。
+- **外部状态收尾**：栈与官方库已 stop（仅产品 PG）；无残留进程。

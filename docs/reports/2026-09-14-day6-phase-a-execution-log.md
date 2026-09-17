@@ -434,3 +434,13 @@ N=10 时 c 侧较 Pilot 失控基线 **-83%**。a-mode 无行为级基线拆分�
 5. **b09 同因两现 → GC7 停**：sports_events_8 同死 `ContextBudgetExceeded`（10 turns）→ 立即停批呈报 → 用户「②」截停：**223/300 succeeded + 2 failed + 75 unrun；reward 0/225；agent $6.1506 = 43.5 元；总投影 ≈116/160 ✓**。
 6. **telemetry 导入**：225/225 assigned，0 unassigned/ambiguous（BIRD_EXPERIMENT_ID 接线首战全中）；eval 视图 sum $6.1506 与 spool 精确一致。
 7. **现场**：栈与官方库 stop（仅产品 PG）；a 批 10 实验身份完整；commit 待授权。
+
+## 33. 消融 §17.2 COMPLETE：120/120 succeeded，修复价值 = 0（描述性），A 条件省 58–64% 费用（2026-09-17，午窗+晚窗，agent $1.6734）
+
+**授权链**：消融付费门呈批（cap 25 元）→ 用户「授权消融」。条件 A 实现（`e0b3844` adapter 停止门 + `d70b429` compose 接线 + `e87391b` 选取工件，零付费 891 passed）→ B 条件午窗 12:37–13:19 → A 条件晚窗 18:03–18:39（贴 peak 线按 rider 分窗）。细节见 `docs/reports/2026-09-17-ablation-repair-120.md`。
+
+1. **结果**：30 配对题 × c/a × A/B = **120/120 succeeded 零 infra**；P1 两条件 0/60 vs 0/60——**修复救回 0 集**（描述性结论：当前能力下修复价值 = 0）；reward 0/120 如实标注。
+2. **经济学**：B 条件 2.4–2.7× 轮次/费用（$1.1885）vs A（$0.4850）零 P1 增益；A 格恰 1.00 submit/集（B 1.87–2.27）= 停止语义活体确认。
+3. **执行修正**：60 集混合清单触坑 63 → 拆 c/a 单模式清单串行；B/a 曾用 shell `&` 发射，按坑 58 双时点核验存活。
+4. **telemetry 新坑（坑 79）**：c 模式 spool 每模型轮一文件，导入器 1:1 假设对 c 格欠记 ~4×；按 (experiment,task,mode) 预聚合修正后 120/120 精确归属（jsonb 顶层键替换使重跑安全）。
+5. **账目**：agent $1.673449 ≈ 11.8 元（cap 25 元内）；栈已 stop；未 push。

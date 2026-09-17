@@ -10,8 +10,22 @@
 
 项目由 Codex 推进 12 天（2026-08-24 → 09-07），Claude Code 于 09-11 接手，09-13 完成 Task 13 Pilot 主运行。
 
-**精确状态（2026-09-16 深夜更新，以 `HANDOFF.md` 为准）：**
+**精确状态（2026-09-17 晚更新，以 `HANDOFF.md` 为准）：**
 
+```text
+Day 4 overall: PASS；Day 5 Phase A + Gate P preflight 全 PASS（模型已切 deepseek-flash）
+Task 13 Pilot: 完成（两门 FAIL 为 Day 6 输入基线；付费纪律：peak 档 = 2×，一律空闲档调度）
+Day 6+7 修复链: c-mode 失忆机制修复（phase-memory + 64K 水位线 + 文本轮）实测起效（run g/h 结构健康）
+A4 c 批: COMPLETE 304/304，agent $3.4567 = $0.0113/集；reward 0/300（知识缺口，如实标注）
+A4 a 批: 裁定②截停——223/300 + 2 确定性 ContextBudgetExceeded + 75 unrun；agent $6.1506 = 43.5 元
+消融 §17.2: **COMPLETE 120/120**（30 配对题 × c/a × A/B）；**P1 A 0/60 vs B 0/60 = 修复救回 0 集**
+         （描述性结论：当前能力下修复价值 0，修复经济学为负 2.4–2.7×）；agent $1.6734 = 11.8 元（cap 25 内）
+         条件 A 实现 e0b3844（adapter 停止门，BIRD_ABLATION_CONDITION=a opt-in）+ compose 接线 d70b429
+         新坑 79（c 模式 spool 每轮一文件 → 导入预聚合修正）/80（混合清单拆单模式串行）
+预算: spent ≈87.7 元；forward 产品 ~23 元；总投影 ≈111/160 ✓（余 ~31%）
+用户动作链: ①a批照跑 ②v4 验证 ③并发 A ④a批截停② ⑤授权执行下一步（commit） ⑥授权消融——全部行使完毕
+待办: 产品 50 题付费门呈批 → 最终报告/README/面试材料（Phase E）；sim 余额核对
+终态证据: 消融报告（2026-09-17-ablation-repair-120.md）+ a 批报告 + 执行日志 §30–§33 + 账本四节；消融收官文档 commit 待授权；未 push
 ```text
 Day 4 overall: PASS；Day 5 Phase A + Gate P preflight 全 PASS（模型已切 deepseek-flash）
 Task 13 Pilot: 完成（两门 FAIL 为 Day 6 输入基线；付费运行纪律：peak 档 = 2×，一律空闲档调度）
