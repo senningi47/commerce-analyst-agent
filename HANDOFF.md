@@ -368,14 +368,26 @@ security/transaction gate `9 passed in 5.59s`；唯一正向 seller-risk scenari
 4. **账目**：agent **$1.673449 ≈ 11.8 元**（cap 25 元内）；telemetry 120/120 精确归属（坑 79 修正后 DB 与 spool 逐分一致）；栈已 stop。
 5. **执行修正**：混合清单触坑 63 → 拆单模式串行（坑 80）；B/a shell `&` 发射按坑 58 双时点核验。
 
+
+### 2.36 产品评测 §17.1 COMPLETE：预注册判据否决检索、A 胜出（Claude Code，2026-09-17 晚，付费门行使；细节见 `docs/reports/2026-09-17-product-eval-s17.1.md` 与执行日志 §34）
+
+范围发现：题集工件从未存在 → 用户裁定「①」构建。零付费构建（题集 v2 50 题双验证 + BM25 路线 + zh glossary + harness，`c52bc67`/`09871dc`）→ 40 题人工审核 → 付费门（cap 5 元）行使。
+
+1. **产品真缺陷发现与修复**：`_ast_policy` 函数白名单误杀布尔运算符（sqlglot And/Or 子类化 Func）→ **任何 AND/OR 查询不可执行**；豁免修复 + 守卫测试（首轮发射 80 行全错的 $0 诊断转化为该发现）。
+2. **题集 v2**：5 题身份列裸投影违反隐私红线 → 重设计为州/城维度聚合；全部 50 题双验证（执行 + 策略）通过。
+3. **A/B×40（$0.0502）**：A 3/40 正确、recall 1.000、tokens 170,696；B 2/40、recall 0.910、tokens 64,046（−62.5%）→ **§10.2 判据否决 B，A 胜出**（小 Schema 下全量更有效，规格预期）。
+4. **封闭 10 题（A 配置一次，$0.0093）**：1/10 正确。主导失败 = 单步 harness 无修复环下的策略合规缺口（~60% 函数拒绝、~26% 未按工具应答），如实测量。
+5. **账目**：agent $0.0595 ≈ 0.42 元（cap 5 元内）；产品轨无 BIRD 栈参与；产品 PG 只读零变化。
+
 ## 3. 当前卡在哪里
 
-**无阻塞——a 批截停收官（223/300）+ 消融 §17.2 COMPLETE（120/120），收尾段剩余 = 产品 50 题 + 最终报告。**
+**无阻塞——a 批截停（223/300）+ 消融 §17.2（120/120）+ 产品评测 §17.1（A/B + 封闭 10）全部收官；剩余 = 最终报告/README/面试材料（Phase E）。**
 
 - **a 批终账**：agent $6.1506 = 43.5 元（225 attempts / 2,301 turns，off_peak 100%）；reward 0/225 如实标注；telemetry 225/225 精确归属。
 - **消融终账（新）**：120/120 succeeded，agent $1.6734 = 11.8 元（cap 25 元内）；**修复救回 0 集**（P1 A 0/60 vs B 0/60）——§17.2 描述性结论 = 当前能力下修复价值 0，修复经济学为负（2.4–2.7× 费用零增益）。
-- **增量重估**：spent ≈87.7 元（75.9 + 11.8）；forward（产品 ~23）≈ 23 元；**总投影 ≈111/160 ✓（余 ~31%）**。
+- **增量重估**：spent ≈88.1 元（75.9 + 11.8 + 0.42）；产品评测以 $0.06 完成远低于原 23 元预留；**总账 ≈88.1/160 ✓（余 ~45%）**。
 - **能力门终态**：A4 + 消融全程 reward>0 = 0/645；机制 = 知识缺口 + SQL 运行期质量；v4 杠杆已验证「行为激活、reward 中性」归档备用；修复杠杆经消融实证同样无效。
+- **产品评测终态（新）**：§10.2 预注册判据否决路线 2 检索（正确率 5.0% vs 7.5%、recall 0.910<1.0、token −62.5%）→ **全量 Schema 胜出**（规格预期）；单步 harness 无修复环 → 策略合规缺口 ~60% 如实测量；构建期发现并修复产品真缺陷（AND/OR 被函数白名单误杀）。
 - **上下文溢出**：bird_a 长对话 0.9% 确定性失败（2 集），裁定不修、如实标注。
 - **待用户**：产品 50 题付费门呈批（§5）；sim 侧余额核对。
 
@@ -408,10 +420,9 @@ security/transaction gate `9 passed in 5.59s`；唯一正向 seller-risk scenari
 
 ## 5. 下一步计划
 
-1. **本轮（消融）commit 授权**（用户）→ 报告 + 执行日志 §33 + HANDOFF/CLAUDE 刷新（§8.12）。
-2. **产品 50 题**（Day 7 Phase D Task 8 / §17.1，付费 ~23 元）：产品轨 A/B 40 题 × 2 条件 + 封闭 10 题；执行前细估呈批。
-3. **Task 9 最终报告 + README/面试材料**（Day 7 Phase E）：A4 口径 = c 300/300 全量 + a 223/300 + 2 确定性失败 + 75 裁定未跑；消融 §17.2 描述性结论（修复价值 0）；能力门如实标注；v4/并发升档/截停裁定作为过程决策入材料。
-4. **可选**：4 份早期计划文件（Day 2a/2b/3/5）从未入库——补录与否待用户裁定；`cybermarket_pattern_12 [a]` 恢复裁定。
+1. **本轮（产品评测）commit 授权**（用户）→ 策略修复 + 题集 v2 + runner 修正 + 报告/文档（§8.13）。
+2. **Task 9 最终报告 + README/面试材料**（Day 7 Phase E）：A4 口径（c 300/300 + a 223/300 + 2 确定性失败 + 75 裁定未跑）、消融 §17.2（修复价值 0）、产品 §17.1（A 胜出、token −62.5% 但 recall 降）、策略缺陷发现与修复——全部作为过程决策与诚实结论入材料。
+3. **可选**：4 份早期计划文件（Day 2a/2b/3/5）补录裁定；`cybermarket_pattern_12 [a]` 恢复裁定；sql_generate 提示内嵌白名单摘要 + SqlReasoner 修复环接入产品评测（v2 改进项）。
 
 ## 6. 踩过的坑，绝对不要再踩
 
@@ -730,3 +741,11 @@ security/transaction gate `9 passed in 5.59s`；唯一正向 seller-risk scenari
 - **DB 现场变更（消融授权内）**：eval 库新增 2 实验身份 120 attempt 行 + telemetry（坑 79 预聚合修正后 120/120 精确归属）；migration head 仍 0007。
 - **gitignored 产物**：events ×4、episodes 120、spool +276、账本 `ablation_reestimate_20260917` + `ablation_repair_20260917` 节、`import_ablation_telemetry.py`（含坑 79 预聚合修正）。
 - **外部状态收尾**：栈与官方库已 stop（仅产品 PG）；无残留进程。
+
+### 8.13 产品评测轮（2026-09-17 晚，付费门行使，commit 待授权）
+
+- **已入库（构建阶段）**：`c52bc67`（题集 v1 + builder + glossary）、`09871dc`（检索路线 + harness + 测试 + runner；amend 移出误卷的 Day 4 遗留测试 `test_day4_authorization.py`——坑 49 复现）。
+- **待 commit（产品评测收官）**：`src/commerce_agent/query_engine/_ast_policy.py`（AND/OR 豁免修复）、`tests/unit/query_engine/test_ast_policy.py`（+1 守卫）、`scripts/build_product_question_bank.py`（v2 + 策略校验）、`data/product-eval/*.jsonl`（v2 题集）、`scripts/run_product_eval.py`（psycopg gold 路径 + Selector 循环 + subject_id）、`docs/reports/2026-09-17-product-eval-s17.1.md`、执行日志 §34、本文件、`CLAUDE.md`。
+- **付费**：agent **$0.059496 ≈ 0.42 元**（cap 5 元内；A/B×40 $0.0502 + 封闭 $0.0093；首轮 v1/v2 发射零模型调用零成本）。sim 无（产品轨单步无 simulator）。
+- **判定终态**：**907 passed, 140 skipped** + Ruff 全绿。
+- **现场**：无栈参与；产品 PG 只读零业务变化；无残留进程。

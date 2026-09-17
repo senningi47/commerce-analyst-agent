@@ -22,9 +22,12 @@ A4 a 批: 裁定②截停——223/300 + 2 确定性 ContextBudgetExceeded + 75 
          （描述性结论：当前能力下修复价值 0，修复经济学为负 2.4–2.7×）；agent $1.6734 = 11.8 元（cap 25 内）
          条件 A 实现 e0b3844（adapter 停止门，BIRD_ABLATION_CONDITION=a opt-in）+ compose 接线 d70b429
          新坑 79（c 模式 spool 每轮一文件 → 导入预聚合修正）/80（混合清单拆单模式串行）
-预算: spent ≈87.7 元；forward 产品 ~23 元；总投影 ≈111/160 ✓（余 ~31%）
-用户动作链: ①a批照跑 ②v4 验证 ③并发 A ④a批截停② ⑤授权执行下一步（commit） ⑥授权消融——全部行使完毕
-待办: 产品 50 题付费门呈批 → 最终报告/README/面试材料（Phase E）；sim 余额核对
+预算: spent ≈88.1 元（含产品评测 0.42 元）；**总账 ≈88.1/160 ✓（余 ~45%）**
+用户动作链: ①a批照跑 ②v4 验证 ③并发 A ④a批截停② ⑤授权执行下一步 ⑥授权消融 ⑦①构建 ⑧授权产品评测——全部行使完毕
+产品评测 §17.1: COMPLETE——题集从零构建（50 题双验证）+ BM25 检索路线 + harness（c52bc67/09871dc）
+         A/B×40 + 封闭 10（$0.0595）：**§10.2 判据否决检索、全量 Schema 胜出**（正确率 7.5% vs 5.0%、recall 1.0 vs 0.91、token −62.5%）
+         构建期发现产品真缺陷并修复：AND/OR 被函数白名单误杀（任何多条件查询不可执行）；单步 harness 策略合规缺口 ~60% 如实测量
+待办: 最终报告/README/面试材料（Phase E）；sim 余额核对；4 份早期计划文件补录裁定
 终态证据: 消融报告（2026-09-17-ablation-repair-120.md）+ a 批报告 + 执行日志 §30–§33 + 账本四节；消融收官文档 commit 待授权；未 push
 ```text
 Day 4 overall: PASS；Day 5 Phase A + Gate P preflight 全 PASS（模型已切 deepseek-flash）
