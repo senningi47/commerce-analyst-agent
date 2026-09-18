@@ -1,0 +1,568 @@
+{
+ "formula": "spent_so_far + full_remaining_upper_bound + product_remaining_upper_bound <= ceiling",
+ "ceiling_yuan": 180.0,
+ "reserve_yuan": 20.0,
+ "spent_so_far_yuan": 1.4932,
+ "spent_so_far_note": "agent-side measured from spool window of pilot-day5-20260913d (600 files, 675 model turns, 2,000,627 total tokens); USD 0.211203192 converted at 7.07 indicative; simulator-side usage invisible to the spool — user balance cross-check is authoritative",
+ "pilot_gate_p_cap_yuan": 30.0,
+ "pilot_gate_p_spent_agent_side_yuan": 1.4932,
+ "full_remaining_upper_bound_yuan": 122.9,
+ "product_remaining_upper_bound_yuan": 19.3,
+ "recheck_every_completed_full_tasks": 25,
+ "decision_rule": "if the projected total would cross the ceiling, pause safely and escalate to the user",
+ "measured_at": "2026-09-13 (Asia/Shanghai)",
+ "note": "measured fields are filled only from actual usage/balance evidence",
+ "upper_bound_basis": "layered bootstrap p95 (seed=7, N=20000) on d-experiment per-turn spool costs: c-set = 60 small turns, a-set = 9 small + 9 big turns; full remaining 1180 = 590c + 590a; product 90 episodes (all-c conservative) + repair ablation 60c/60a; agent-side only",
+ "diagnostic_spend_yuan": 0.491,
+ "diagnostic_spend_note": "pre-d spool turns (208 / USD 0.069457): experiment c attempts + paid diagnostics; retrospective metering, disclosed in pilot report 1.2 (diagnostic authorization was <=0.05 USD, measured ~0.0615)",
+ "spent_so_far_including_diagnostic_yuan": 1.9842,
+ "projected_total_upper_bound_yuan": 457.6,
+ "projected_total_note": "FINAL (restored 2026-09-14 after peak-claim withdrawal): spent 6.43 yuan (platform, off-peak-billed, full stack; agent 1.98 / sim 4.45) + full remaining 1180 sets (agent p95 17.38 + sim 37.10 USD) + product/ablation 210 sets (agent 2.73 + sim 6.60 USD) = 457.6 yuan vs the 160-yuan line -> FAIL at 2.86x. Band model CONFIRMED by the official windows (Beijing Mon-Fri 09:00-12:00/14:00-18:00 = snapshot peak_windows_utc; weekend off-peak); the pilot ran Sunday = off-peak. Running future windows inside peak would double the remainder to ~908.8 yuan (5.68x) — schedule paid runs off-peak. Structural finding unchanged: a-mode Full remaining alone (590 x (0.0188 agent p95 + 0.0314 sim)) = 210 yuan exceeds the whole line at off-peak pricing.",
+ "updated_at": "2026-09-15T19:30:00+08:00 (A4 selection + C2 re-estimate + task5 appended)",
+ "balance_cross_check": {
+  "platform_total_2026_09_13_yuan": 6.43,
+  "platform_total_usd_at_7_07": 0.9095,
+  "agent_side_measured_usd": 0.28066,
+  "simulator_side_implied_usd": 0.6288,
+  "simulator_side_implied_yuan": 4.45,
+  "simulator_to_agent_ratio": 2.24,
+  "sim_per_set_usd_20_set_spread": 0.03144,
+  "scope_note": "[band claim REVERSED 2026-09-14, see band_correction_2026_09_14] 2026-09-13 platform spend on deepseek-flash attributed wholly to the pilot stack (probes predate 09-13); price band off_peak verified correct (Sunday run; peak windows are weekdays-only per snapshot evidence and _pricing.py weekday gate)",
+  "band_correction_2026_09_14": {
+   "user_statement": "6.43 yuan was peak-window billing; the earlier transcribed price sheet was the off-peak column; complete CNY table provided 2026-09-14 (off-peak 0.02/1/4, peak 0.04/2/8 yuan per million tokens)",
+   "platform_cny_per_snapshot_usd": 6.6667,
+   "rate_basis": "user CNY table / snapshot USD column agree at 6.6667 on all three price points; corrections below use the platform CNY column directly",
+   "agent_side_actual_peak_yuan": 3.74,
+   "simulator_side_actual_peak_yuan": 2.69,
+   "simulator_to_agent_ratio": 0.72,
+   "sim_per_set_off_peak_usd": 0.01008,
+   "sim_per_set_off_peak_yuan": 0.0672,
+   "sim_per_set_peak_yuan": 0.1344,
+   "superseded_values": {
+    "simulator_side_implied_usd": 0.6288,
+    "simulator_side_implied_yuan": 4.45,
+    "simulator_to_agent_ratio": 2.24,
+    "sim_per_set_usd_20_set_spread": 0.03144
+   },
+   "assumption": "entire 09-13 spend (d window + 208 diagnostic turns) billed at peak; if some diagnostic calls fell in true off-peak the sim residual shifts by <0.1 yuan",
+   "status": "WITHDRAWN same day (2026-09-14): user's peak-billing claim was an oversight — the run was Sunday, off-peak all day per the official windows; original split below restored as primary"
+  },
+  "band_claim_withdrawal_2026_09_14": {
+   "user_statement": "official peak windows: Beijing Mon-Fri 09:00-12:00 and 14:00-18:00 (UTC 01:00-04:00, 06:00-10:00), all other times off-peak; user withdrew the peak-billing claim ('forgot yesterday was Sunday')",
+   "band_model_verdict": "CONFIRMED — snapshot v4 peak_windows_utc + evidence ('weekdays') and _pricing.py weekday gate match the official definition exactly; no re-freeze needed",
+   "restored_primary": {
+    "simulator_side_implied_usd": 0.6288,
+    "simulator_side_implied_yuan": 4.45,
+    "simulator_to_agent_ratio": 2.24,
+    "sim_per_set_usd_20_set_spread": 0.03144,
+    "projected_total_upper_bound_yuan": 457.6
+   },
+   "rate_convention_note": "platform CNY column = 6.6667x snapshot USD column (user CNY table); under that basis the split is agent 1.87 / sim 4.56 yuan (ratio 2.44x, sim $0.0342/set) but the projected total is invariant (~457.3 vs 457.6 yuan); original 7.07-indicator numbers kept as primary for continuity",
+   "peak_run_penalty": "future runs inside peak windows double the projection remainder: total ~908.8 yuan (5.68x of the 160-yuan line); schedule paid runs off-peak (weekday evenings/nights/mornings Beijing, weekends) — the pilot already did (Sunday)"
+  }
+ },
+ "budget_gate_decision": "FAIL (user balance cross-check closed the gate 2026-09-13; reaffirmed 2026-09-14 after peak-claim withdrawal — original reconciliation restored, band model confirmed); safe pause per spec 16.4, user decision required",
+ "simulator_side_usage": "now estimated from platform total minus agent-side spool measurement; per-turn sim attribution remains unavailable (no spool)",
+ "projected_total_peak_run_penalty_yuan": 908.8,
+ "task5_c_mode_sensitivity": {
+  "basis": "pilot c-mode measured: agent $0.0100/set + sim $0.03144/set at 60 model turns (linear per-turn model; sim answers every ask_user)",
+  "per_turn_combined_usd": 0.000691,
+  "table_n_turns_per_set_usd": {
+   "5": 0.00345,
+   "8": 0.00553,
+   "10": 0.00691,
+   "15": 0.01036,
+   "20": 0.01381,
+   "60": 0.04144
+  },
+  "c_part_740_sets_usd": {
+   "5": 2.56,
+   "8": 4.09,
+   "10": 5.11,
+   "15": 7.67,
+   "20": 10.22,
+   "60": 30.67
+  },
+  "note": "Task 5 binds c-mode turns to ~max_turn+1..2; at N=10 the c-side of the full scope drops ~83% vs the runaway 60-turn baseline; input for Task 11 redesign"
+ },
+ "task10_strategy_validation": {
+  "date": "2026-09-14",
+  "authorization_cap_usd": 0.1,
+  "cap_scope": "agent + simulator side, per Day 6 packaged authorization",
+  "selection": "archeology_scan_M_4 c+a same-task dual-mode (seed 11, zero Pilot overlap)",
+  "config_hash": "97a40e747024a52fb77e09bdb8374acf4b2f3e8e4c00c2d3e4228a0242ead749",
+  "config_hash_basis": "sha256(outputs/bird-pilot/task10/task-selection.json), Task 13 derivation; per-profile fingerprints recomputed live and matched execution-log S16 reference values",
+  "off_peak_confirmed": "runs executed 23:13-23:49 Beijing Monday (off-peak; peak=workdays 09-12/14-18)",
+  "runs_agent_side_measured": {
+   "run1_a_succeeded_provider_response_invalid_at_turn8": {
+    "experiment": "task10-strategy-validate-20260914",
+    "agent_usd": 0.01153989,
+    "turns": 7
+   },
+   "run1_c_failed_createdb_race_infra": {
+    "experiment": "task10-strategy-validate-20260914",
+    "agent_usd": 0.0,
+    "note": "died at /init_task 500 before any model turn"
+   },
+   "run2_c_runaway_stale_image": {
+    "experiment": "task10-strategy-validate-20260914b",
+    "agent_usd": 0.009389802,
+    "turns": 60,
+    "note": "container image predated Task 5: no clarification gate, prompt-policies v1 baked; Pilot-style 60-ask runaway reproduced"
+   },
+   "run3_c_fixed_image": {
+    "experiment": "task10-strategy-validate-20260914c",
+    "agent_usd": 0.004117392,
+    "turns": 14,
+    "note": "after image rebuild: 12 ask_user + 2 submit_sql, 118s, submits reached official evaluator (Phase 1 failed verdicts, reward 0)"
+   }
+  },
+  "agent_side_total_usd": 0.025047084,
+  "simulator_side_usd": "invisible to spool; estimate ~0.05-0.08 from ~77 sim calls at Pilot per-call average (~$0.00098); authoritative number = user platform balance cross-check",
+  "combined_estimate_usd": "0.075-0.105, likely at/just under the 0.10 cap; no further paid runs this episode regardless",
+  "telemetry_import": "run3 imported into eval.task_attempt via spool_importer + merge_telemetry (14 turns, $0.004117392); experiment_id relabeled from compose default bird-system-agent (wiring gap, disclosed); runs 1-2 spool files are pre-Task-2 format without stamps -> not importable per established ruling",
+  "c_behavior_comparison": {
+   "pilot_d_c_mode": "9 episodes, 539 ask_user, 1 submit_sql, wall ~580s each",
+   "run2_stale_image_c": "60 ask_user, 0 submit_sql, 551s (identical runaway shape -> fix was simply not deployed)",
+   "run3_fixed_image_c": "12 ask_user, 2 submit_sql, 118s (v3 policy + live budget lines; submits reached evaluator)"
+  },
+  "updated_at": "2026-09-14T23:59+08:00",
+  "simulator_side_authoritative": {
+   "platform_2026_09_14_yuan": 0.65,
+   "agent_side_yuan": 0.1771,
+   "probe_yuan": 0.0071,
+   "sim_side_yuan": 0.4658,
+   "sim_side_usd": 0.06588,
+   "sim_per_call_usd": 0.000856,
+   "note": "user balance reading 2026-09-15; within the 0.05-0.08 USD estimate band"
+  }
+ },
+ "task11_capability_validation": {
+  "date": "2026-09-15",
+  "authorization": "user ruling 2026-09-15 on task11 ruling checklist: item1 approved (capability validation as Full precondition, cap $0.05-0.10 total agent+sim); item2 = option A4; item4 = sim compliance static check into Day 7",
+  "selection": "archeology_scan_8 c + archeology_scan_7 a (seed 13, zero task overlap with Pilot 20 and task10 archeology_scan_M_4; ambiguity 4 each; strategy database+ambiguity-fallback)",
+  "config_hash": "0ce49a5253ccf20df55db5a961595790b244412b86f285d09c091b0bb852f6fb",
+  "config_hash_basis": "sha256(outputs/bird-pilot/task11/task-selection.json), Task 13 derivation",
+  "runs": {
+   "a_experiment_20260915a": "succeeded 181s, 11 model turns in ONE session, 7 execute_sql + 3 knowledge + 2 ask_user + 2 submit_sql, budget 20/20 bounded; reward 0 (both submits Phase 1 failed) — FIRST complete a-mode episode under v3 strategy, behaviorally healthy",
+   "c_experiment_20260915a": "failed 15.5s official_task_error, 2 single-turn sessions then orchestrator error; transient infra (stack cold start), discarded per GC7",
+   "c_experiment_20260915b": "succeeded, 14 ask_user + 2 submit_sql across 16 single-turn sessions, reward 0 (both submits Phase 1 failed; submits include placeholder SELECT 1)"
+  },
+  "agent_side_measured_usd": 0.034841,
+  "simulator_side_usd": "estimate ~0.022 (~22 sim calls x ~$0.001); invisible to spool, authoritative number = user balance check",
+  "combined_estimate_usd": "~0.057, within the approved cap; no further paid runs this round regardless (decision tree: bounded attempts all zero -> stop)",
+  "gate_verdict": "reward>0 NOT achieved (4 submits across 3 effective episodes, all failed Phase 1)",
+  "key_finding": "c-mode runs ONE agent session PER TURN by official design (spool-proven: 16 sessions x exactly 1 turn for the c rerun; a-mode is one continuous session). The per-turn context (phase record) does not carry the task question after the first exchange: turn 0 agent asked a real task-aware question and the sim answered substantively; from turn 1 the sim refused (official out-of-scope guard) and the agent went context-blind (self-reports 'I don't have the original question/schema'), spiraling to placeholder submits. The same blind-ask pattern is present in ALL historical c episodes (task10 Run2 runaway and Run3 fixed-run episodes both contain 'I don't'/'restate' phrases) — Task 5 bounded the symptom (60 -> 14 asks) but not the mechanism. a-mode is unaffected (full context, real SQL experiments).",
+  "implication": "c-mode reward is structurally 0 until the phase-record/session-state replication is statically verified against the frozen official allowlist and fixed (Day 7 first item, zero-paid static then code change + image rebuild + container verification + 1-2 set revalidation within a new paid authorization). a-mode Phase 1 failure is genuine SQL quality.",
+  "updated_at": "2026-09-15T08:50+08:00",
+  "simulator_side_authoritative": {
+   "platform_2026_09_15_pre0900_yuan": 0.32,
+   "agent_side_yuan": 0.2463,
+   "sim_side_yuan": 0.0737,
+   "sim_side_usd": 0.01042,
+   "sim_per_call_usd": 0.000474,
+   "note": "post-fix c sessions are short-context: per-call ~0.0005 vs runaway-era ~0.0009; refines the 0.001 anchor downward"
+  }
+ },
+ "sim_anchor_refinement_2026_09_15": {
+  "basis": "two independent platform-day splits",
+  "post_fix_c_per_call_usd": "~0.0005 (validation day)",
+  "runaway_era_per_call_usd": "~0.0009 (task10 day, 60-ask sessions)",
+  "refined_c_set_combined_usd": "~0.012 (agent 0.0041 + sim ~0.008 at 16 calls) vs 0.017 in the task11 research note",
+  "a_set_combined_usd": "~0.023 unchanged",
+  "impact": "A4 projection improves: anchor ~82 yuan / conservative ~125 yuan vs 160 line (was 91.6/135.6)"
+ },
+ "task7_c1_refit_20260915": {
+  "date": "2026-09-15",
+  "authorization": "Day 7 plan approved 2026-09-15 with Gate C1 <=$0.05 bundled (HANDOFF section 0.2); executed per HANDOFF section 3 one-button checklist in the 12:00-14:00 off-peak window",
+  "selection": "archeology_scan_8 c single episode (reused from task11 selection seed 13; new experiment legal per plan Task 4)",
+  "config_hash": "0ce49a5253ccf20df55db5a961595790b244412b86f285d09c091b0bb852f6fb",
+  "config_hash_basis": "sha256(outputs/bird-pilot/task11/task-selection.json), re-verified on site before launch",
+  "runs": {
+   "experiment": "task7-cmode-refit-20260915",
+   "attempt": "a5073903-8076-46f2-ac5d-98b1e0e4a2fa",
+   "outcome": "succeeded 118.4s, 5 model turns, 3 ask_user + 2 submit_sql; both submits REAL SQL (complex CTEs on real schema, zero SELECT 1 placeholder); reward 0.0 (both Phase 1 failed)"
+  },
+  "capability_gate": "NOT achieved (reward>0 required). Fix mechanism VERIFIED within clarify phase (task-grounded questions citing knowledge items, first submit on-task). RESIDUAL DEFECT localized: after a failed submit the official failure-feedback message starts a new phase/run_session; _run_c dialogue is call-local (bird_server.py:434) and the first official message (task question) is not persisted, so agent truthfully reported 'I don't have the original question text in this context' and improvised the second submit from state knowledge.",
+  "cost": {
+   "agent_measured_usd": 0.01471,
+   "agent_basis": "5 spool model_turn files (878->883), snapshot deepseek-flash-usd-2026-09-12, band off_peak all turns; prompt 65286 / completion 17634 (reasoning 15838)",
+   "sim_estimated_usd": 0.0015,
+   "sim_basis": "3 ask_user -> ~3 calls x $0.0005 refined per-call anchor; invisible, pending user platform balance check",
+   "total_estimated_usd": 0.0162,
+   "cap_usd": 0.05,
+   "within_cap": true
+  },
+  "c_anchor_backfill": {
+   "agent_usd_per_episode": 0.0147,
+   "agent_note": "schema+external_kg per-turn rendering lifts prompt to ~13k tokens/turn (3.6x Task 10 Run 3 anchor $0.0041) — risk disclosed in HANDOFF section 2.24 item 4 confirmed",
+   "sim_calls_per_episode": 3,
+   "combined_usd_per_episode": 0.016,
+   "prior_combined_usd_per_episode": 0.012,
+   "a4_impact_note": "+~$0.004/episode x 288 c-episodes ~ +$1.2 on the ~$82 A4 baseline — negligible; sim-side calls collapsed (runaway 60-ask era ~$0.008 -> 3 calls ~$0.0015)"
+  },
+  "spend_authoritative_note": "platform-side reconciliation pending next user balance report; this section records agent-side measured + sim estimate only",
+  "reruns": {
+   "authorization": "user 2026-09-15: '两者一起授权' (C1 re-validation <=$0.05 + commit of fix/docs)",
+   "commits_before_reruns": [
+    "0f99076 fix: persist c-mode session memory across phase boundaries",
+    "bd38072 docs: record c1 execution and phase-memory residual fix"
+   ],
+   "runs": {
+    "task7-cmode-refit-20260915b": "attempt 5aac285d failed 97s official_task_error; 2 model turns recorded, agent $0.004848; agent container boundary log: 503 ModelProtocolError provider_response_invalid",
+    "task7-cmode-refit-20260915c": "attempt 316e3ae4 failed 65s official_task_error (GC7 retry); 1 model turn recorded, agent $0.003392; same provider_response_invalid"
+   },
+   "rerun_agent_cost_usd": 0.00824,
+   "gate_cumulative_note": "first C1 run $0.014710 booked under prior section; re-validation authorization spent $0.00824 of $0.05",
+   "diagnosis": "2/2 consecutive failures, same gateway fail-closed reason=provider_response_invalid (provider HTTP response fails parse in ModelGateway._parse_output or _finish_reason). Known prior occurrence: Task 10 Run 1 turn 8 (old image) — class predates the phase-memory fix; fix NOT implicated (failure is downstream response parsing; episodes die before reaching the debug round, so the fix remains live-unvalidated). Exact trigger needs one instrumented diagnostic (sanitized parse-failure metadata: finish_reason string + exception class + raise site). Suspected: truncated/malformed tool_call arguments under long reasoning outputs.",
+   "sim_schema_note": "user-simulator 'Could not load schema' appeared once per run at init — pit 67 known observation, non-fatal (ask calls returned 200).",
+   "status": "STOPPED per plan discipline (fail -> bounded diagnosis -> report); further paid runs need new user authorization",
+   "instrumented_diagnostic": {
+    "authorization": "user ruling '执行方案1' (instrumented diagnostic ~$0.01 + fix red-green zero-cost)",
+    "instrumentation": "gateway _log_protocol_diagnostic at both fail-closed parse sites (sanitized metadata only: site/exception class/detail/finish_reason/model echo match/payload keys — zero response content)",
+    "run_d": "task7-cmode-refit-20260915d, attempt 83b6e31d, failed 126s official_task_error; 3 model turns recorded $0.008127; diagnostic captured: site=output_parse error=ValidationError (FinalOutput content min_length=1) finish_reason='length' model_echo_match=True",
+    "verdict": "ROOT CAUSE = output budget exhaustion, NOT protocol corruption and NOT a retry-semantics issue: model reasoning consumed the full 8192-token output budget, returned empty content with finish_reason=length, and FinalOutput(content='') failed pydantic validation (ValidationError is a ValueError subclass swallowed as provider_response_invalid). Morning episode's largest successful turn was 7133 completion tokens — already near the cap. Same class explains Task 10 Run 1 turn-8 failure (a-mode, same 8192 cap).",
+    "fix_zero_cost": "ThinkingConfig le 8192->16384 (model/contracts.py) + bird_a/bird_c profile inference max_output_tokens 16384 + profile revisions v2 (run-profiles.v2.json canonical rewrite); retail unchanged; 873 passed / Ruff green / rebuilt / container evidence",
+    "cost_note": "diagnostic authorization spent $0.008127 of ~$0.01; fixing the cap does not raise normal-turn cost (turns already finish under 8192), only converts would-be fatal truncated turns into longer billed turns"
+   },
+   "run_e_output_headroom_fix": {
+    "authorization": "user '授权执行下一步' (C1 re-validation, evening off-peak window, ~$0.015 anchor)",
+    "run": "task7-cmode-refit-20260915e, attempt 7e6c1ef7, 18:05-18:08 Beijing (off-peak), failed 196s official_task_error; 4 recorded turns $0.011330 (reasoning 4637/190/5374/7071), 5th turn finish_reason='length' + empty content -> same FinalOutput ValidationError",
+    "h1_rejected": "provider clamp hypothesis: official docs (verified in rename probe, research note line 37) state max_tokens ceiling 384K — provider accepts 16384; gateway encode path verified (gateway.py:358 max_tokens flows from profile inference)",
+    "h2_confirmed": "the model's reasoning genuinely consumed the full 16384 output budget with zero content; provider thinking-mode DEFAULT output is 64K (128K at max effort) — the official ADK stack (no max_tokens override) runs with 4x headroom, making such blowouts rare there",
+    "implication": "any finite cap below the thinking default keeps occasional reasoning blowouts fatal (empty content = episode kill). Options: 16384->65536 (provider default, config-only) and/or graceful empty-content turn handling (touches Day 3 fail-closed gateway contract = user design decision)",
+    "status": "STOPPED per pit 73 discipline (no blind retry of unresolved cause); paid authorization consumed $0.011330; awaiting user ruling"
+   },
+   "run_f_64k_waterline": {
+    "authorization": "user '按推荐决策执行下一步，并给予授权' (waterline 65536 per recommendation + C1 re-validation run f; cap interpreted <=$0.05 per gate-series standing limit)",
+    "run": "task7-cmode-refit-20260915f, attempt d023d724, 18:21-18:24 Beijing (off-peak), failed 158s official_task_error; 4 turns $0.018509 (3 tool_calls + 1 stop/18895 completion reasoning 18297)",
+    "waterline_verified": "64K WORKS: the model had room to reason 18.3K tokens and the clarify phase COMPLETED with a submit reaching the official evaluator (db-env /submit 200) for the first time in this task's history; the 18.9K-completion turn would have died under the 16384 cap",
+    "new_defect_found": "after the failed-submit debug message, the model answered in PROSE (finish=stop, no tool call) and BirdCResponder raised ToolContractError bird_c_candidate_required -> 400 -> episode killed. Official ADK semantics: a non-function-call response ENDS the runner invocation (orchestrator continues via phase state machine); it is not an error",
+    "fix_zero_cost": "TextCandidate added to BirdCCandidate union; responder returns text candidate for FinalOutput turns; _run_c records [agent note] in session memory and ends the run_session with the prose. 874 passed / Ruff green / commit 26047e2 / rebuilt + container evidence",
+    "status": "stopped before run g per pit 5 (one forward run = one authorization); run g (same experiment family task7-cmode-refit-20260915g, ~$0.02-0.05 expected) awaits user grant"
+   },
+   "run_g_first_healthy_episode": {
+    "authorization": "user '授权执行下一步' (run g, evening off-peak, cap <=$0.05)",
+    "run": "task7-cmode-refit-20260915g, attempt accf1991, 18:39-18:42 Beijing (off-peak), SUCCEEDED 161.9s; agent $0.018851 all off_peak; 4 turns (2 ask + 2 submit; final turn reasoning 15181/completion 15774 — would have died at 8192 AND 16384)",
+    "criteria_1_PASS": "dialogue replay: zero amnesia patterns; both submits REAL SQL (mesh CTE + PRU CASE classification on real schema); debug round produced a genuine revision (7 words differ); full chain clarify->submit->debug->resubmit healthy end-to-end for the first time",
+    "criteria_2_FAIL": "reward = 0.0; both submits failed official Phase 1 with 'Test case execution failed' (SQL runtime error against hidden test cases, not result mismatch); capability gate reward>0 NOT achieved on this episode",
+    "c_anchor": "run g $0.018851/episode agent-side (64K waterline lets blowout-length turns bill more); c-episode combined anchor ~$0.021 agent+sim; A4 impact ~+$1.5 vs prior estimate — negligible",
+    "status": "STOPPED per plan Task 4 (fail -> bounded diagnosis -> user ruling); remaining gap = genuine SQL quality (same class as a-mode finding), pipeline/infra chain fully healthy"
+   },
+   "run_h_cross_task_validation": {
+    "authorization": "user '按推荐决策执行下一步，并给予授权' (option 1: one more episode on a DIFFERENT task; cap <=$0.05)",
+    "selection": "cold_chain_pharma_compliance_3 c (Pilot seed-7 selection, ambiguity 2, different database than run g; reuses the existing Pilot GT split — zero new GT handling; config-hash b1889777...9017 = sha256 of the Pilot task-selection.json, re-verified on site)",
+    "run": "task7-cmode-refit-20260915h, attempt 6332977d, 19:10-19:11 Beijing (off-peak), SUCCEEDED 74.1s; agent $0.009012 all off_peak; 4 turns = 2 ask + 2 submit",
+    "result": "reward = 0.0 again; both submits 'Test case execution failed' (SQL runtime error). Structural health CONFIRMED across databases: sim genuinely answered the first clarification ('on-time delivery performance'), both submits real SQL on shipment_overview JSONB keys, debug round revised and resubmitted, zero amnesia/infra/adapter errors",
+    "pattern": "two independent tasks / two databases: structurally healthy, reward 0 with execution failures. c-mode is blind on JSONB inner keys (no execution tool in the frozen c toolset) — the official design expects the agent to resolve such unknowns via ask_user, and the user-sim's answers are limited. Remaining gap = genuine SQL quality under c-mode constraints, same class as the a-mode finding",
+    "c_anchor": "healthy c episode ~$0.009-0.019 agent-side (task-dependent); combined ~$0.011-0.021/集",
+    "status": "STOPPED per plan Task 4; awaiting user ruling on the capability gate (see HANDOFF section 3 options)"
+   }
+  }
+ },
+ "a4_selection_20260915": {
+  "date": "2026-09-15",
+  "method": "scripts/prepare_bird_pilot.py --count 600 --seed 20260915 (database+ambiguity-fallback stratification, v0.3 §16.3 precedent)",
+  "result": "600 episodes = 300 c + 300 a, 22 databases covered (13-14 per db per mode), 30/600 task overlap with prior selections (informational; store contract skips completed per experiment)",
+  "artifacts": [
+   "outputs/bird-pilot/a4/task-selection.json (public)",
+   "outputs/bird-pilot/a4/task-list-c.jsonl (300)",
+   "outputs/bird-pilot/a4/task-list-a.jsonl (300)",
+   "outputs/bird-pilot/a4/task-data/ (gitignored GT splits)"
+  ],
+  "batch_discipline": "per-mode batch lists -> same task's two modes never in one concurrent batch (pit 63; runner now fail-closes on that config)",
+  "cost": "zero paid, zero GT reads (splits written by reviewed script)"
+ },
+ "c2_reestimate_20260915": {
+  "date": "2026-09-15",
+  "anchors": {
+   "c_healthy": "agent $0.009-0.019/集 (run h/g observed) -> $0.014 agent + $0.002 sim = $0.016/集",
+   "a_v3": "agent $0.023/集 (task11 first full a episode) + $0.002 sim = $0.025/集",
+   "fx": "7.07 CNY/USD (implied by 2026-09-13 balance check)"
+  },
+  "table": {
+   "spent_through_2026_09_15": "7.93 元 (7.40 platform-checked + 0.53 today's C1-series agent, sim pending next balance check)",
+   "A4_600_episodes": "c 300x$0.016 + a 300x$0.025 = $12.30 ≈ 87 元",
+   "ablation_120": "60c+60a = $2.46 ≈ 17 元",
+   "product_90": "≈ 23 元 (沿 §16.4 锚, 执行前细估)",
+   "baseline_total": "≈ 135 元 vs 160 线 ✓ (余 ~16%)",
+   "conservative_40pct": "forward (87+17+23)x1.4 ≈ 178 + spent ≈ 186 元 — 超线 16%"
+  },
+  "riders": [
+   "off-peak-only",
+   "c 批先行 (300c 校准锚) → a 批前重估",
+   "每 25 集重估入账本",
+   "越线安全暂停",
+   "capability gate 如实标注: reward>0 未达成, A4 批内自然检验"
+  ],
+  "status": "PRESENTED to user with Gate C2 authorization request"
+ },
+ "task5_sim_compliance_and_amode_diagnosis": {
+  "date": "2026-09-15",
+  "sim_compliance": "single user-simulator service serves BOTH modes (compose topology = c/a 同配置 by construction, fairness clause satisfied); USER_SIM_MODEL is env-plumbed and swappable (one env change); whether official rules permit swapping = open item, user decision before any change",
+  "amode_diagnosis": "archeology_scan_7 a-episode: exploratory execute_sql ALL succeeded (JSONB keys correct, schema known) — the failure driver is NOT schema/execution: knowledge_definition lookup failed 3x ('ESI' variants -> Knowledge not found) so the agent INVENTED the domain metric formula; 2 clarification asks were stonewalled by the sim; submitted guessed formula -> Phase 1 mismatch",
+  "implication": "dominant failure driver across c and a = domain-knowledge resolution gaps (lookup misses + sim limits), not pipeline health; candidate policy v4 lever = teach agents to ask the user for the definition when knowledge lookup misses"
+ },
+ "a4_c_batch_20260915": {
+  "authorization": "Gate C2 approved (baseline ~135/160, riders: c-first / reestimate-25 / safe-pause / off-peak)",
+  "config_hash": "57eeec0f0ae05cf212d45c9cf3ab57c0a5e966664210fa54aa35cae715fb7127 (sha256 a4/task-selection.json)",
+  "structure": "12 batches x 25 episodes, per-batch experiment ids a4-c-20260915-b01..b12, concurrency 2, off-peak only",
+  "batches": {
+   "b01": "25/25 succeeded (1 GBK data-file crash fixed via PYTHONUTF8=1 commit 1b1b838, retried under store contract); 93 turns; $0.291085 -> $0.011643/集",
+   "b02": "25/25 succeeded, 0 infra; cleanest batch",
+   "b03": "25/25 succeeded, 0 infra",
+   "b04": "21 succeeded + 4 failed official_task_error (agent 503 transient, stderr-captured; sweep planned after b12)",
+   "b05": "25/25 succeeded, 0 infra (post top-up, zero balance errors)",
+   "b06": "25/25 succeeded, 0 infra",
+   "b07": "25/25 succeeded, 0 infra",
+   "b08": "25/25 succeeded, 0 infra",
+   "b09": "25/25 succeeded, 0 infra",
+   "b10": "25/25 succeeded, 0 infra",
+   "b11": "25/25 succeeded, 0 infra",
+   "b12": "25/25 succeeded, 0 infra"
+  },
+  "cumulative_agent_usd": 3.399746,
+  "episodes_done": 75,
+  "reward_gt0_count": 0,
+  "estimate_check": "25 集 $0.291 -> 300 集外推 ~$3.49 (under the $4.8 c-anchor line ✓); budget line intact",
+  "updated_at": "2026-09-16T00:55:00+08:00",
+  "per_episode_avg": 0.011332,
+  "episodes_succeeded": 300,
+  "failed_pending_sweep": 4,
+  "status": "COMPLETE: 304/304 succeeded (300 batch + 4 sweep); reward 0/300 (capability gate unmet, consistent with knowledge-gap finding)",
+  "balance_exhaustion_note": "agent 503s in b04 were balance errors, not task/model defects; 4 failed tasks: solar_panel_3, robot_fault_prediction_7, sports_events_19, virtual_idol_9",
+  "cumulative_spend_note": "platform-checked 7.40 (through 09-15 morning) + today's agent-side ~8.41 (0.52 C1 series + 7.89 A4 b01-b04) ≈ 15.81 元, pending user balance report",
+  "resume_plan": "after top-up: preflight b05 -> batches b05-b12 (200 episodes) + failed-episode sweep (~$2.35 agent at $0.0116/集) -> c-batch re-estimate before a批",
+  "sweep": "a4-c-20260915-sweep: 4/4 succeeded, 16 turns, $0.057003",
+  "final_agent_usd": 3.456749,
+  "final_per_episode": 0.011371,
+  "c_reestimate": {
+   "c_actual": "$0.0113/集 (vs $0.016 anchor, -29%)",
+   "spent_after_c_batch": "≈ 32.4 元 (7.93 + 24.44)",
+   "a_batch_projection": "300 × $0.025 ≈ $7.50 ≈ 53 元",
+   "forward_total": "a批 53 + 消融 17 + 产品 23 ≈ 93 元;总投影 ≈ 125 元 vs 160 ✓ (优于基准 135)",
+   "a_batch_decision": "呈用户: ①a批照跑(完成 A4 数据集) ②prompt policy v4 先行(知识 miss→问用户)再小样本验证 ③暂停"
+  }
+ },
+ "a4_a_batch_20260916": {
+  "authorization": "user ruling 2026-09-16: option (1) a-batch as planned (~53 yuan, complete A4 dataset)",
+  "config_hash": "57eeec0f0ae05cf212d45c9cf3ab57c0a5e966664210fa54aa35cae715fb7127 (sha256 a4/task-selection.json, identical to c-batch)",
+  "structure": "12 batches x 25 episodes, experiment ids a4-a-20260916-b01..b12, concurrency 2, off-peak only; task lists outputs/bird-pilot/a4/task-list-a-bNN.jsonl derived as sequential slices of task-list-a.jsonl (300 distinct tasks, no same-task concurrency)",
+  "batches": {
+   "b01": "25/25 succeeded, 0 infra, 265 turns, $0.685979 = $0.027439/集 (off_peak 25/25); wall 12:31-13:13 (~42 min); first-episode cost check PASS (archeology_scan_M_3 $0.0237 < $0.035 pause line)",
+   "b02": "22/22 succeeded (b02 list consumed 3 by v4check + 22 here = 25), 0 infra, 227 turns, $0.585564 = $0.026617/集 off_peak",
+   "v4check": "3/3 succeeded under v4 policy (disclosed), $0.056447; reward 0/3; verdict REVERT -> see v4_validation_20260916",
+   "b03": "25/25 succeeded, 0 infra, 263 turns, $0.645606 = $0.025824/集 off_peak",
+   "b04": "24/25 succeeded + 1 failed (fake_account_24: agent 500 -> ContextBudgetExceeded after 8 turns/$0.0665; deterministic-shape, sweep-excluded pending user ruling; watch: 2nd same-cause = systemic stop)",
+   "b05": "25/25 succeeded, 0 infra, 258 turns, $0.745537 = $0.029821/集 off_peak; ContextBudgetExceeded recurrence 0",
+   "b06": "25/25 succeeded, 0 infra, 248 turns, $0.682499 = $0.027300/集 off_peak; recurrence 0",
+   "b07": "25/25 succeeded, 0 infra, 249 turns, $0.649836 = $0.025993/集 off_peak; recurrence 0",
+   "b08": "25/25 succeeded, 0 infra, 248 turns, $0.671393 = $0.026856/集 off_peak; ~18 min at concurrency 4 (pilot PASS: 2.3x speedup, zero infra errors); spec v0.3 s16.2 cap 2->4 by user ruling (host-side runner, disclosed)",
+   "b09": "24/25 succeeded + 1 failed (sports_events_8: ContextBudgetExceeded, 2nd occurrence -> GC7 systemic stop at 22:4x; batch loop halted pending user ruling)"
+  },
+  "episodes_succeeded": 223,
+  "reward_gt0_count": 0,
+  "cumulative_agent_usd": 6.150604,
+  "reestimate_after_b01": {
+   "a_batch_actual_anchor": "$0.0274/集 agent (b01 measured)",
+   "a_batch_total_projection": "300 x 0.0274 = $8.23 ≈ 58 元 agent (sim ~+4 元, pending balance check)",
+   "spent_so_far": "≈ 32.4 + 4.85 (b01) ≈ 37.3 元",
+   "forward": "a-batch remaining 275 x 0.0274 ≈ 53.3 + 消融 17 + 产品 23 ≈ 93 元",
+   "total_projection": "≈ 131 元 vs 160 线 ✓ (余 ~18%)",
+   "note": "b02-b12 deferred to 18:00 evening window (b02 would straddle 14:00 peak; zero schedule pressure in 15h overnight window)"
+  },
+  "updated_at": "2026-09-16T22:45:00+08:00",
+  "capability_gate_watch": "reward>0 = 0/25 after b01 (same shape as c-batch; knowledge-gap finding; 如实标注)",
+  "reestimate_after_50": {
+   "anchor": "$0.0268/集 agent (50 集 measured)",
+   "a_batch_total_projection": "300 x 0.0268 ≈ $8.04 ≈ 57 元 agent",
+   "spent_so_far": "≈ 32.4 + 9.39 (a-batch 50 集) ≈ 41.8 元",
+   "total_projection": "≈ 131 元 vs 160 ✓",
+   "updated_at": "2026-09-16T19:00:00+08:00"
+  },
+  "failed_pending_ruling": [
+   "fake_account_24"
+  ],
+  "concurrency_change": "user approved option A: b08+ at concurrency 4 (pilot batch b08 watched for infra; revert to 2 on anomaly)",
+  "failed_context_budget": [
+   "fake_account_24",
+   "sports_events_8"
+  ],
+  "status": "TRUNCATED by user ruling 2026-09-16 22:45 (option 2): 223/300 succeeded + 2 failed (deterministic ContextBudgetExceeded: fake_account_24, sports_events_8) + 75 unrun (b10-b12); reward>0 = 0/225; telemetry imported 225/225 (0 unassigned, 0 ambiguous), eval view sums $6.1506",
+  "final_agent_usd": 6.150604,
+  "final_per_attempt_usd": 0.027336,
+  "final_per_succeeded_usd": 0.027581,
+  "episodes_attempted": 225,
+  "unrun_by_ruling": 75,
+  "authorization_chain": [
+   "a批照跑 (option 1)",
+   "v4 validation cap $0.20",
+   "concurrency 4 (option A, spec s16.2 cap 2->4 disclosed)",
+   "GC7 systemic stop after 2nd ContextBudgetExceeded",
+   "option 2 truncate"
+  ],
+  "reestimate_final": {
+   "a_batch_agent_actual": "$6.1506 ≈ 43.5 元 (225 attempts, 2301 turns, off_peak 100%)",
+   "saved_by_truncation": "75 x $0.0273 ≈ $2.05 ≈ 14.5 元",
+   "spent_estimate": "≈ 32.4 + 43.5 + 0.4 (v4 impl zero-paid; validation already inside) ≈ 75.9 元",
+   "forward": "消融 17 + 产品 23 ≈ 40 元 (a 侧消融基线现在只有 223 集主运行, 仍可用)",
+   "total_projection": "≈ 116 元 vs 160 ✓ (余 ~28%)",
+   "sim_side": "pending next user balance check (a-mode sim ~$0.002-0.004/集)"
+  }
+ },
+ "v4_validation_20260916": {
+  "authorization": "user: 授权 v4 验证 (cap $0.20, 2-3 episodes)",
+  "implementation": "prompt-policies.v4 (bird-a-policy-v3: knowledge miss -> ask user, never fabricate) + bird_a profile v4; RED->GREEN 3 guards, 888 passed; image rebuilt + container verified; zero paid",
+  "validation_run": {
+   "experiment": "a4-a-20260916-v4check",
+   "tasks": [
+    "crypto_exchange_M_1",
+    "cybermarket_pattern_1",
+    "disaster_relief_12"
+   ],
+   "cost_usd": 0.056447,
+   "per_episode_usd": 0.018816,
+   "reward": "0/3",
+   "phase1_passed": 0,
+   "submit_failures": "6x Test case execution failed",
+   "off_peak": true
+  },
+  "findings": [
+   "0 hard knowledge misses in sample -> the core v4 trigger scenario was not exercised",
+   "generalized v4 behavior (definitional gap -> ask instead of fabricate) activated 2/3 episodes; simulator gave real answers (MRS bands -> risk level = MRS value itself; difficult situations -> transport access minimal); episode 2 used the answer and validated locally",
+   "no side effects: 1 ask/episode, cost below b01 anchor"
+  ],
+  "verdict": "REVERT to bird-a-policy-v2 for b02-b12: reward-neutral in sample, strict activation criterion unmet, uniform 300-episode policy preferred over 25+275 mix; v4 archived at outputs/bird-eval/prompt-policies.v4-20260916.json as a documented future lever",
+  "batch_impact": "v4check episodes ran under the v4 policy (disclosed); counted toward the 300-episode a-batch total (25+3+272)"
+ },
+ "ablation_reestimate_20260917": {
+  "design": "v0.3 s17.2: 30 paired tasks x c/a x A/B = 120 episodes; A=stop on first failed submit (BIRD_ABLATION_CONDITION=a), B=official repair semantics (default); same 60-episode list run twice under distinct experiment ids",
+  "selection": "seed 20260916, 30 tasks from the 155 c/a-paired A4 tasks (GT splits already on disk, zero new GT processing), stratified 1 per db-family prefix, 30 distinct families",
+  "artifacts": {
+   "pool": "outputs/bird-pilot/ablation/task-pool-30.jsonl",
+   "config_hash": "e542a7217badae155a6720fdaf6d477aed75f775e04e75a4276904824b7b7114 (sha256 of pool file)",
+   "runner_list": "task-list-60.jsonl"
+  },
+  "implementation": "condition A committed e0b3844 (adapter gates + tests, 891 passed) + compose wiring d70b429; image rebuilt + container-verified; zero paid",
+  "cost_estimate": {
+   "agent": "60c x $0.0113 + 60a x $0.0273 = $2.32 ≈ 16.4 元 (A-condition slightly cheaper, kept conservative)",
+   "sim": "~$0.3 ≈ 2 元",
+   "total": "≈ 18-19 元; suggested cap 25 元"
+  },
+  "wall_clock": "~1h at concurrency 4 (A episodes shorter), fits tonight off-peak window (now -> 09:00)",
+  "expectation": "descriptive repair-value difference on this subset (s17.2 explicitly forbids generalization); reward expected ~0 under both conditions (knowledge-gap mechanism), P1/P2/reward/turns/cost reported per condition",
+  "status": "PRESENTED to user: ablation gate (cap 25 元) pending authorization"
+ },
+ "ablation_repair_20260917": {
+  "authorization": "user: 授权消融 (cap 25 元, riders: off-peak-only/GC7/balance-503-pause/re-estimate-per-30)",
+  "design": "30 paired tasks x c/a x A/B; B=official repair semantics, A=stop on first failed submit (BIRD_ABLATION_CONDITION=a)",
+  "config_hash": "e542a7217badae155a6720fdaf6d477aed75f775e04e75a4276904824b7b7114",
+  "structure": "per condition: c-30 then a-30 serial invocations at concurrency 4 (same-task cross-mode never concurrent, pit 63); experiment ids ablation-repair-20260917-b / -a",
+  "condition_b": {
+   "date": "2026-09-17 12:37-13:19 midday off-peak",
+   "episodes": "60/60 succeeded (30c+30a), 0 infra",
+   "agent_usd": 1.18849,
+   "per_episode_usd": 0.019808,
+   "turns": 444
+  },
+  "condition_a": {
+   "date": "2026-09-17 18:03-18:39 evening off-peak",
+   "episodes": "60/60 succeeded (30c+30a), 0 infra",
+   "agent_usd": 0.484959,
+   "per_episode_usd": 0.008083,
+   "turns": 325,
+   "semantics_live_check": "A/c first episodes show exactly 1 submit (B ~1.87-2.27); 27/30 done in ~5 min vs B 10 min"
+  },
+  "running_total_usd": 1.18849,
+  "cap_usd": 25.0,
+  "telemetry_import": {
+   "records": 276,
+   "groups": 120,
+   "assigned": 120,
+   "unassigned": 0,
+   "note": "c-mode spool = one file per model turn -> per-(experiment,task,mode) pre-aggregation added in import variant; corrected an initial undercount (jsonb merge is top-key replace, re-run is safe); DB cell sums match spool aggregation exactly"
+  },
+  "comparison": {
+   "P1_pass": "A 0/60 vs B 0/60 - repair rescued zero episodes on this subset",
+   "reward": "0/120 both conditions (capability gate unmet, knowledge-gap mechanism)",
+   "turns": "B/c 125 (4.2/集) vs A/c 91 (3.0/集); B/a 319 (10.6/集) vs A/a 234 (7.8/集)",
+   "submits": "B/c 1.87/集, B/a 2.27/集; A 1.00/集 exact",
+   "cost": "B $1.1885 vs A $0.4850; repair = 2.4-2.7x cost for zero P1 gain"
+  },
+  "final_agent_usd": 1.673449,
+  "status": "COMPLETE: 120/120 succeeded, 0 infra, off_peak 100%; descriptive verdict per s17.2: repair value = 0 at current capability (report as DoD finding; no generalization)"
+ },
+ "product_eval_20260917": {
+  "authorization": "user: 授权产品评测 (cap 5 元) after human review of 40 visible questions",
+  "design": "s17.1: 40 visible questions x A(full catalog)/B(thresholded BM25 route-2) + closed 10 with winner config; correctness=multiset row equality, Gold table Recall@5, tokens/cost/latency",
+  "artifacts": {
+   "bank": "data/product-eval/{development,regression,closed}.jsonl",
+   "glossary": "data/product-eval/glossary-zh.json",
+   "config_hash_source": "task pool sha256 e542a721... is ablation; product eval uses live gold re-execution integrity check"
+  },
+  "runs": {
+   "ab_visible": {
+    "experiment": "product-eval-20260917-v3",
+    "agent_usd": 0.050227,
+    "rows": 80
+   },
+   "closed_winner_a": {
+    "experiment": "product-eval-20260917-closed",
+    "agent_usd": 0.009269,
+    "rows": 10
+   }
+  },
+  "results": {
+   "A": {
+    "correct": "3/40 (7.5%)",
+    "executed": "7/40",
+    "recall": 1.0,
+    "tokens": 170696,
+    "usd": 0.032
+   },
+   "B": {
+    "correct": "2/40 (5.0%)",
+    "executed": "4/40",
+    "recall": 0.91,
+    "tokens": 64046,
+    "usd": 0.0182
+   },
+   "closed_A": {
+    "correct": "1/10",
+    "executed": "1/10",
+    "usd": 0.009269
+   }
+  },
+  "verdict": "s10.2 preregistered gate: B rejected (correctness not +5pp: 5.0% vs 7.5%; recall 0.910 < 1.0) -> winner = A full schema; B saves 62.5% context tokens — honest small-schema outcome anticipated by spec",
+  "key_finding": "dominant failure = policy compliance: single-step harness has no SqlReasoner repair (product full-loop does); model default SQL violates function allowlist ~60% and skips tool call ~26% — measured honestly as harness v1 limitation",
+  "discovered_defects_fixed": [
+   "QueryEngine AstPolicy rejected every AND/OR filter (sqlglot boolean ops subclass Func) — real product defect, any multi-condition query unexecutable; fixed with operator exemption + test",
+   "c/gold digest mismatch: gold reference now executes via psycopg reference path (bank-builder-identical), agent SQL still via policy engine",
+   "pit 59 recurrence: selector loop wired into runner"
+  ],
+  "final_agent_usd": 0.059496,
+  "cap_usd": 5.0
+ },
+ "review_corrections_20260918": {
+  "source": "codex read-only review docs/reviews/codex-review-findings.md (23 claim checks, 11 code findings)",
+  "claim_corrections": [
+   "c batch \"304/304\" double-counted sweep: DB truth = 305 attempts (300 succeeded incl 4 balance-failure retries, 4 failed, 1 infra retried); 300 tasks each completed",
+   "A4 totals: 530 attempts / 523 succeeded / 6 failed / 1 infra; scored 523, reward>0 = 0 (2 a-failures unscored, not reward=0)",
+   "ablation: cost ratio ~2.37-2.75x but TURNS ratio ~1.36-1.37x (previous text copied cost ratio onto turns)",
+   "product eval scoring false negatives (codex F1/F2): Decimal-vs-str boundary + per-row cell bagging -> A 3->5 (12.5%), B 2->4 (10.0%), closed 1/10; fixed scorer + free re-score of saved SQL; verdict unchanged (B not +5pp, recall 0.91<1.0)",
+   "token label: total tokens -62.48%; prompt tokens -72.90% (was mislabeled context tokens)",
+   "product v2 failed run actually spent $0.012022332 of model calls (was logged zero-cost); product total $0.071519040"
+  ],
+  "code_fixes": [
+   "scoring contract rewritten (type-anchored pairs, consistent column permutation, ordered/unordered split)",
+   "runner: queued tasks no longer start after stop (F4); gather state/store failures propagate (F6)",
+   "official executor: cancellation kills the orchestrator subprocess (F5)",
+   "sse: reconnect id advances by run cursor, not attempt sequence (F3)",
+   "spool_importer: unique-candidate shortcut honors time window (F9)",
+   "question_eval: string prefix check removed, AST policy decides (F10)",
+   "ast_policy: identity projection wrappers rejected (F7); window/scalar-subquery aggregates no longer bypass detail LIMIT (F11)"
+  ],
+  "budget_restatement": "mixed-basis estimate: 7.93 (= 7.40 platform-checked + 0.53 C1-series agent estimate, through 09-15 am; sim pending — label corrected 2026-09-18, previously mislabeled 'historical platform reads', see table.spent_through_2026_09_15) + (3.456749 + 6.150604 + 1.673449 + 0.071519) x 7.07 = 88.19 yuan; simulator-side still pending; NOT a platform-verified final settlement",
+  "status": "round-1 (09-18 am): corrections applied to final report/README/interview-prep; review file kept untracked by codex. round-2 (09-18 pm): codex verification found body/docs still carrying old calibers + this label error; P1-1/P1-2 scorer defects, P1-3 nested-star bypass, bank row_order metadata (10 questions) and dev-15/reg-03 EPOCH gold_sql fixed; body/README/interview-prep/HANDOFF current-state restated (643 scored denominator, 12.5% vs 10.0%, mixed-basis estimate, narrowed peak claim, 932 tests); this label corrected"
+ }
+}

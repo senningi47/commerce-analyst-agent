@@ -465,3 +465,17 @@ Codex 依交接提示词完成只读审查（`docs/reviews/codex-review-findings
 3. **代码修复（F3–F11）**：Runner 停止后排队任务不再启动（F4）；取消杀死官方子进程（F5）；gather 状态冲突传播而非 exit 0（F6）；SSE 以 run cursor 推进重连位（F3）；导入器唯一候选过时间窗（F9）；harness 移除窄前缀检查（F10）；身份列包装绕过封堵（F7，COUNT 豁免）；窗口/标量子查询不再绕过明细 LIMIT（F11）。回归测试 9 条（tests/unit/review_response/）。
 4. **口径纪律**：产品 v2 失败轮 $0.0120 模型费用补记；「88 元」定性为混合口径估算（非平台实扣终账）；「零 peak 泄漏」收窄至 BIRD 轨现存遥测；账本新增 review_corrections_20260918 节。
 5. **判定**：919 passed / 140 skipped + Ruff 全绿；审查报告保持未跟踪（Codex 约定），处置记录入本日志与账本。
+
+
+## 36. Codex 二轮复核处置：8 项验证通过确认、评分器两缺陷重写、嵌套 star 封堵、题集行序契约更正、文档口径落地（2026-09-18，零付费）
+
+Codex 依回复提示词完成独立复核（`docs/reviews/codex-review-verification.md`）：8 项 FIXED-VERIFIED、F2/F7 FIXED-DISPUTED（设计采纳、实现有错）、F8 NOT-FIXED（如实披露）；免费重评分 A 5/40、B 4/40、封闭 1/10 复现。其 4 项 P1 逐项复现核实**全部属实**，处置：
+
+1. **评分器重写（P1-1/P1-2）**：ordered 分支 `pairwise` 误比相邻行（单行必真、正确多行判错、错误单行放行）→ 参考行 i 对实际行 i 逐单元格比较；unordered 分支先按行位置配对再归一化（重排的文本/NULL 结果必错、隐性依赖库行序）→ 两侧按参考列类型独立归一化后再比较（顺序 = 逐位、无序 = 行多重集）；`scoring.py` 尾部死代码清除。
+2. **策略硬化（P1-3）**：`_contains_nested_star` 拒绝投影表达式内的嵌套 star（`(s.*)`/`COALESCE(s.*,s.*)`/`COUNT(s.*)`，防复合类型字符串携身份过序列化边界）；`COUNT(*)` 豁免保留，合法裸 star 不受影响；保守误拒（COUNT FILTER 命名身份列、CTE 派生计数别名身份名）按披露接受，不建血缘系统。
+3. **题集更正（P2-1/P2-3）**：row_order 逐题声明——dev-02/dev-04/reg-03 明说降序原误标 unordered（新增 `descending` 取值）、reg-02 明说升序；ordered 集 6→10 题；dev-15/reg-03 参考 SQL interval 除法不折算天数 → `EXTRACT(EPOCH FROM (…)) / 86400.0`；builder 升级三层验收（真实库执行 + AST 合规 + **QueryEngine 边界自评分** 50/50）。题面与语义零变化。
+4. **免费重评分**（新评分器 + 新元数据重放 v3/closed 保存 SQL）：A 5/7 执行正确（5/40 = 12.5%）、B 4/4（10.0%）、closed 1/1（10.0%）——与一轮更正数字一致；dev-02 在 ordered 契约下仍正确。已披露局限：保存运行仅覆盖 1 道有序题；单行结果值互换与合法列重排不可区分（值匹配契约）。
+5. **文档口径落地（P1-4）**：最终报告正文（0/643、12.5%/10.0%、混合口径估算、peak 收窄、932 测试、三层验证）+ README + 面试材料 + HANDOFF 当前态全部改用更正后口径并新增 §8（二轮复核与处置）；历史带日期记录保留原值；HANDOFF §8.14 补 88.1 元来源标签更正标记；账本 budget_restatement 来源更正（7.93 = 7.40 平台核对 + 0.53 agent 估算）；F8 与导入器库级聚合在 HANDOFF §5 落为具体排期项（迁移 + 验收条件）。
+6. **测试**：+13 条回归（评分边界 7、AST 嵌套 star 4、F3 同生成器三连拉取 1、F5 fake-process 取消杀子进程 1）→ **932 passed / 140 skipped** + Ruff 全绿。
+7. **Day-4 回填披露（P2-4）**：`89390d8` 同时有意补录 Day 4 遗留授权测试 `tests/unit/product_eval/test_day4_authorization.py`（7 条，用户同意保留）——属既有本地测试入库，非本轮新增覆盖。
+8. **判定**：零付费、零 GT 读取、产品 PG 只读；复核报告保持未跟踪（Codex 约定）；commit 待授权。

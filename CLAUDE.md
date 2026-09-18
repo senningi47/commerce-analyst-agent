@@ -16,29 +16,32 @@
 Day 4 overall: PASS；Day 5 Phase A + Gate P preflight 全 PASS（模型已切 deepseek-flash）
 Task 13 Pilot: 完成（两门 FAIL 为 Day 6 输入基线；付费纪律：peak 档 = 2×，一律空闲档调度）
 Day 6+7 修复链: c-mode 失忆机制修复（phase-memory + 64K 水位线 + 文本轮）实测起效（run g/h 结构健康）
-A4 c 批: COMPLETE 304/304，agent $3.4567 = $0.0113/集；reward 0/300（知识缺口，如实标注）
+A4 c 批: COMPLETE **300 任务完成（305 attempts：300+4 failed+1 infra；「304/304」系 sweep 重复计入已更正）**，agent $3.4567 = $0.0113/成功任务；reward 0/300（知识缺口，如实标注）
 A4 a 批: 裁定②截停——223/300 + 2 确定性 ContextBudgetExceeded + 75 unrun；agent $6.1506 = 43.5 元
 消融 §17.2: **COMPLETE 120/120**（30 配对题 × c/a × A/B）；**P1 A 0/60 vs B 0/60 = 修复救回 0 集**
          （描述性结论：当前能力下修复价值 0，修复经济学为负 2.4–2.7×）；agent $1.6734 = 11.8 元（cap 25 内）
          条件 A 实现 e0b3844（adapter 停止门，BIRD_ABLATION_CONDITION=a opt-in）+ compose 接线 d70b429
          新坑 79（c 模式 spool 每轮一文件 → 导入预聚合修正）/80（混合清单拆单模式串行）
-预算: spent ≈88.1 元（含产品评测 0.42 元）；**总账 ≈88.1/160 ✓（余 ~45%）**
+预算: spent ≈88.1 元（**混合口径估算** = 7.40 平台核对 + 0.53 agent 估算 + 遥测×7.07，sim 待核对）；**总账 ≈88.1/160 ✓（余 ~45%）**；非平台实扣终账
 用户动作链: ①a批照跑 ②v4 验证 ③并发 A ④a批截停② ⑤授权执行下一步 ⑥授权消融 ⑦①构建 ⑧授权产品评测——全部行使完毕
 产品评测 §17.1: COMPLETE——题集从零构建（50 题双验证）+ BM25 检索路线 + harness（c52bc67/09871dc）
-         A/B×40 + 封闭 10（$0.0595）：**§10.2 判据否决检索、全量 Schema 胜出**（正确率 7.5% vs 5.0%、recall 1.0 vs 0.91、token −62.5%）
+         A/B×40 + 封闭 10（$0.0595）：**§10.2 判据否决检索、全量 Schema 胜出**（正确率 12.5% vs 10.0%（审查更正后重评分口径；原始执行轮 7.5%/5.0% 系评分假阴性）、recall 1.0 vs 0.91、总 token −62.5%）
          构建期发现产品真缺陷并修复：AND/OR 被函数白名单误杀（任何多条件查询不可执行）；单步 harness 策略合规缺口 ~60% 如实测量
 Codex 审查回应: 只读审查 23 抽验 + 11 findings 全部处置——**成功数重复计算/评分假阴性/预算口径混用全部更正**
          （A4 530 attempts/523 有效评分、c 300 任务完成非 304；产品修正后 12.5%/10.0%、裁决不变；v2 轮 $0.0120 补记）
          6 项代码缺陷修复 + 9 回归测试（F3–F11）；策略 AND/OR 误杀修复的边界再硬化（F7/F11）；919 passed
-         预算定性: 混合口径估算 88.19 元（历史平台读数 + 遥测×7.07），非平台实扣终账；sim 待核对
-待办（均可选）: push 授权；仓库补录裁定；审查 P2（SSE 持久游标列、导入器库级聚合）排期
+         预算定性: 混合口径估算 88.19 元（7.40 平台核对 + 0.53 估算 + 遥测×7.07），非平台实扣终账；sim 待核对
+Codex 二轮复核（§2.39/日志 §36）: 8 项验证通过确认、F8 如实未修；其 4 项 P1 复现属实并全部处置——评分器 ordered 逐位/unordered 先归一化再多重集重写（P1-1/2）、
+         表达式内嵌套 star 一律拒绝（P1-3，COUNT(*) 豁免保留）、题集 row_order 10 题声明 + dev-15/reg-03 EPOCH 折算 + builder 三层验收 50/50（P2-1/3）、
+         文档口径落地正文与对外材料（P1-4）；重评分 A 5/40、B 4/40、closed 1/10 不变；**932 passed / 140 skipped**；已披露局限（单行列值互换不可区分、保存运行仅覆盖 1 道有序题）
+待办（均可选）: 两轮审查处置 commit 授权（§8.15/§8.16）；push 授权；仓库补录裁定；审查 P2（SSE 持久游标列 F8、导入器库级聚合）排期
 终态证据: 消融报告（2026-09-17-ablation-repair-120.md）+ a 批报告 + 执行日志 §30–§33 + 账本四节；消融收官文档 commit 待授权；未 push
 ```text
 Day 4 overall: PASS；Day 5 Phase A + Gate P preflight 全 PASS（模型已切 deepseek-flash）
 Task 13 Pilot: 完成（两门 FAIL 为 Day 6 输入基线；付费运行纪律：peak 档 = 2×，一律空闲档调度）
 Day 6: Task 1–11 全部完成；c-mode 失忆机制定位并修复（phase-memory + 64K 水位线 + 文本轮）；run g/h 结构健康跨库成立
 Day 7: 四修复项 + A4 清单 600 集入库（885 passed 基线）
-A4 c 批: COMPLETE 304/304 succeeded，agent $3.4567 = $0.0113/集；reward 0/300（知识缺口，如实标注）
+A4 c 批: COMPLETE **300 任务完成（305 attempts：300 succeeded + 4 failed + 1 infra；「304/304」系 sweep 重复计入已更正）**，agent $3.4567 = $0.0113/成功任务；reward 0/300（知识缺口，如实标注）
 A4 a 批: 用户裁定②截停——**223/300 succeeded + 2 集确定性 ContextBudgetExceeded（fake_account_24/sports_events_8）+ 75 unrun（b10–b12）**
          reward 0/225 如实标注；agent $6.1506 = 43.5 元（$0.0273/attempt，off_peak 100%）
          v4（知识 miss→问用户）验证=行为激活 2/3、reward 中性 → 回退 v2 归档备用（$0.056/授权 $0.20）
