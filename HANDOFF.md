@@ -1,9 +1,9 @@
-# CommerceAnalyst 项目交接：**收官 + Codex 三轮审查处置完成**——数字全面更正（成功数/评分假阴性/预算口径）、11 项 findings 全部处置（10 项修复 + F8 延期披露）、评分器 ordered/unordered 重写、嵌套 star 封堵、题集行序契约、文档口径落地、bool 归一化边界修复；审查报告 docs/reviews/codex-review-{findings,verification,verification-r2}.md
+# CommerceAnalyst 项目交接：**收官 + Codex 四轮审查循环关闭（终局签署：有限范围收官声明成立）**——11 项 findings 全部处置（10 项修复 + F8 延期披露）、评分器重写与 bool 边界、题集行序契约、文档口径落地；审查报告 docs/reviews/codex-review-{findings,verification,verification-r2,final-ruling}.md
 
 > 更新时间：2026-09-18（Asia/Shanghai），更新者：Claude Code（GLM）  
 > 工作区：`D:\git-projects\commerce-analyst-agent`  
-> 当前分支状态：`main`（未 push；三轮审查处置已提交至 cfd77f0，三轮 P2 修复 commit 待用户授权）  
-> 交接状态：**closure-supported-with-reservations**——三段评测 + Phase E 收官 + Codex 三轮审查处置完成（终态见 §3；Codex 终局裁断 = 支持有保留的有限范围收官，`codex-review-verification-r2.md` 保持未跟踪）；剩余全部为可选后续（§5）  
+> 当前分支状态：`main`（未 push；审查处置已提交至 e6053fd，签署记录 commit 待用户授权）  
+> 交接状态：**closure-signed**——Codex 终局裁定四项全 ACCEPT 并签署「有限范围收官声明成立（保留已披露边界）」，审查循环关闭（`codex-final-ruling.md` 保持未跟踪）；剩余全部为可选后续（§5）  
 > PowerContext scope：`git:github.com/senningi47/commerce-analyst-agent`  
 > Durable Handoff：PowerContext `handoff/handoff#30`（2026-09-15 提交，exact revision=30；#29 为 Day 7 计划产出轮）
 
@@ -421,9 +421,13 @@ Codex 验证二轮处置：6 项 FIXED-VERIFIED、F8 NOT-FIXED 但延期披露�
 3. **重放脚本退出码（P3，已修复）**：`rescore_saved_runs.py` 报告完成即 exit 0（题目答错 ≠ 脚本失败）；helper 未跟踪，不影响库结论。
 4. **判定**：**933 passed / 140 skipped**（+1 bool 边界）+ Ruff 全绿；零付费；commit 待授权。收官口径 = 有限范围收官 + 已披露保留，不再声称「全部问题清零」（最终报告 §9）。
 
+### 2.41 Codex 终局裁定轮（Claude Code，2026-09-18，零付费；裁定 `docs/reviews/codex-final-ruling.md` 保持未跟踪）
+
+Codex 对 e6053fd 增量做终局验证与裁定：增量验证 11 项全 PASS（bool 修复、文档残余核销、helper 退出码、重评分复现 5/40、4/40、1/10、933/140 + Ruff、40 项 bool 边界独立断言），四项裁决全部 ACCEPT，**签署「有限范围收官声明成立（保留已披露边界）」，审查循环关闭**。四轮累计：findings 11 项 + 二轮 4 项 P1 + 三轮增量，全部修复验证或明确接受延期，无「必须本轮修复」的开放项。签署保留五项边界（F8 延期、值匹配契约、COUNT 保守误拒、混合口径预算、有序题覆盖）。签署记录已入最终报告 §10；本节与日志 §38 为关闭记录。
+
 ## 3. 当前卡在哪里
 
-**无阻塞——三段评测 + Phase E 收官 + Codex 两轮审查处置全部完成（§2.39）；剩余全部为可选后续（见 §5），等待用户裁定。**
+**无阻塞——三段评测 + Phase E 收官 + Codex 四轮审查循环关闭（终局签署，§2.41）；剩余全部为可选后续（见 §5），等待用户裁定。**
 
 - **a 批终账**：agent $6.1506 = 43.5 元（225 attempts / 2,301 turns，off_peak 100%）；**reward 0/223 有效评分如实标注**（225 attempts / 223 succeeded / 2 failed）；telemetry 225/225 精确归属。
 - **消融终账（新）**：120/120 succeeded，agent $1.6734 = 11.8 元（cap 25 元内）；**修复救回 0 集**（P1 A 0/60 vs B 0/60）——§17.2 描述性结论 = 当前能力下修复价值 0，修复经济学为负（2.4–2.7× 费用零增益）。
@@ -821,4 +825,10 @@ Codex 验证二轮处置：6 项 FIXED-VERIFIED、F8 NOT-FIXED 但延期披露�
 - **待 commit**：bool 归一化修复 + 边界测试（src/tests）、重放脚本退出码（未跟踪不入库）、文档残余更正（最终报告 §8.1/§8.6 + 新 §9、HANDOFF 标题/入口/§3）；验证报告 `docs/reviews/codex-review-verification-r2.md` 保持未跟踪（Codex 约定）。
 - **判定终态**：**933 passed / 140 skipped** + Ruff 全绿（以提交前复跑为准）。
 - **Codex 终局裁断**：支持有保留的有限范围收官；三个设计取舍全部接受；F8 延期披露充分。
+- **零付费零 DB 变更零进程变更**；未 push。
+
+### 8.18 终局裁定轮（2026-09-18，零付费，commit 待授权）
+
+- **待 commit**：签署记录（最终报告 §10、本文件标题/交接状态/§2.41/§3 首行、日志 §38、CLAUDE.md 状态）；裁定文件 `docs/reviews/codex-final-ruling.md` 保持未跟踪（Codex 约定）。
+- **终局**：四项裁决全 ACCEPT；**签署「有限范围收官声明成立（保留已披露边界）」；审查循环关闭**。增量验证 11 项全 PASS（含 40 项 bool 边界断言、重评分复现、933/140 + Ruff）。
 - **零付费零 DB 变更零进程变更**；未 push。
