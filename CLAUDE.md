@@ -27,8 +27,11 @@ A4 a 批: 裁定②截停——223/300 + 2 确定性 ContextBudgetExceeded + 75 
 产品评测 §17.1: COMPLETE——题集从零构建（50 题双验证）+ BM25 检索路线 + harness（c52bc67/09871dc）
          A/B×40 + 封闭 10（$0.0595）：**§10.2 判据否决检索、全量 Schema 胜出**（正确率 7.5% vs 5.0%、recall 1.0 vs 0.91、token −62.5%）
          构建期发现产品真缺陷并修复：AND/OR 被函数白名单误杀（任何多条件查询不可执行）；单步 harness 策略合规缺口 ~60% 如实测量
-Phase E 收官: 最终报告 + README + 面试材料入库（2026-09-17-final-report.md / README.md / docs/interview-prep.md）——**项目 CLOSED**
-待办（均可选）: push 授权；Day 1–2 工件与早期计划补录裁定；sim 余额核对
+Codex 审查回应: 只读审查 23 抽验 + 11 findings 全部处置——**成功数重复计算/评分假阴性/预算口径混用全部更正**
+         （A4 530 attempts/523 有效评分、c 300 任务完成非 304；产品修正后 12.5%/10.0%、裁决不变；v2 轮 $0.0120 补记）
+         6 项代码缺陷修复 + 9 回归测试（F3–F11）；策略 AND/OR 误杀修复的边界再硬化（F7/F11）；919 passed
+         预算定性: 混合口径估算 88.19 元（历史平台读数 + 遥测×7.07），非平台实扣终账；sim 待核对
+待办（均可选）: push 授权；仓库补录裁定；审查 P2（SSE 持久游标列、导入器库级聚合）排期
 终态证据: 消融报告（2026-09-17-ablation-repair-120.md）+ a 批报告 + 执行日志 §30–§33 + 账本四节；消融收官文档 commit 待授权；未 push
 ```text
 Day 4 overall: PASS；Day 5 Phase A + Gate P preflight 全 PASS（模型已切 deepseek-flash）

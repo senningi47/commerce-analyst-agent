@@ -1,4 +1,4 @@
-# CommerceAnalyst 项目交接：**项目收官**——A4（c 全量/a 截停 223）+ 消融（修复价值 0）+ 产品评测（全量 Schema 胜出）全部完成；最终报告/README/面试材料已入库
+# CommerceAnalyst 项目交接：**收官 + Codex 审查回应完成**——三段评测数字全面更正（成功数/评分假阴性/预算口径）、6 项代码缺陷修复；审查报告 docs/reviews/codex-review-findings.md
 
 > 更新时间：2026-09-16 23:15（Asia/Shanghai），更新者：Claude Code（GLM）  
 > 工作区：`D:\git-projects\commerce-analyst-agent`  
@@ -388,6 +388,17 @@ security/transaction gate `9 passed in 5.59s`；唯一正向 seller-risk scenari
 3. `docs/interview-prep.md`——90 秒叙事、8 个深挖 Q&A、数字速查、复盘（如果重来）。
 4. 收官 commit（见 §8.14）；HANDOFF/CLAUDE 终态刷新。
 
+### 2.38 Codex 审查回应轮（Claude Code，2026-09-18，零付费；审查文件 `docs/reviews/codex-review-findings.md`，处置见执行日志 §35 与账本 review_corrections_20260918）
+
+Codex 完成只读审查（23 条抽验 + 11 findings）后，逐条核实：全部属实/采纳。处置：
+
+1. **数字更正**：c 批 304/304 → **300 任务完成（305 attempts：300+4 failed+1 infra）**；A4 527/529、0/627 → **530 attempts / 523 succeeded / 523 有效评分 / 0 正 reward**；消融轮次比 1.37×（费用 2.4–2.7× 分列）。
+2. **评分契约重写（F1/F2）**：Decimal-vs-str 边界 + 逐行单元格乱配 → 4 假阴性；参考侧类型锚定 + 一致列置换 + 有序/无序分约 → 免费（保留 SQL）重评分：产品 A 3→5（12.5%）、B 2→4（10.0%）、封闭 1/10；**§10.2 裁决不变**。
+3. **六项代码修复 + 9 条回归测试**（tests/unit/review_response/）：F3 sse run-cursor、F4 停止后排队任务不启动、F5 取消杀官方子进程、F6 gather 状态冲突传播、F9 导入器时间窗、F10 移除窄前缀检查。
+4. **策略硬化（F7/F11）**：身份列仅可在 COUNT 内投影（包装/拼接/MIN 封堵）；窗口/标量子查询不再绕过明细 LIMIT。发现过程修复了 bank 2 题（reg-01/10 COUNT 分母合法化、reg-05 重设计）。
+5. **口径纪律**：产品 v2 失败轮 $0.0120 补记；「88 元」= 混合口径估算（非平台实扣终账）；「零 peak 泄漏」收窄至 BIRD 轨现存遥测；DoD 语气收窄（能力门未过下的有限范围评测经裁定）。
+6. **判定**：**919 passed / 140 skipped** + Ruff 全绿；commit `89390d8`（代码）+ 收官文档更正；审查文件保持未跟踪（Codex 约定）。
+
 ## 3. 当前卡在哪里
 
 **无阻塞——a 批截停（223/300）+ 消融 §17.2（120/120）+ 产品评测 §17.1（A/B + 封闭 10）全部收官；剩余 = 最终报告/README/面试材料（Phase E）。**
@@ -398,7 +409,7 @@ security/transaction gate `9 passed in 5.59s`；唯一正向 seller-risk scenari
 - **能力门终态**：A4 + 消融全程 reward>0 = 0/645；机制 = 知识缺口 + SQL 运行期质量；v4 杠杆已验证「行为激活、reward 中性」归档备用；修复杠杆经消融实证同样无效。
 - **产品评测终态（新）**：§10.2 预注册判据否决路线 2 检索（正确率 5.0% vs 7.5%、recall 0.910<1.0、token −62.5%）→ **全量 Schema 胜出**（规格预期）；单步 harness 无修复环 → 策略合规缺口 ~60% 如实测量；构建期发现并修复产品真缺陷（AND/OR 被函数白名单误杀）。
 - **上下文溢出**：bird_a 长对话 0.9% 确定性失败（2 集），裁定不修、如实标注。
-- **待用户（均非阻塞）**：push 授权；Day 1–2 工件/4 份早期计划补录裁定；sim 侧余额核对。
+- **待用户（均非阻塞）**：push 授权；Day 1–2 工件/4 份早期计划补录裁定；sim 侧余额核对；审查遗留 P2（SSE 持久游标列、导入器库级聚合）排期裁定。
 
 ## 4. 当前验证证据（2026-09-11 Task 18 测试数字 + 2026-09-12 Gate G/清理现场，最终源码状态，Claude Code）
 
@@ -766,3 +777,11 @@ security/transaction gate `9 passed in 5.59s`；唯一正向 seller-risk scenari
 - **零付费零 DB 变更零进程变更**；测试终态 907 passed / 140 skipped + Ruff 全绿。
 - **项目终账**：agent 实测累计 ≈$7.94 ≈ 56.1 元（a 批 6.15 + 消融 1.67 + 产品 0.06 + 历史门控与验证）；平台核对口径累计 ≈88.1 元 / 160 线。
 - **未 push**（80+ commits 本地）。
+
+### 8.15 审查回应轮（2026-09-18，零付费，commit 待授权）
+
+- **待 commit**：审查回应文档更正（最终报告/README/面试材料）、执行日志 §35、本文件、`CLAUDE.md`；审查文件 `docs/reviews/codex-review-findings.md` 保持未跟踪（Codex 约定）。
+- **已入库**：`89390d8`（6 项代码修复 + 评分契约重写 + 9 条回归测试 + 题集 v2 重生成）。
+- **判定终态**：**919 passed / 140 skipped** + Ruff 全绿。
+- **审查结论采纳情况**：23 条抽验全部处置（PASS 保留、FAIL 更正）；11 findings 中 F1–F7、F9–F11 已修复+测试，F8（SSE 持久游标列）与「导入器库级聚合」列为待排期 P2；无争议驳回项。
+- **账本**：新增 review_corrections_20260918 节（含产品 v2 $0.0120 补记与预算混合口径重述）。
