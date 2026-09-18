@@ -2,8 +2,8 @@
 
 > 更新时间：2026-09-18（Asia/Shanghai），更新者：Claude Code（GLM）  
 > 工作区：`D:\git-projects\commerce-analyst-agent`  
-> 当前分支状态：`main`（未 push；审查处置已提交至 e6053fd，签署记录 commit 待用户授权）  
-> 交接状态：**closure-signed**——Codex 终局裁定四项全 ACCEPT 并签署「有限范围收官声明成立（保留已披露边界）」，审查循环关闭（`codex-final-ruling.md` 保持未跟踪）；剩余全部为可选后续（§5）  
+> 当前分支状态：`main` → **已 push 至 `origin/main`（github.com/senningi47/commerce-analyst-agent，2026-09-18，89 commits 全历史 @ `86061b2`，跟踪已建立）**  
+> 交接状态：**closure-signed**——Codex 终局裁定四项全 ACCEPT 并签署「有限范围收官声明成立（保留已披露边界）」，审查循环关闭（四份审查文件已随 `1440185` 归档入库）；后续安排按终局裁定执行（§5）  
 > PowerContext scope：`git:github.com/senningi47/commerce-analyst-agent`  
 > Durable Handoff：PowerContext `handoff/handoff#30`（2026-09-15 提交，exact revision=30；#29 为 Day 7 计划产出轮）
 
@@ -466,7 +466,7 @@ Codex 对 e6053fd 增量做终局验证与裁定：增量验证 11 项全 PASS�
 
 ## 5. 下一步计划（CLOSED——均为可选后续）
 
-1. **push**：Codex 终局后续裁定同意 push（归档完成后、前置检查：分支/远端/提交范围/敏感信息）；四份审查文件已随 `1440185` 归档，`codex-final-ruling.md` 为最终结论。
+1. **push（✅ 已执行，2026-09-18）**：按终局后续裁定执行——归档 commit `1440185` + 裁定记录 `86061b2` 后 push；前置检查四项全绿（分支 main / 远端 origin=github.com/senningi47/commerce-analyst-agent / 89 commits 全历史 d87768a→86061b2 / 敏感扫描 0 真实命中 + `.env` 从未入库）；`git push -u origin main` 成功（新远端分支 + 跟踪建立）。
 2. **仓库补录（分批，另开归档任务）**：裁定要求优先补齐**干净 checkout 运行所必需**的代码/迁移/配置/测试——实际缺口经盘点远大于文档原记载「Day 1–2 部分工件」：Day 1–3 基础层整体未入库（`knowledge/`、`model/`、`context_builder/` 实现、`value_resolver/`、迁移 0001–0003、`alembic.ini`、`compose.yaml`、`data/knowledge`、约 60 个测试文件、bootstrap/import 脚本）；其余历史材料（specs/plans/research/早期报告）可延后。禁止 `git add .`，逐路径分批。
 3. **sim 侧余额核对（优先，免费）**：按裁定完成一次对账——需用户提供平台账单读数（见账本 review_corrections 节公式）；核清后追加财务结算记录，核不清继续标注混合估算；不启动付费补跑。
 4. **待排期 P2（审查 F8，2026-09-18 登记）**：SSE 持久游标列——事件表迁移加持久 cursor 列，替换 `sse.py` 按 occurred_at/attempt_id 的动态 `row_number()`；验收条件：晚到/重排事件不重发、跨 attempt 断线重连语义、与现有事件导入兼容。落地前 F3 修复只保证会话内游标语义正确，**不等于**可靠持久重连。**终局裁定：排在下一次 SSE 可靠性迭代，作为宣称「可靠持久重连」前的验收门，不阻塞归档。**
@@ -833,3 +833,11 @@ Codex 对 e6053fd 增量做终局验证与裁定：增量验证 11 项全 PASS�
 - **待 commit**：签署记录（最终报告 §10、本文件标题/交接状态/§2.41/§3 首行、日志 §38、CLAUDE.md 状态）；裁定文件 `docs/reviews/codex-final-ruling.md` 保持未跟踪（Codex 约定）。
 - **终局**：四项裁决全 ACCEPT；**签署「有限范围收官声明成立（保留已披露边界）」；审查循环关闭**。增量验证 11 项全 PASS（含 40 项 bool 边界断言、重评分复现、933/140 + Ruff）。
 - **零付费零 DB 变更零进程变更**；未 push。
+
+### 8.19 归档与 push 轮（2026-09-18，零付费，后续安排裁定行使）
+
+- **审查文件归档**：`1440185`——四份审查文件按精确路径入库（禁止整目录卷入），文件零改写，基线映射写入 commit message，`codex-final-ruling.md` 为最终结论。
+- **后续安排记录**：`86061b2`——HANDOFF §5 按裁定改写（push、分批补录、sim 对账优先、两项 P2 优先级）+ CLAUDE.md。
+- **push（裁定行使）**：前置检查四项全绿（分支 main / 远端 origin=github.com/senningi47/commerce-analyst-agent / 89 commits 全历史 / 敏感扫描 0 真实命中——树内命中均为测试夹具合成占位、历史新增行扫描 0、`.env` 从未入库且被忽略）→ `git push -u origin main` 成功（新远端分支，跟踪建立）。
+- **补录规模发现（如实）**：未跟踪盘点显示 Day 1–3 基础层整体未入库（`knowledge/`、`model/`、`context_builder/` 实现、`value_resolver/`、迁移 0001–0003、`alembic.ini`、`compose.yaml`、`data/knowledge`、~60 测试文件、bootstrap/import 脚本）——远大于文档原记载「Day 1–2 部分工件」；当前远端 checkout 不可运行，分批补录为下一步任务（裁定顺序：push → 补录）。
+- **零付费零 DB 变更零进程变更**；push 后状态同步 commit 二次 push。

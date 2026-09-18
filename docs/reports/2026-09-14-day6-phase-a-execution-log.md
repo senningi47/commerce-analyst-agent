@@ -499,3 +499,14 @@ Codex 终局裁定（`docs/reviews/codex-final-ruling.md`，保持未跟踪，�
 2. **四项裁决全部 ACCEPT**：①bool 严格边界正确（不建议增加字符串字面量解析）；②P2-B 清单全部销项；③收官声明（§1 + §3.3 + §9）可以签署——保留五项既定边界（F8 待排期、值匹配契约标签非语义、COUNT 保守误拒、混合口径预算 sim 待核对、有序题仅一道有模型运行覆盖）；④审查循环关闭——无「必须本轮修复」的开放项。
 3. **签署语**：**「有限范围收官声明成立（保留已披露边界）；审查循环关闭。」**
 4. **记录**：签署入最终报告 §10；HANDOFF 交接状态升级 `closure-signed`（§2.41/§8.18）；四轮累计 findings 11 项 + 后续 P1/P2 全部修复验证或明确接受延期。剩余 = 可选后续（push 授权、仓库补录、F8/导入器库级聚合排期、sim 余额核对），均非收官阻塞。
+
+
+## 39. 归档与 push：四份审查文件入库、后续安排裁定行使、全历史上 GitHub（2026-09-18，零付费）
+
+Codex 后续安排裁定（push 同意 / 审查文件入库全同意 / Day 1–2 分批补录另开任务 / 两项 P2 排期 / sim 对账优先）行使记录：
+
+1. **归档** `1440185`：四份审查文件按精确路径入库（未跟踪清单核对 + check-ignore 预检，无整目录卷入），文件零改写，四轮基线映射（e73cf3a → 89390d8/32123ef → 5c915ec/cfd77f0 → e6053fd）写入 commit message，`codex-final-ruling.md` 为最终结论。
+2. **安排记录** `86061b2`：HANDOFF §5 改写 + CLAUDE.md 待办行。
+3. **前置检查四项全绿**：分支 main；远端 origin=github.com/senningi47/commerce-analyst-agent；范围 = 89 commits 全历史（d87768a → 86061b2）；敏感扫描——`.env` 从未入库（全历史无该路径）+ gitignore 生效，树内 secret 形态命中均为测试夹具合成占位（127.0.0.1/generated-N/checkpoint-token），全历史新增行高信号扫描 0 命中。
+4. **push**：`git push -u origin main` 成功——远端新建 main 分支、跟踪建立，89 commits 上 GitHub。按项目纪律 push 历来需用户授权；本轮授权链 = 用户委托 Codex 裁定（「我想让Codex做裁定」）→ 用户原样转发裁定 → 裁定条件全部满足后行使，全程留痕。
+5. **补录规模发现**：未跟踪盘点显示 Day 1–3 基础层整体未入库（4 个包实现、迁移 0001–0003、alembic.ini、compose.yaml、data/knowledge、~60 测试、bootstrap/import 脚本），远大于此前文档记载；当前远端 checkout 不可运行——分批补录（裁定顺序在 push 之后）为下一步，首批 = 干净 checkout 必需项，逐路径 add、禁止 git add .。
