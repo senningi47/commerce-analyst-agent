@@ -466,12 +466,13 @@ Codex 对 e6053fd 增量做终局验证与裁定：增量验证 11 项全 PASS�
 
 ## 5. 下一步计划（CLOSED——均为可选后续）
 
-1. **可选**：push 授权（80+ commits 本地）。
-2. **可选**：仓库补录——Day 1–2 工件（bootstrap/import 脚本、data/knowledge、部分早期测试）与 4 份早期计划（Day 2a/2b/3/5）。
-3. **可选（能力杠杆）**：v4 + SqlReasoner 修复环接入产品评测与 BIRD 轨后重测（预算另批）。
-4. **可选**：`cybermarket_pattern_12 [a]` 恢复。
-5. **待排期 P2（审查 F8，2026-09-18 登记）**：SSE 持久游标列——事件表迁移加持久 cursor 列，替换 `sse.py` 按 occurred_at/attempt_id 的动态 `row_number()`；验收条件：晚到/重排事件不重发、跨 attempt 断线重连语义、与现有事件导入兼容。落地前 F3 修复仅保证会话内游标正确，不得表述为「可靠持久重连」。
-6. **待排期 P2（pit 79 入库）**：spool 导入器库级 per-(experiment,task,mode) 聚合（c 模式一轮一文件），替代调用侧预聚合变体。
+1. **push**：Codex 终局后续裁定同意 push（归档完成后、前置检查：分支/远端/提交范围/敏感信息）；四份审查文件已随 `1440185` 归档，`codex-final-ruling.md` 为最终结论。
+2. **仓库补录（分批，另开归档任务）**：裁定要求优先补齐**干净 checkout 运行所必需**的代码/迁移/配置/测试——实际缺口经盘点远大于文档原记载「Day 1–2 部分工件」：Day 1–3 基础层整体未入库（`knowledge/`、`model/`、`context_builder/` 实现、`value_resolver/`、迁移 0001–0003、`alembic.ini`、`compose.yaml`、`data/knowledge`、约 60 个测试文件、bootstrap/import 脚本）；其余历史材料（specs/plans/research/早期报告）可延后。禁止 `git add .`，逐路径分批。
+3. **sim 侧余额核对（优先，免费）**：按裁定完成一次对账——需用户提供平台账单读数（见账本 review_corrections 节公式）；核清后追加财务结算记录，核不清继续标注混合估算；不启动付费补跑。
+4. **待排期 P2（审查 F8，2026-09-18 登记）**：SSE 持久游标列——事件表迁移加持久 cursor 列，替换 `sse.py` 按 occurred_at/attempt_id 的动态 `row_number()`；验收条件：晚到/重排事件不重发、跨 attempt 断线重连语义、与现有事件导入兼容。落地前 F3 修复只保证会话内游标语义正确，**不等于**可靠持久重连。**终局裁定：排在下一次 SSE 可靠性迭代，作为宣称「可靠持久重连」前的验收门，不阻塞归档。**
+5. **待排期 P2（pit 79 入库）**：spool 导入器库级 per-(experiment,task,mode) 聚合（c 模式一轮一文件），替代调用侧预聚合变体。**终局裁定：优先于下一次 c 模式批量评测落实；此前继续使用已验证的调用侧预聚合流程。**
+6. **可选（能力杠杆）**：v4 + SqlReasoner 修复环接入产品评测与 BIRD 轨后重测（预算另批）。
+7. **可选**：`cybermarket_pattern_12 [a]` 恢复。
 
 ## 6. 踩过的坑，绝对不要再踩
 
