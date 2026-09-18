@@ -1,32 +1,66 @@
 """Build and validate the §17.1 Olist product question bank (zero paid calls).
 
 Authors 30 development + 10 regression + 10 closed questions with reference
-SQL, validates every reference query twice: (1) executable against the live
-product database (read-only DSN), and (2) compliant with the frozen
-QueryEngine AST policy — the same executor surface the agent operates under.
-Emits three JSONL files with row counts and result digests.
+SQL, and validates every reference query three ways: (1) executable against
+the live product database (read-only DSN), (2) compliant with the frozen
+QueryEngine AST policy — the same executor surface the agent operates under,
+and (3) a cross-boundary self-score: the reference SQL is re-executed through
+the QueryEngine result boundary and must match the reference rows under the
+frozen scorer (codex round-2 P2-3 — DB-executable + AST-compliant alone does
+not prove a question is scoreable). Emits three JSONL files with row counts
+and result digests.
 
 Usage: uv run --env-file .env python scripts/build_product_question_bank.py
 """
 
 from __future__ import annotations
 
+import asyncio
 import json
 import os
 import sys
 from pathlib import Path
 
 import psycopg
+from pydantic import SecretStr
 
-from commerce_agent.product_eval.scoring import result_digest
+from commerce_agent.product_eval.scoring import result_digest, results_match
 from commerce_agent.query_engine._ast_policy import AstPolicy
+from commerce_agent.query_engine._postgres import PostgresExecutor
+from commerce_agent.query_engine.contracts import QueryRequest
+from commerce_agent.query_engine.engine import QueryEngine
 from commerce_agent.query_engine.errors import SqlPolicyViolation
 
 OUT_DIR = Path("data/product-eval")
 
-# questions whose question text declares an ascending ordering — the scorer
-# compares sequences, not multisets (codex F2: ordered-contract split)
-_ORDERED_QUESTIONS = {"dev-01", "dev-10", "reg-06", "reg-08", "closed-01", "closed-10"}
+# questions whose row order is part of the answer: a question text that
+# demands a sort ("按金额降序" / "按年升序" / "按…排序") or a time series
+# trend (reg-06: trend read in chronological order) is ordered — codex
+# round-2 P2-1: dev-02/dev-04/reg-03 demand a DESCENDING sort and reg-02 a
+# rising one, so the ordered set is not only "ascending" questions and the
+# row_order value distinguishes the direction (the scorer treats any
+# non-"unordered" value as ordered).
+_ORDERED_QUESTIONS = {
+    "dev-01",
+    "dev-02",
+    "dev-04",
+    "dev-10",
+    "reg-02",
+    "reg-03",
+    "reg-06",
+    "reg-08",
+    "closed-01",
+    "closed-10",
+}
+_DESCENDING_QUESTIONS = {"dev-02", "dev-04", "reg-03"}
+
+
+def _row_order(question_id: str) -> str:
+    if question_id not in _ORDERED_QUESTIONS:
+        return "unordered"
+    if question_id in _DESCENDING_QUESTIONS:
+        return "descending"
+    return "ascending"
 
 
 def q(qid: str, visibility: str, question: str, sql: str, tables: list[str]) -> dict:
@@ -70,7 +104,7 @@ QUESTIONS: list[dict] = [
     q("dev-14", "development", "客户数量最多的前 10 个城市（customer_city）各有多少客户？",
       "SELECT customer_city, COUNT(DISTINCT customer_id) AS customer_count FROM retail.customers GROUP BY 1 ORDER BY 2 DESC LIMIT 10", ["customers"]),
     q("dev-15", "development", "已交付订单从下单到客户签收的平均天数是多少？（时间戳差折算为天，只统计有签收时间的订单）",
-      "SELECT AVG(order_delivered_customer_date - order_purchase_timestamp) / 86400.0 AS avg_delivery_days FROM retail.orders WHERE order_status = 'delivered' AND order_delivered_customer_date IS NOT NULL", ["orders"]),
+      "SELECT AVG(EXTRACT(EPOCH FROM (order_delivered_customer_date - order_purchase_timestamp))) / 86400.0 AS avg_delivery_days FROM retail.orders WHERE order_status = 'delivered' AND order_delivered_customer_date IS NOT NULL", ["orders"]),
     q("dev-16", "development", "商品目录中共有多少个产品（products 行数）？",
       "SELECT COUNT(*) AS product_count FROM retail.products", ["products"]),
     q("dev-17", "development", "各英文产品类别的评价数（COUNT(DISTINCT review_id)）前 10 名是多少？",
@@ -107,7 +141,7 @@ QUESTIONS: list[dict] = [
     q("reg-02", "regression", "各年度（EXTRACT 年份）的订单数与商品额分别是多少？按年升序。",
       "SELECT EXTRACT(YEAR FROM o.order_purchase_timestamp) AS order_year, COUNT(DISTINCT o.order_id) AS order_count, SUM(oi.price) AS item_amount FROM retail.orders o JOIN retail.order_items oi ON oi.order_id = o.order_id GROUP BY 1 ORDER BY 1", ["orders", "order_items"]),
     q("reg-03", "regression", "各客户州的平均送达天数（时间戳差折算为天，只统计已交付且有签收时间）降序排列是多少？",
-      "SELECT c.customer_state, AVG(o.order_delivered_customer_date - o.order_purchase_timestamp) / 86400.0 AS avg_delivery_days FROM retail.orders o JOIN retail.customers c ON c.customer_id = o.customer_id WHERE o.order_status = 'delivered' AND o.order_delivered_customer_date IS NOT NULL GROUP BY 1 ORDER BY 2 DESC", ["customers", "orders"]),
+      "SELECT c.customer_state, AVG(EXTRACT(EPOCH FROM (o.order_delivered_customer_date - o.order_purchase_timestamp))) / 86400.0 AS avg_delivery_days FROM retail.orders o JOIN retail.customers c ON c.customer_id = o.customer_id WHERE o.order_status = 'delivered' AND o.order_delivered_customer_date IS NOT NULL GROUP BY 1 ORDER BY 2 DESC", ["customers", "orders"]),
     q("reg-04", "regression", "2018 年分期数 × 支付方式的支付金额前 10 名是多少？",
       "SELECT pay.payment_installments, pay.payment_type, SUM(pay.payment_value) AS payment_amount FROM retail.order_payments pay JOIN retail.orders o ON o.order_id = pay.order_id WHERE o.order_purchase_timestamp >= '2018-01-01' AND o.order_purchase_timestamp < '2019-01-01' GROUP BY 1, 2 ORDER BY 3 DESC LIMIT 10", ["orders", "order_payments"]),
     q("reg-05", "regression", "商品额最高的前 10 个卖家州（seller_state）的合计商品额是多少？",
@@ -146,6 +180,27 @@ QUESTIONS: list[dict] = [
 ]
 
 
+async def _self_score(
+    engine: QueryEngine,
+    validated: list[tuple[str, str, list[dict], list[str], str]],
+) -> list[str]:
+    """Re-execute each reference SQL through the QueryEngine boundary and
+    require the frozen scorer to match it against the reference rows."""
+    failures: list[str] = []
+    for question_id, sql, rows, columns, row_order in validated:
+        try:
+            result = await engine.execute(QueryRequest(sql=sql))
+        except Exception as error:  # noqa: BLE001 - validation report
+            failures.append(f"{question_id}: engine {type(error).__name__}: {error}")
+            continue
+        if result.columns != columns:
+            failures.append(f"{question_id}: engine columns {result.columns} != {columns}")
+            continue
+        if not results_match(result.rows, rows, columns, ordered=row_order != "unordered"):
+            failures.append(f"{question_id}: self-score mismatch")
+    return failures
+
+
 def main() -> int:
     dsn = os.environ.get("PRODUCT_DATABASE_DSN")
     if not dsn:
@@ -154,6 +209,7 @@ def main() -> int:
     policy = AstPolicy()
     files: dict[str, list[str]] = {"development": [], "regression": [], "closed": []}
     failures: list[str] = []
+    validated: list[tuple[str, str, list[dict], list[str], str]] = []
     with psycopg.connect(dsn, connect_timeout=10) as conn:
         for item in QUESTIONS:
             try:
@@ -188,11 +244,11 @@ def main() -> int:
             if problems:
                 failures.append(f"{item['question_id']}: {','.join(problems)}")
                 continue
+            row_order = _row_order(item["question_id"])
+            validated.append((item["question_id"], item["gold_sql"], rows, columns, row_order))
             record = {
                 **item,
-                "row_order": "ascending"
-                if item["question_id"] in _ORDERED_QUESTIONS
-                else "unordered",
+                "row_order": row_order,
                 "gold_columns_count": len(columns),
                 "gold_row_count": len(rows),
                 "gold_result_sha256": result_digest(rows),
@@ -200,6 +256,12 @@ def main() -> int:
             files[item["visibility"]].append(
                 json.dumps(record, ensure_ascii=False, sort_keys=True)
             )
+    if not failures:
+        engine = QueryEngine(policy=AstPolicy(), executor=PostgresExecutor(SecretStr(dsn)))
+        # pit 59: the win32 Proactor loop is rejected by the async postgres
+        # driver — run the engine on a Selector loop (same as run_product_eval)
+        with asyncio.Runner(loop_factory=asyncio.SelectorEventLoop) as runner:
+            failures.extend(runner.run(_self_score(engine, validated)))
     for name, lines in files.items():
         path = OUT_DIR / f"{name}.jsonl"
         path.write_text(
@@ -211,7 +273,7 @@ def main() -> int:
         for failure in failures:
             print(" ", failure)
         return 1
-    print(f"all {len(QUESTIONS)} reference queries validated (execute + AST policy)")
+    print(f"all {len(QUESTIONS)} reference queries validated (execute + AST policy + self-score)")
     return 0
 
 

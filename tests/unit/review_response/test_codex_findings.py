@@ -249,3 +249,110 @@ def test_codex_f3_sse_cursor_advances_by_run_cursor(monkeypatch) -> None:
     # sequence (1), so this pull re-served the tail forever
     with pytest.raises(asyncio.TimeoutError):
         asyncio.run(_pull(2))
+
+
+def test_codex_f3_same_generator_third_pull_does_not_replay_tail() -> None:
+    """Codex round-2 P2-4: the F3 regression above creates a fresh generator
+    per pull; the original defect lived INSIDE one generator's loop. Replay
+    the exact scenario on a single generator: two events served, third pull
+    must block instead of re-serving the tail."""
+    from commerce_agent.api.events import SseRunEvent
+    from commerce_agent.api.sse import sse_stream
+
+    run_id = uuid4()
+
+    def _event(cursor: int, sequence: int) -> SseRunEvent:
+        return SseRunEvent(
+            cursor=cursor,
+            run_id=run_id,
+            attempt_id=uuid4(),
+            sequence=sequence,
+            event_type="attempt_started",
+            status="succeeded",
+            reason_code=None,
+            occurred_at=datetime.now(UTC),
+        )
+
+    class _Source:
+        def __init__(self) -> None:
+            self.queries: list[int] = []
+            self._events = [_event(1, 0), _event(2, 1)]
+
+        async def events_after(self, run_id, *, after_sequence: int, limit: int = 200):
+            self.queries.append(after_sequence)
+            return [e for e in self._events if e.cursor > after_sequence]
+
+    async def _scenario() -> list[int]:
+        generator = sse_stream(
+            _Source(), run_id, last_event_id=0,
+            poll_interval=0.0, heartbeat_interval=999,
+        )
+        served: list[int] = []
+        for _ in range(2):
+            block = await asyncio.wait_for(generator.__anext__(), timeout=2)
+            served.append(int(block.splitlines()[0].removeprefix("id: ")))
+        with pytest.raises(asyncio.TimeoutError):
+            await asyncio.wait_for(generator.__anext__(), timeout=0.2)
+        return served
+
+    assert asyncio.run(_scenario()) == [1, 2]
+
+
+def test_codex_f5_cancelled_episode_kills_official_child(tmp_path, monkeypatch) -> None:
+    """Codex F5 / round-2 P2-4: a cancelled episode must kill the official
+    orchestrator subprocess — an abandoned live process keeps calling the
+    paid model API. Fake process blocks in communicate(); cancel must
+    trigger kill()+wait() and re-raise CancelledError."""
+    import sys
+
+    from commerce_agent.evaluation._official import OfficialOrchestratorEpisodeExecutor
+    from commerce_agent.evaluation.contracts import AttemptRecord
+
+    attempt = AttemptRecord(
+        attempt_id=uuid4(),
+        run_id=uuid4(),
+        experiment_id="fx",
+        task_id="t0",
+        mode="c",
+        attempt_seq=1,
+        started_at=datetime.now(UTC),
+    )
+    executor = OfficialOrchestratorEpisodeExecutor(
+        adk_root=tmp_path / "adk",
+        python_executable=sys.executable,
+        data_file_for=lambda task: tmp_path / "data.jsonl",
+        output_dir=tmp_path / "episodes",
+    )
+
+    killed = {"kill": False, "wait": False}
+
+    class _FakeProcess:
+        returncode = None
+
+        async def communicate(self):
+            await asyncio.Event().wait()  # blocks forever until cancelled
+
+        def kill(self):
+            killed["kill"] = True
+
+        async def wait(self):
+            killed["wait"] = True
+            return 0
+
+    async def _fake_exec(*args, **kwargs):
+        return _FakeProcess()
+
+    monkeypatch.setattr(asyncio, "create_subprocess_exec", _fake_exec)
+
+    async def _scenario() -> None:
+        running = asyncio.ensure_future(
+            executor.execute(EpisodeTask(task_id="t0", mode="c"), attempt)
+        )
+        await asyncio.sleep(0.05)
+        running.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await running
+
+    asyncio.run(_scenario())
+    assert killed["kill"] is True
+    assert killed["wait"] is True

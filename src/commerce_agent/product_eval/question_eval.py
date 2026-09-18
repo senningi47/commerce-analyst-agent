@@ -206,7 +206,9 @@ def score_execution(
             agent_rows,
             gold_rows,
             reference_columns,
-            ordered=row_order == "ascending",
+            # row_order is "ascending" | "descending" | "unordered" — any
+            # declared direction makes the comparison order-sensitive
+            ordered=row_order != "unordered",
         )
     )
     return QuestionScore(

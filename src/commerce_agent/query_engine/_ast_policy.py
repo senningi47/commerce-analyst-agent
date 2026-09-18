@@ -257,6 +257,46 @@ def _identity_leaks(node: exp.Expression) -> bool:
     return False
 
 
+def _contains_nested_star(projection: exp.Expression) -> bool:
+    """True when a star hides BELOW the projection root (codex round-2 P1-3).
+
+    A nested ``s.*`` / whole-row reference inside any expression (paren,
+    COALESCE, COUNT, …) expands to the source row's columns — including
+    identity columns the name-based leak check cannot see — and a composite
+    value can carry them through result serialization as one opaque string.
+    Expression-wrapped stars have no legitimate analytics use here, so they
+    are denied outright; the root star keeps its dedicated checks below.
+    """
+    if isinstance(projection, exp.Star):
+        return False
+    if isinstance(projection, exp.Column) and projection.is_star:
+        return False
+    stack = [projection]
+    while stack:
+        current = stack.pop()
+        if isinstance(current, exp.Star):
+            return True
+        if isinstance(current, exp.Column) and current.is_star:
+            return True
+        if isinstance(current, exp.Count) and isinstance(current.this, exp.Star):
+            # COUNT(*) is the row-count statistic — the one star with no
+            # column behind it; COUNT(s.*) still falls through below
+            for value in current.args.values():
+                if value is current.this:
+                    continue
+                if isinstance(value, exp.Expression):
+                    stack.append(value)
+                elif isinstance(value, list):
+                    stack.extend(item for item in value if isinstance(item, exp.Expression))
+            continue
+        for value in current.args.values():
+            if isinstance(value, exp.Expression):
+                stack.append(value)
+            elif isinstance(value, list):
+                stack.extend(item for item in value if isinstance(item, exp.Expression))
+    return False
+
+
 def _validate_identity_projections(
     scope: Scope,
     source_columns: dict[str, frozenset[str]],
@@ -266,11 +306,20 @@ def _validate_identity_projections(
         # codex F7: an identity column must only ever appear under a COUNT
         # aggregate (irreversible statistic) within the projection — parens,
         # COALESCE, concatenation and MIN/MAX wrappers preserve the
-        # identifier, and SUM/AVG over an identifier has no business use
+        # identifier, and SUM/AVG over an identifier has no business use.
+        # Conservative residual limits, disclosed in the review docs: a
+        # COUNT FILTER clause naming an identity column, and a derived count
+        # aliased to an identity name in a CTE, are both rejected even
+        # though they output only a statistic.
         if _identity_leaks(projected):
             raise SqlPolicyViolation(
                 "identity_projection_denied",
                 "Raw identity projection is not allowed",
+            )
+        if _contains_nested_star(projected):
+            raise SqlPolicyViolation(
+                "identity_projection_denied",
+                "Expression-wrapped star projection is not allowed",
             )
         if isinstance(projected, exp.Star) and any(
             columns & _RAW_IDENTITY_COLUMNS for columns in source_columns.values()

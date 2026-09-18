@@ -176,6 +176,31 @@ def test_direct_identity_projection_is_rejected_even_when_aliased(sql: str) -> N
     assert caught.value.reason_code == "identity_projection_denied"
 
 
+@pytest.mark.parametrize(
+    "sql",
+    [
+        "SELECT (s.*) AS x FROM retail.sellers s LIMIT 1",
+        "SELECT COALESCE(s.*, s.*) AS x FROM retail.sellers s LIMIT 1",
+        "SELECT COUNT(s.*) FROM retail.sellers s",
+    ],
+)
+def test_expression_wrapped_star_is_rejected(sql: str) -> None:
+    """Codex round-2 P1-3: a nested qualified star expands to the source
+    row's columns (including identities) and a composite value can carry
+    them through result serialization as one opaque string — the name-based
+    leak check cannot see it. Stars wrapped in expressions are denied
+    outright; the root star keeps its dedicated checks."""
+    with pytest.raises(SqlPolicyViolation) as caught:
+        AstPolicy().validate(sql)
+    assert caught.value.reason_code == "identity_projection_denied"
+
+
+def test_root_star_on_identity_free_table_still_allowed() -> None:
+    """The nested-star denial must not take out legitimate detail reads."""
+    AstPolicy().validate("SELECT p.* FROM retail.products p LIMIT 3")
+    AstPolicy().validate("SELECT * FROM retail.products LIMIT 3")
+
+
 def test_allows_boolean_operators_in_filters(policy: AstPolicy) -> None:
     """2026-09-17 product-eval discovery: this sqlglot version subclasses
     boolean operators from Func, so the function allowlist rejected every
