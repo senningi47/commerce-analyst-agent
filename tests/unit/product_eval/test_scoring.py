@@ -101,6 +101,22 @@ def test_mixed_kind_reference_column_fails_closed() -> None:
     assert not results_match([{"x": 1}, {"x": "a"}], gold_rows, ["x"])
 
 
+def test_bool_reference_column_requires_real_bools() -> None:
+    """Codex round-3 P2-A regression: str(bool(value)) let Python truthiness
+    answer for the agent — 'False' and any nonzero number normalized to
+    True. A bool reference column accepts only actual bools (the QueryEngine
+    boundary keeps PG booleans as real bools)."""
+    gold_rows = [{"flag": True}]
+    assert results_match([{"flag": True}], gold_rows, ["flag"])
+    assert results_match([{"flag": False}], [{"flag": False}], ["flag"])
+    assert not results_match([{"flag": "False"}], gold_rows, ["flag"])
+    assert not results_match([{"flag": "True"}], gold_rows, ["flag"])
+    assert not results_match([{"flag": 7}], gold_rows, ["flag"])
+    assert not results_match([{"flag": 0}], [{"flag": False}], ["flag"])
+    assert not results_match([{"flag": None}], gold_rows, ["flag"])
+    assert results_match([{"flag": None}], [{"flag": None}], ["flag"])
+
+
 def test_text_reference_requires_equal_text() -> None:
     gold_rows = [{"note": "abc"}]
     assert results_match([{"note": "abc"}], gold_rows, ["note"])

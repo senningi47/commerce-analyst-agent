@@ -1,16 +1,16 @@
-# CommerceAnalyst 项目交接：**收官 + Codex 两轮审查处置完成**——数字全面更正（成功数/评分假阴性/预算口径）、11 项 findings 修复、二轮 P1 全清（评分器 ordered/unordered 重写、嵌套 star 封堵、题集行序契约、文档口径落地）；审查报告 docs/reviews/codex-review-{findings,verification}.md
+# CommerceAnalyst 项目交接：**收官 + Codex 三轮审查处置完成**——数字全面更正（成功数/评分假阴性/预算口径）、11 项 findings 全部处置（10 项修复 + F8 延期披露）、评分器 ordered/unordered 重写、嵌套 star 封堵、题集行序契约、文档口径落地、bool 归一化边界修复；审查报告 docs/reviews/codex-review-{findings,verification,verification-r2}.md
 
 > 更新时间：2026-09-18（Asia/Shanghai），更新者：Claude Code（GLM）  
 > 工作区：`D:\git-projects\commerce-analyst-agent`  
-> 当前分支状态：`main`（未 push；a 批全程 + 截停已入账本与报告，commit 待用户授权）  
-> 交接状态：`ready-for-closure`——a 批已按用户裁定②截停（223/300 + 2 确定性失败 + 75 unrun），下一步 = 消融/产品 50 题/最终报告与材料  
+> 当前分支状态：`main`（未 push；三轮审查处置已提交至 cfd77f0，三轮 P2 修复 commit 待用户授权）  
+> 交接状态：**closure-supported-with-reservations**——三段评测 + Phase E 收官 + Codex 三轮审查处置完成（终态见 §3；Codex 终局裁断 = 支持有保留的有限范围收官，`codex-review-verification-r2.md` 保持未跟踪）；剩余全部为可选后续（§5）  
 > PowerContext scope：`git:github.com/senningi47/commerce-analyst-agent`  
 > Durable Handoff：PowerContext `handoff/handoff#30`（2026-09-15 提交，exact revision=30；#29 为 Day 7 计划产出轮）
 
 ## 0. 新会话先做什么
 
 1. 完整阅读本文件、`docs/reports/2026-09-14-day6-phase-a-execution-log.md`（Day 6 Phase A 执行日志，§30/§31=A4 c 批、§32=A4 a 批截停）与 `docs/reports/2026-09-16-a4-a-batch-truncated-and-v4-validation.md`（a 批收官报告：v4 验证 / 并发升档 / 上下文溢出定性）。把它们当作需要现场核验的历史交接，不要把历史授权当作新会话授权。
-2. 先向用户报告准确状态：**A4 a 批按裁定②截停——223/300 succeeded + 2 集确定性 `ContextBudgetExceeded` 失败（fake_account_24 / sports_events_8）+ 75 集未跑（b10–b12）；reward 0/225 如实标注；agent $6.1506 ≈ 43.5 元（telemetry 225/225 精确归属）；spent ≈75.9 元，总投影 ≈116/160 ✓**。v4（知识 miss→问用户）已验证=行为激活但 reward 中性，已回退 v2 并归档。并发 cap 2→4 经用户裁定升档（§16.2 偏差已披露，b08 试点 2.3× 零 infra）。**下一步 = 消融 / 产品 50 题 / 最终报告与材料（见 §5）。**
+2. 先向用户报告准确状态：**三段评测 + Phase E 收官 + Codex 三轮审查处置全部完成——c 批 300 任务完成（305 attempts）、a 批 223/300（2 集确定性 `ContextBudgetExceeded`、75 集裁定未跑）、消融 120/120（修复救回 0 集）、产品 §17.1（A 12.5% vs B 10.0% 重评分口径、封闭 1/10）；A4+消融 0/643 有效评分；预算混合口径估算 ≈88.1/160 元（7.40 平台核对 + 0.53 agent 估算 + 遥测×7.07，sim 待核对）；Codex 终局裁断 = 支持有保留的有限范围收官（verification-r2，未跟踪）。剩余全部为可选后续（§5），无待行使的付费授权。**
 3. **外部事实（关键）**：模型更名证据链与全部实测数字见研究笔记；价格快照已双源核对（用户读数 = 页面提取）；探针累计花费 ~$0.008。
 4. preflight 三项零付费已于 2026-09-13 完成（执行入口备查：`scripts/prepare_bird_pilot.py --dataset <公开数据集路径>`、`--run-db-check`、GT 拒绝检查见执行日志 §4）。Task 13 主运行**需要用户新会话明确授权**（一次正向运行 = 一次授权额度）。
 5. 根目录 `.env` 只能由已审核脚本或 `uv run --env-file .env ...` 消费。不要手工读取、打印、搜索、hash 或统计它。（本日已追加 Day 5 变量与 `USER_SIM_MODEL=openai/deepseek-flash`，均经用户授权。）
@@ -412,13 +412,22 @@ Codex 独立复核一轮回应：8 项 FIXED-VERIFIED、2 项 FIXED-DISPUTED（�
 7. **Day-4 回填披露（P2-4）**：`89390d8` 同时**有意补录**了 Day 4 遗留的授权测试文件 `tests/unit/product_eval/test_day4_authorization.py`（7 条，用户明确同意保留）——属「已有本地测试进入版本控制」，非本轮新编写的覆盖；此前仅记录过 amend 移出史，未作保留披露，现补记。
 8. **判定**：**932 passed / 140 skipped** + Ruff 全绿；零付费零 GT 读取；commit 待授权。Codex 保留意见（单行值互换与列重排不可区分、保存运行仅覆盖 1 道有序题）已如实写入最终报告 §8。
 
+### 2.40 Codex 三轮验证处置轮（Claude Code，2026-09-18，零付费；验证报告 `docs/reviews/codex-review-verification-r2.md` 保持未跟踪）
+
+Codex 验证二轮处置：6 项 FIXED-VERIFIED、F8 NOT-FIXED 但延期披露充分、三个设计取舍在限定契约下全部接受；**终局裁断 = 支持有保留的有限范围收官**；50/50 三层验收与重评分 5/40、4/40、1/10 独立复现；并新发现一项相邻缺陷 + 文档残余。处置：
+
+1. **bool 归一化假阳性（P2-A，已修复）**：二轮重写的 `str(bool(value))` 以 Python 真值性作答（'False'/7 对参考 True 判 True）→ bool 参考列要求两侧真实 bool；8 条边界用例（含 NULL）入回归；当前题集无布尔列，已核验数字不受影响。
+2. **文档残余（P2-B，已修复）**：HANDOFF 标题（11 项→10 项修复 + F8 延期）、:5/:6 交接状态（ready-for-closure → closure-supported-with-reservations）、§0 新会话报告口径（截停态 → 终态）、a 批 reward 0/225 → **0/223 有效评分**（225 attempts/223 succeeded）、产品 $0.06 → **$0.071519040**（含 v2 补记）；最终报告 §8.6 分母 12/80 → 11/80 + 1/10 = 12/90、§8.1 回归构成精确化。
+3. **重放脚本退出码（P3，已修复）**：`rescore_saved_runs.py` 报告完成即 exit 0（题目答错 ≠ 脚本失败）；helper 未跟踪，不影响库结论。
+4. **判定**：**933 passed / 140 skipped**（+1 bool 边界）+ Ruff 全绿；零付费；commit 待授权。收官口径 = 有限范围收官 + 已披露保留，不再声称「全部问题清零」（最终报告 §9）。
+
 ## 3. 当前卡在哪里
 
 **无阻塞——三段评测 + Phase E 收官 + Codex 两轮审查处置全部完成（§2.39）；剩余全部为可选后续（见 §5），等待用户裁定。**
 
-- **a 批终账**：agent $6.1506 = 43.5 元（225 attempts / 2,301 turns，off_peak 100%）；reward 0/225 如实标注；telemetry 225/225 精确归属。
+- **a 批终账**：agent $6.1506 = 43.5 元（225 attempts / 2,301 turns，off_peak 100%）；**reward 0/223 有效评分如实标注**（225 attempts / 223 succeeded / 2 failed）；telemetry 225/225 精确归属。
 - **消融终账（新）**：120/120 succeeded，agent $1.6734 = 11.8 元（cap 25 元内）；**修复救回 0 集**（P1 A 0/60 vs B 0/60）——§17.2 描述性结论 = 当前能力下修复价值 0，修复经济学为负（2.4–2.7× 费用零增益）。
-- **增量重估**：spent ≈88.1 元（混合口径估算 = 7.40 平台核对 + 0.53 agent 估算 + 现存遥测×7.07，sim 侧待核对，非平台实扣终账）；产品评测以 $0.06 完成远低于原 23 元预留；**总账 ≈88.1/160 ✓（余 ~45%）**。
+- **增量重估**：spent ≈88.1 元（混合口径估算 = 7.40 平台核对 + 0.53 agent 估算 + 现存遥测×7.07，sim 侧待核对，非平台实扣终账）；产品评测以 **$0.071519040** 完成（v3+closed $0.0595 + v2 失败轮 $0.0120 补记）远低于原 23 元预留；**总账 ≈88.1/160 ✓（余 ~45%）**。
 - **能力门终态**：A4 + 消融全程 reward>0 = **0/643 有效评分**（A4 523 + 消融 120）；机制 = 知识缺口 + SQL 运行期质量；v4 杠杆已验证「行为激活、reward 中性」归档备用；修复杠杆经消融实证同样无效。
 - **产品评测终态（新）**：§10.2 预注册判据否决路线 2 检索（正确率 **12.5% vs 10.0%**（审查更正后重评分口径；原始执行轮 7.5% vs 5.0% 系评分器假阴性）、recall 0.910<1.0、总 token −62.5%）→ **全量 Schema 胜出**（规格预期）；单步 harness 无修复环 → 策略合规缺口 ~60% 如实测量；构建期发现并修复产品真缺陷（AND/OR 被函数白名单误杀）。
 - **上下文溢出**：bird_a 长对话 0.9% 确定性失败（2 集），裁定不修、如实标注。
@@ -806,3 +815,10 @@ Codex 独立复核一轮回应：8 项 FIXED-VERIFIED、2 项 FIXED-DISPUTED（�
 - **待 commit**：评分器重写 + 嵌套 star 硬化（src）、题集 row_order/2 题 gold_sql 重生成（data）、builder 三层验收 + question_eval row_order 语义（scripts/src）、13 条回归测试（tests）、文档口径落地（最终报告/README/面试材料/HANDOFF/账本）；复核报告 `docs/reviews/codex-review-verification.md` 保持未跟踪（Codex 约定）。
 - **判定终态**：**932 passed / 140 skipped** + Ruff 全绿；免费重评分 A 5/40、B 4/40、closed 1/10（与一轮更正一致）；builder 三层验收 50/50。
 - **零付费零 DB 变更零进程变更**；产品 PG 只读（builder 三层验收 + 保存 SQL 重放）；未 push。
+
+### 8.17 三轮验证处置轮（2026-09-18，零付费，commit 待授权）
+
+- **待 commit**：bool 归一化修复 + 边界测试（src/tests）、重放脚本退出码（未跟踪不入库）、文档残余更正（最终报告 §8.1/§8.6 + 新 §9、HANDOFF 标题/入口/§3）；验证报告 `docs/reviews/codex-review-verification-r2.md` 保持未跟踪（Codex 约定）。
+- **判定终态**：**933 passed / 140 skipped** + Ruff 全绿（以提交前复跑为准）。
+- **Codex 终局裁断**：支持有保留的有限范围收官；三个设计取舍全部接受；F8 延期披露充分。
+- **零付费零 DB 变更零进程变更**；未 push。

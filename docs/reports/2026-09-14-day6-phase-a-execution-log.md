@@ -479,3 +479,13 @@ Codex 依回复提示词完成独立复核（`docs/reviews/codex-review-verifica
 6. **测试**：+13 条回归（评分边界 7、AST 嵌套 star 4、F3 同生成器三连拉取 1、F5 fake-process 取消杀子进程 1）→ **932 passed / 140 skipped** + Ruff 全绿。
 7. **Day-4 回填披露（P2-4）**：`89390d8` 同时有意补录 Day 4 遗留授权测试 `tests/unit/product_eval/test_day4_authorization.py`（7 条，用户同意保留）——属既有本地测试入库，非本轮新增覆盖。
 8. **判定**：零付费、零 GT 读取、产品 PG 只读；复核报告保持未跟踪（Codex 约定）；commit 待授权。
+
+
+## 37. Codex 三轮验证处置：终局裁断「支持有保留的有限范围收官」；bool 归一化边界修复、文档残余清零（2026-09-18，零付费）
+
+Codex 对二轮处置做独立验证（`docs/reviews/codex-review-verification-r2.md`）：6 项 FIXED-VERIFIED、F8 NOT-FIXED 但延期披露充分、三个设计取舍全部接受；50/50 三层验收与重评分 5/40、4/40、1/10 独立复现（账本 `git ls-files --error-unmatch` 亦确认入库）。处置：
+
+1. **bool 归一化假阳性（新发现 P2-A）**：二轮重写的 `str(bool(value))` 用 Python 真值性作答——`'False'`/`7` 对参考 `True` 判 True。修复为 bool 参考列要求两侧真实 bool（QueryEngine 边界 `_normalize_scalar` 本就保留 PG bool，无字符串化冲突）；True/False×字符串、0/1/数值、NULL 边界用例全部补入（+1 回归）。当前 50 题参考类型仅 Decimal/str/int，无布尔列，已核验数字不受影响（Codex 同结论）。
+2. **文档残余（P2-B）**：HANDOFF 标题「11 项 findings 修复」→「10 项修复 + F8 延期披露」；:5/:6 交接状态 ready-for-closure → **closure-supported-with-reservations**；§0 新会话报告口径由 a 批截停态（0/225、75.9、下一步消融/产品/报告）刷新为终态；§3 a 批 reward 0/225 → **0/223 有效评分**（225 attempts/223 succeeded）；产品 $0.06 → **$0.071519040**（v3+closed 0.0595 + v2 补记 0.0120）。最终报告 §8.6 分母 12/80 → 11/80 + 1/10 = 12/90；§8.1 「13 条边界回归」精确化为构成明细。历史带日期记录仍不追溯。
+3. **重放脚本退出码（P3）**：`rescore_saved_runs.py` 原把预期内的 A 5/7 也设 exit 1（题目答错与脚本失败混淆）→ 改为报告完成即 exit 0；helper 未跟踪，不影响库结论。
+4. **判定**：933 passed / 140 skipped（+1 bool 边界）+ Ruff 全绿；零付费零 GT 读取；验证报告保持未跟踪；commit 待授权。收官口径定格为「有限范围收官 + 已披露保留」（最终报告 §9）。

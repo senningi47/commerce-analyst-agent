@@ -10,7 +10,7 @@
 
 项目由 Codex 推进 12 天（2026-08-24 → 09-07），Claude Code 于 09-11 接手，09-13 完成 Task 13 Pilot 主运行。
 
-**精确状态（2026-09-17 晚更新，以 `HANDOFF.md` 为准）：**
+**精确状态（2026-09-18 更新：三段评测收官 + Codex 三轮审查处置完成、终局裁断=支持有保留的有限范围收官；以 `HANDOFF.md` 为准）：**
 
 ```text
 Day 4 overall: PASS；Day 5 Phase A + Gate P preflight 全 PASS（模型已切 deepseek-flash）
@@ -34,7 +34,10 @@ Codex 审查回应: 只读审查 23 抽验 + 11 findings 全部处置——**成
 Codex 二轮复核（§2.39/日志 §36）: 8 项验证通过确认、F8 如实未修；其 4 项 P1 复现属实并全部处置——评分器 ordered 逐位/unordered 先归一化再多重集重写（P1-1/2）、
          表达式内嵌套 star 一律拒绝（P1-3，COUNT(*) 豁免保留）、题集 row_order 10 题声明 + dev-15/reg-03 EPOCH 折算 + builder 三层验收 50/50（P2-1/3）、
          文档口径落地正文与对外材料（P1-4）；重评分 A 5/40、B 4/40、closed 1/10 不变；**932 passed / 140 skipped**；已披露局限（单行列值互换不可区分、保存运行仅覆盖 1 道有序题）
-待办（均可选）: 两轮审查处置 commit 授权（§8.15/§8.16）；push 授权；仓库补录裁定；审查 P2（SSE 持久游标列 F8、导入器库级聚合）排期
+Codex 三轮验证（§2.40/日志 §37）: 6 项 FIXED-VERIFIED、F8 延期披露充分、三个设计取舍全部接受——**终局裁断=支持有保留的有限范围收官**；
+         新发现 bool 归一化假阳性（str(bool(value)) 真值性作答）已修复（要求真实 bool，题集无布尔列不受影响）；HANDOFF 当前入口/分母（0/223、$0.071519、12/90）清零；
+         重放脚本退出码修正；**933 passed / 140 skipped**；收官口径 = 有限范围收官 + 已披露保留，不声称「全部问题清零」
+待办（均可选）: 三轮处置 commit 授权（§8.15–§8.17）；push 授权；仓库补录裁定；审查 P2（SSE 持久游标列 F8、导入器库级聚合）排期
 终态证据: 消融报告（2026-09-17-ablation-repair-120.md）+ a 批报告 + 执行日志 §30–§33 + 账本四节；消融收官文档 commit 待授权；未 push
 ```text
 Day 4 overall: PASS；Day 5 Phase A + Gate P preflight 全 PASS（模型已切 deepseek-flash）

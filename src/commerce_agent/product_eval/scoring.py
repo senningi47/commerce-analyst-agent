@@ -89,7 +89,13 @@ def _normalize_row(
                 return None
             normalized.append(format(number.quantize(_QUANT), "f"))
         elif kind == "bool":
-            normalized.append(str(bool(value)))
+            # codex round-3 P2-A: Python truthiness is NOT a boolean type
+            # check — 'False' or 7 must not normalize to True. The agent
+            # boundary keeps PG booleans as real bools (_normalize_scalar),
+            # so require an actual bool on both sides.
+            if not isinstance(value, bool):
+                return None
+            normalized.append(str(value))
         else:
             normalized.append(str(value))
     return normalized
