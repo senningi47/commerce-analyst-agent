@@ -278,7 +278,13 @@ def assign_attempts(
     for key, group in groups.items():
         candidates = attempt_groups.get(key, ())
         if len(group) == 1 and len(candidates) == 1:
-            assigned[candidates[0].attempt_id] = group[0]
+            # codex F9: the unique-candidate shortcut must still honor the
+            # time window — a far-out-of-window session stays unassigned
+            # rather than being claimed by an unrelated attempt
+            if _in_window(group[0], candidates[0], clock_grace):
+                assigned[candidates[0].attempt_id] = group[0]
+            else:
+                unassigned.append(group[0])
             continue
         if not candidates:
             unassigned.extend(group)

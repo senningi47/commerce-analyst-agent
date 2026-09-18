@@ -108,6 +108,13 @@ class OfficialOrchestratorEpisodeExecutor:
                     process.kill()
                     await process.wait()
                     return self._infrastructure(attempt, "official_episode_timeout")
+                except asyncio.CancelledError:
+                    # codex F5: a cancelled episode must terminate the
+                    # orchestrator too — abandoning the DB row without
+                    # killing the process leaves a live paid model loop
+                    process.kill()
+                    await process.wait()
+                    raise
                 self._persist_streams(attempt.attempt_id, stdout, stderr)
                 return_code = process.returncode
         except TimeoutError:

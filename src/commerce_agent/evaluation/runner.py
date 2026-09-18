@@ -172,10 +172,12 @@ class EvaluationRunner:
                     set(in_flight), timeout=self._config.stop_grace_seconds
                 )
                 await self._mark_abandoned(in_flight)
-                await asyncio.gather(*in_flight, return_exceptions=True)
+                gathered = await asyncio.gather(*in_flight, return_exceptions=True)
+                self._raise_runner_failures_from(gathered)
             else:
                 stop_wait.cancel()
                 await all_done
+                self._raise_runner_failures(all_done)
 
         attempted = sum(self._status_counts.values())
         return RunSummary(
@@ -187,6 +189,19 @@ class EvaluationRunner:
             unfinished_tasks=len(self._store.unfinished_attempts(self._config.experiment_id)),
             stopped=self._stop_event.is_set(),
         )
+
+    def _raise_runner_failures(self, all_done: asyncio.Future) -> None:
+        self._raise_runner_failures_from(all_done.result())
+
+    def _raise_runner_failures_from(self, results: list[object]) -> None:
+        """codex F6: gather(return_exceptions=True) must not swallow state or
+        store failures — a runner-level error is not an episode outcome and
+        must reach the CLI instead of a silent exit 0."""
+        for result in results:
+            if isinstance(result, asyncio.CancelledError):
+                continue
+            if isinstance(result, BaseException):
+                raise result
 
     def _ordered_queue(self, *, exclude: frozenset[tuple[str, str]]) -> list[EpisodeTask]:
         tasks = [task for task in self._config.task_list if (task.task_id, task.mode) not in exclude]
@@ -202,6 +217,11 @@ class EvaluationRunner:
         semaphore: asyncio.Semaphore,
     ) -> None:
         async with semaphore:
+            if self._stop_event.is_set():
+                # codex F4: stop may arrive while this task waited on the
+                # semaphore — a queued task must not start executing; it
+                # stays unattempted for the next resume
+                return
             self._store.register_attempt(attempt)
             self._events.append(self._event(attempt, "attempt_started"))
             self._store.mark_running(attempt.attempt_id, expected_status=EvalTaskStatus.PENDING)

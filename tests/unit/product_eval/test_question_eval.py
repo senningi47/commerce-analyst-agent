@@ -1,6 +1,7 @@
 """Unit tests for the §17.1 question-eval harness (no model calls)."""
 
 import json
+from decimal import Decimal
 from pathlib import Path
 from uuid import uuid4
 
@@ -180,8 +181,11 @@ def test_parse_sql_candidate_rejects_wrong_tool_and_non_select() -> None:
             separators=(",", ":"),
         ),
     )
-    with pytest.raises(SqlCandidateError):
-        parse_sql_candidate(ToolCallOutput(type="tool_calls", tool_calls=[bad]))
+    # codex F10: non-SELECT enforcement moved to the QueryEngine AST policy
+    # (which also accepts CTEs/comments this string check rejected)
+    sql, refs = parse_sql_candidate(ToolCallOutput(type="tool_calls", tool_calls=[bad]))
+    assert sql == "DELETE FROM t"
+    assert refs == ("x",)
 
 
 def test_score_execution_compares_multisets() -> None:
@@ -189,7 +193,8 @@ def test_score_execution_compares_multisets() -> None:
         question_id="q1",
         condition="a",
         agent_rows=[{"amt": 10.5}],
-        gold_rows=[{"total": "10.500000"}],
+        gold_rows=[{"total": Decimal("10.50")}],
+        reference_columns=["total"],
         recall=1.0,
         row_count=1,
         usage={"prompt_tokens": 100, "completion_tokens": 10, "total_tokens": 110},
@@ -202,6 +207,7 @@ def test_score_execution_compares_multisets() -> None:
         condition="a",
         agent_rows=[{"amt": 11}],
         gold_rows=[{"total": "10.5"}],
+        reference_columns=["total"],
         recall=1.0,
         row_count=1,
         usage={},

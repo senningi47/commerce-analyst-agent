@@ -24,6 +24,10 @@ from commerce_agent.query_engine.errors import SqlPolicyViolation
 
 OUT_DIR = Path("data/product-eval")
 
+# questions whose question text declares an ascending ordering — the scorer
+# compares sequences, not multisets (codex F2: ordered-contract split)
+_ORDERED_QUESTIONS = {"dev-01", "dev-10", "reg-06", "reg-08", "closed-01", "closed-10"}
+
 
 def q(qid: str, visibility: str, question: str, sql: str, tables: list[str]) -> dict:
     return {
@@ -186,6 +190,9 @@ def main() -> int:
                 continue
             record = {
                 **item,
+                "row_order": "ascending"
+                if item["question_id"] in _ORDERED_QUESTIONS
+                else "unordered",
                 "gold_columns_count": len(columns),
                 "gold_row_count": len(rows),
                 "gold_result_sha256": result_digest(rows),

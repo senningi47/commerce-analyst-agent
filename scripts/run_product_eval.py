@@ -194,6 +194,8 @@ async def _run(args: argparse.Namespace) -> int:
                         condition=condition,
                         agent_rows=agent_rows,
                         gold_rows=gold_rows,
+                        reference_columns=gold_columns,
+                        row_order=item.get("row_order", "unordered"),
                         recall=recall,
                         row_count=len(agent_rows or []),
                         usage=usage,

@@ -160,8 +160,11 @@ def parse_sql_candidate(output: object) -> tuple[str, tuple[str, ...]]:
     if not isinstance(refs, list) or not refs:
         raise SqlCandidateError("evidence_refs_missing")
     sql = arguments["sql"]
-    if not sql.lstrip().upper().startswith("SELECT"):
-        raise SqlCandidateError("not_select")
+    # codex F10: read-only enforcement belongs to the QueryEngine AST policy
+    # (which also accepts CTEs/comments this string check rejected) — the
+    # harness only parses the response contract
+    if not sql.strip():
+        raise SqlCandidateError("sql_missing")
     return sql, tuple(str(ref) for ref in refs)
 
 
@@ -188,6 +191,8 @@ def score_execution(
     condition: Condition,
     agent_rows: list[dict] | None,
     gold_rows: list[dict],
+    reference_columns: list[str],
+    row_order: str = "unordered",
     recall: float,
     row_count: int,
     usage: dict[str, int],
@@ -195,7 +200,15 @@ def score_execution(
     latency_seconds: float,
     error_class: str | None = None,
 ) -> QuestionScore:
-    correct = bool(agent_rows is not None and results_match(agent_rows, gold_rows))
+    correct = bool(
+        agent_rows is not None
+        and results_match(
+            agent_rows,
+            gold_rows,
+            reference_columns,
+            ordered=row_order == "ascending",
+        )
+    )
     return QuestionScore(
         question_id=question_id,
         condition=condition,

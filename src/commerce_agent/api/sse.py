@@ -125,7 +125,10 @@ async def sse_stream(
         )
         for event in events:
             yield format_sse_event(event)
-            last_sent = event.sequence
+            # codex F3: the reconnect id must be the run cursor (the same
+            # field the source filters on) — advancing by the attempt-local
+            # sequence re-served the tail event on every poll
+            last_sent = event.cursor
             last_activity = time.monotonic()
         if not events and time.monotonic() - last_activity >= heartbeat_interval:
             yield _HEARTBEAT_NOTE

@@ -238,15 +238,39 @@ _RAW_IDENTITY_COLUMNS = frozenset(
 )
 
 
+def _identity_leaks(node: exp.Expression) -> bool:
+    """True when an identity column is reachable outside a COUNT aggregate."""
+    stack = [node]
+    while stack:
+        current = stack.pop()
+        if isinstance(current, exp.Count):
+            continue  # counting identifiers is an irreversible statistic
+        if isinstance(current, exp.Column):
+            if current.name in _RAW_IDENTITY_COLUMNS:
+                return True
+            continue
+        for value in current.args.values():
+            if isinstance(value, exp.Expression):
+                stack.append(value)
+            elif isinstance(value, list):
+                stack.extend(item for item in value if isinstance(item, exp.Expression))
+    return False
+
+
 def _validate_identity_projections(
     scope: Scope,
     source_columns: dict[str, frozenset[str]],
 ) -> None:
     for projection in scope.expression.expressions:
         projected = projection.this if isinstance(projection, exp.Alias) else projection
-        if isinstance(projected, exp.Column) and projected.name in _RAW_IDENTITY_COLUMNS:
+        # codex F7: an identity column must only ever appear under a COUNT
+        # aggregate (irreversible statistic) within the projection — parens,
+        # COALESCE, concatenation and MIN/MAX wrappers preserve the
+        # identifier, and SUM/AVG over an identifier has no business use
+        if _identity_leaks(projected):
             raise SqlPolicyViolation(
-                "identity_projection_denied", "Raw identity projection is not allowed"
+                "identity_projection_denied",
+                "Raw identity projection is not allowed",
             )
         if isinstance(projected, exp.Star) and any(
             columns & _RAW_IDENTITY_COLUMNS for columns in source_columns.values()
@@ -319,6 +343,25 @@ def _validate_joins(scope: Scope, source_tables: dict[str, str]) -> None:
             edge = frozenset({left, right}) if left is not None and right is not None else None
             if edge not in ALLOWED_JOIN_EDGES:
                 raise SqlPolicyViolation("join_edge", "JOIN edge is not reviewed")
+
+
+def _projection_is_aggregate(projection: exp.Expression) -> bool:
+    """True when the projection aggregates within THIS select scope: an
+    AggFunc reachable without crossing a subquery or window boundary (those
+    aggregate a different row set — codex F11)."""
+    stack = [projection]
+    while stack:
+        node = stack.pop()
+        if isinstance(node, (exp.Subquery, exp.Select, exp.Window)):
+            continue
+        if isinstance(node, exp.AggFunc):
+            return True
+        for value in node.args.values():
+            if isinstance(value, exp.Expression):
+                stack.append(value)
+            elif isinstance(value, list):
+                stack.extend(item for item in value if isinstance(item, exp.Expression))
+    return False
 
 
 def _validate_limit(statement: exp.Select, is_aggregate: bool) -> None:
@@ -394,8 +437,15 @@ class AstPolicy:
                 "Recursive CTE is not allowed",
             )
 
+        # codex F11: aggregation is a property of the output grain — a COUNT
+        # buried in a scalar subquery or a window does not aggregate the
+        # outer row set, and detail rows must still carry a LIMIT
         is_aggregate = (
-            statement.find(exp.AggFunc) is not None or statement.args.get("group") is not None
+            any(
+                _projection_is_aggregate(projection)
+                for projection in statement.expressions
+            )
+            or statement.args.get("group") is not None
         )
         for scope in traverse_scope(statement):
             source_columns, source_tables = _scope_sources(scope)
