@@ -24,3 +24,10 @@ outputs/bird-eval/
 outputs/bird-agent-spool/
 outputs/bird-pilot/task11/task-data/
 outputs/bird-pilot/a4/task-data/
+
+# Local project documentation
+/HANDOFF.md
+/HADNOFF.md
+/CLAUDE.md
+/docs/
+/doc/
