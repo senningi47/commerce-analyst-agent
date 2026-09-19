@@ -1,0 +1,30 @@
+{
+  "manifest_version": 1,
+  "generated_at_utc": "2026-08-30T06:56:00Z",
+  "source": {
+    "provider": "Hugging Face",
+    "dataset_ref": "birdsql/bird-interact-full",
+    "revision": "5d78b0722433c3821e1ebda5d8c39d24070049d7",
+    "dataset_url": "https://huggingface.co/datasets/birdsql/bird-interact-full",
+    "license": "CC BY-SA 4.0"
+  },
+  "visibility": "agent_visible_public_only",
+  "relative_root": "data/raw/bird-interact-full/public",
+  "task_file": {
+    "relative_path": "bird_interact_data.jsonl",
+    "byte_count": 1030706,
+    "sha256": "84a726f194d264ffed6de3035e26b46c3fd4702c735f38ce4d0389c7d1b5d9d8",
+    "task_count": 600,
+    "selected_database_count": 22
+  },
+  "evaluator_only_field_audit": {
+    "sol_sql_non_empty_count": 0,
+    "test_cases_non_empty_count": 0,
+    "result": "public task data does not contain evaluator-only ground truth or test cases"
+  },
+  "required_separation": {
+    "gt_test_root": "data/raw/bird-interact-full/evaluator_only",
+    "agent_build_context": "must exclude evaluator_only",
+    "agent_prompt_rag_trace": "must not receive evaluator-only files or fields"
+  }
+}

@@ -1,0 +1,1701 @@
+{
+  "aliases": [
+    {
+      "canonical_value": "AC",
+      "display_label": "Acre",
+      "domain": "customer_state",
+      "locale": "pt-BR",
+      "normalized_alias": "acre",
+      "source_doc_id": "table.customers"
+    },
+    {
+      "canonical_value": "AL",
+      "display_label": "Alagoas",
+      "domain": "customer_state",
+      "locale": "pt-BR",
+      "normalized_alias": "alagoas",
+      "source_doc_id": "table.customers"
+    },
+    {
+      "canonical_value": "AP",
+      "display_label": "Amapá",
+      "domain": "customer_state",
+      "locale": "pt-BR",
+      "normalized_alias": "amapá",
+      "source_doc_id": "table.customers"
+    },
+    {
+      "canonical_value": "AM",
+      "display_label": "Amazonas",
+      "domain": "customer_state",
+      "locale": "pt-BR",
+      "normalized_alias": "amazonas",
+      "source_doc_id": "table.customers"
+    },
+    {
+      "canonical_value": "BA",
+      "display_label": "Bahia",
+      "domain": "customer_state",
+      "locale": "pt-BR",
+      "normalized_alias": "bahia",
+      "source_doc_id": "table.customers"
+    },
+    {
+      "canonical_value": "CE",
+      "display_label": "Ceará",
+      "domain": "customer_state",
+      "locale": "pt-BR",
+      "normalized_alias": "ceará",
+      "source_doc_id": "table.customers"
+    },
+    {
+      "canonical_value": "DF",
+      "display_label": "Distrito Federal",
+      "domain": "customer_state",
+      "locale": "pt-BR",
+      "normalized_alias": "distrito federal",
+      "source_doc_id": "table.customers"
+    },
+    {
+      "canonical_value": "ES",
+      "display_label": "Espírito Santo",
+      "domain": "customer_state",
+      "locale": "pt-BR",
+      "normalized_alias": "espírito santo",
+      "source_doc_id": "table.customers"
+    },
+    {
+      "canonical_value": "GO",
+      "display_label": "Goiás",
+      "domain": "customer_state",
+      "locale": "pt-BR",
+      "normalized_alias": "goiás",
+      "source_doc_id": "table.customers"
+    },
+    {
+      "canonical_value": "MA",
+      "display_label": "Maranhão",
+      "domain": "customer_state",
+      "locale": "pt-BR",
+      "normalized_alias": "maranhão",
+      "source_doc_id": "table.customers"
+    },
+    {
+      "canonical_value": "MT",
+      "display_label": "Mato Grosso",
+      "domain": "customer_state",
+      "locale": "pt-BR",
+      "normalized_alias": "mato grosso",
+      "source_doc_id": "table.customers"
+    },
+    {
+      "canonical_value": "MS",
+      "display_label": "Mato Grosso do Sul",
+      "domain": "customer_state",
+      "locale": "pt-BR",
+      "normalized_alias": "mato grosso do sul",
+      "source_doc_id": "table.customers"
+    },
+    {
+      "canonical_value": "MG",
+      "display_label": "Minas Gerais",
+      "domain": "customer_state",
+      "locale": "pt-BR",
+      "normalized_alias": "minas gerais",
+      "source_doc_id": "table.customers"
+    },
+    {
+      "canonical_value": "PR",
+      "display_label": "Paraná",
+      "domain": "customer_state",
+      "locale": "pt-BR",
+      "normalized_alias": "paraná",
+      "source_doc_id": "table.customers"
+    },
+    {
+      "canonical_value": "PB",
+      "display_label": "Paraíba",
+      "domain": "customer_state",
+      "locale": "pt-BR",
+      "normalized_alias": "paraíba",
+      "source_doc_id": "table.customers"
+    },
+    {
+      "canonical_value": "PA",
+      "display_label": "Pará",
+      "domain": "customer_state",
+      "locale": "pt-BR",
+      "normalized_alias": "pará",
+      "source_doc_id": "table.customers"
+    },
+    {
+      "canonical_value": "PE",
+      "display_label": "Pernambuco",
+      "domain": "customer_state",
+      "locale": "pt-BR",
+      "normalized_alias": "pernambuco",
+      "source_doc_id": "table.customers"
+    },
+    {
+      "canonical_value": "PI",
+      "display_label": "Piauí",
+      "domain": "customer_state",
+      "locale": "pt-BR",
+      "normalized_alias": "piauí",
+      "source_doc_id": "table.customers"
+    },
+    {
+      "canonical_value": "RJ",
+      "display_label": "Rio de Janeiro",
+      "domain": "customer_state",
+      "locale": "pt-BR",
+      "normalized_alias": "rio de janeiro",
+      "source_doc_id": "table.customers"
+    },
+    {
+      "canonical_value": "RN",
+      "display_label": "Rio Grande do Norte",
+      "domain": "customer_state",
+      "locale": "pt-BR",
+      "normalized_alias": "rio grande do norte",
+      "source_doc_id": "table.customers"
+    },
+    {
+      "canonical_value": "RS",
+      "display_label": "Rio Grande do Sul",
+      "domain": "customer_state",
+      "locale": "pt-BR",
+      "normalized_alias": "rio grande do sul",
+      "source_doc_id": "table.customers"
+    },
+    {
+      "canonical_value": "RO",
+      "display_label": "Rondônia",
+      "domain": "customer_state",
+      "locale": "pt-BR",
+      "normalized_alias": "rondônia",
+      "source_doc_id": "table.customers"
+    },
+    {
+      "canonical_value": "RR",
+      "display_label": "Roraima",
+      "domain": "customer_state",
+      "locale": "pt-BR",
+      "normalized_alias": "roraima",
+      "source_doc_id": "table.customers"
+    },
+    {
+      "canonical_value": "SC",
+      "display_label": "Santa Catarina",
+      "domain": "customer_state",
+      "locale": "pt-BR",
+      "normalized_alias": "santa catarina",
+      "source_doc_id": "table.customers"
+    },
+    {
+      "canonical_value": "SE",
+      "display_label": "Sergipe",
+      "domain": "customer_state",
+      "locale": "pt-BR",
+      "normalized_alias": "sergipe",
+      "source_doc_id": "table.customers"
+    },
+    {
+      "canonical_value": "SP",
+      "display_label": "São Paulo",
+      "domain": "customer_state",
+      "locale": "pt-BR",
+      "normalized_alias": "são paulo",
+      "source_doc_id": "table.customers"
+    },
+    {
+      "canonical_value": "TO",
+      "display_label": "Tocantins",
+      "domain": "customer_state",
+      "locale": "pt-BR",
+      "normalized_alias": "tocantins",
+      "source_doc_id": "table.customers"
+    },
+    {
+      "canonical_value": "approved",
+      "display_label": "aprovado",
+      "domain": "order_status",
+      "locale": "pt-BR",
+      "normalized_alias": "aprovado",
+      "source_doc_id": "table.orders"
+    },
+    {
+      "canonical_value": "canceled",
+      "display_label": "cancelado",
+      "domain": "order_status",
+      "locale": "pt-BR",
+      "normalized_alias": "cancelado",
+      "source_doc_id": "table.orders"
+    },
+    {
+      "canonical_value": "created",
+      "display_label": "criado",
+      "domain": "order_status",
+      "locale": "pt-BR",
+      "normalized_alias": "criado",
+      "source_doc_id": "table.orders"
+    },
+    {
+      "canonical_value": "processing",
+      "display_label": "em processamento",
+      "domain": "order_status",
+      "locale": "pt-BR",
+      "normalized_alias": "em processamento",
+      "source_doc_id": "table.orders"
+    },
+    {
+      "canonical_value": "delivered",
+      "display_label": "entregue",
+      "domain": "order_status",
+      "locale": "pt-BR",
+      "normalized_alias": "entregue",
+      "source_doc_id": "table.orders"
+    },
+    {
+      "canonical_value": "shipped",
+      "display_label": "enviado",
+      "domain": "order_status",
+      "locale": "pt-BR",
+      "normalized_alias": "enviado",
+      "source_doc_id": "table.orders"
+    },
+    {
+      "canonical_value": "invoiced",
+      "display_label": "faturado",
+      "domain": "order_status",
+      "locale": "pt-BR",
+      "normalized_alias": "faturado",
+      "source_doc_id": "table.orders"
+    },
+    {
+      "canonical_value": "unavailable",
+      "display_label": "indisponível",
+      "domain": "order_status",
+      "locale": "pt-BR",
+      "normalized_alias": "indisponível",
+      "source_doc_id": "table.orders"
+    },
+    {
+      "canonical_value": "processing",
+      "display_label": "处理中",
+      "domain": "order_status",
+      "locale": "zh-CN",
+      "normalized_alias": "处理中",
+      "source_doc_id": "table.orders"
+    },
+    {
+      "canonical_value": "created",
+      "display_label": "已创建",
+      "domain": "order_status",
+      "locale": "zh-CN",
+      "normalized_alias": "已创建",
+      "source_doc_id": "table.orders"
+    },
+    {
+      "canonical_value": "shipped",
+      "display_label": "已发货",
+      "domain": "order_status",
+      "locale": "zh-CN",
+      "normalized_alias": "已发货",
+      "source_doc_id": "table.orders"
+    },
+    {
+      "canonical_value": "canceled",
+      "display_label": "已取消",
+      "domain": "order_status",
+      "locale": "zh-CN",
+      "normalized_alias": "已取消",
+      "source_doc_id": "table.orders"
+    },
+    {
+      "canonical_value": "invoiced",
+      "display_label": "已开票",
+      "domain": "order_status",
+      "locale": "zh-CN",
+      "normalized_alias": "已开票",
+      "source_doc_id": "table.orders"
+    },
+    {
+      "canonical_value": "approved",
+      "display_label": "已批准",
+      "domain": "order_status",
+      "locale": "zh-CN",
+      "normalized_alias": "已批准",
+      "source_doc_id": "table.orders"
+    },
+    {
+      "canonical_value": "delivered",
+      "display_label": "已送达",
+      "domain": "order_status",
+      "locale": "zh-CN",
+      "normalized_alias": "已送达",
+      "source_doc_id": "table.orders"
+    },
+    {
+      "canonical_value": "unavailable",
+      "display_label": "缺货",
+      "domain": "order_status",
+      "locale": "zh-CN",
+      "normalized_alias": "缺货",
+      "source_doc_id": "table.orders"
+    },
+    {
+      "canonical_value": "boleto",
+      "display_label": "boleto bancário",
+      "domain": "payment_type",
+      "locale": "pt-BR",
+      "normalized_alias": "boleto bancário",
+      "source_doc_id": "table.order_payments"
+    },
+    {
+      "canonical_value": "credit_card",
+      "display_label": "cartão de crédito",
+      "domain": "payment_type",
+      "locale": "pt-BR",
+      "normalized_alias": "cartão de crédito",
+      "source_doc_id": "table.order_payments"
+    },
+    {
+      "canonical_value": "debit_card",
+      "display_label": "cartão de débito",
+      "domain": "payment_type",
+      "locale": "pt-BR",
+      "normalized_alias": "cartão de débito",
+      "source_doc_id": "table.order_payments"
+    },
+    {
+      "canonical_value": "not_defined",
+      "display_label": "não definido",
+      "domain": "payment_type",
+      "locale": "pt-BR",
+      "normalized_alias": "não definido",
+      "source_doc_id": "table.order_payments"
+    },
+    {
+      "canonical_value": "voucher",
+      "display_label": "vale",
+      "domain": "payment_type",
+      "locale": "pt-BR",
+      "normalized_alias": "vale",
+      "source_doc_id": "table.order_payments"
+    },
+    {
+      "canonical_value": "voucher",
+      "display_label": "代金券",
+      "domain": "payment_type",
+      "locale": "zh-CN",
+      "normalized_alias": "代金券",
+      "source_doc_id": "table.order_payments"
+    },
+    {
+      "canonical_value": "credit_card",
+      "display_label": "信用卡",
+      "domain": "payment_type",
+      "locale": "zh-CN",
+      "normalized_alias": "信用卡",
+      "source_doc_id": "table.order_payments"
+    },
+    {
+      "canonical_value": "debit_card",
+      "display_label": "借记卡",
+      "domain": "payment_type",
+      "locale": "zh-CN",
+      "normalized_alias": "借记卡",
+      "source_doc_id": "table.order_payments"
+    },
+    {
+      "canonical_value": "not_defined",
+      "display_label": "未定义",
+      "domain": "payment_type",
+      "locale": "zh-CN",
+      "normalized_alias": "未定义",
+      "source_doc_id": "table.order_payments"
+    },
+    {
+      "canonical_value": "boleto",
+      "display_label": "银行票据",
+      "domain": "payment_type",
+      "locale": "zh-CN",
+      "normalized_alias": "银行票据",
+      "source_doc_id": "table.order_payments"
+    },
+    {
+      "canonical_value": "agro_industria_e_comercio",
+      "display_label": "agro_industria_e_comercio",
+      "domain": "product_category",
+      "locale": "en",
+      "normalized_alias": "agro_industry_and_commerce",
+      "source_doc_id": "table.product_category_name_translation"
+    },
+    {
+      "canonical_value": "climatizacao",
+      "display_label": "climatizacao",
+      "domain": "product_category",
+      "locale": "en",
+      "normalized_alias": "air_conditioning",
+      "source_doc_id": "table.product_category_name_translation"
+    },
+    {
+      "canonical_value": "artes",
+      "display_label": "artes",
+      "domain": "product_category",
+      "locale": "en",
+      "normalized_alias": "art",
+      "source_doc_id": "table.product_category_name_translation"
+    },
+    {
+      "canonical_value": "artes_e_artesanato",
+      "display_label": "artes_e_artesanato",
+      "domain": "product_category",
+      "locale": "en",
+      "normalized_alias": "arts_and_craftmanship",
+      "source_doc_id": "table.product_category_name_translation"
+    },
+    {
+      "canonical_value": "audio",
+      "display_label": "audio",
+      "domain": "product_category",
+      "locale": "en",
+      "normalized_alias": "audio",
+      "source_doc_id": "table.product_category_name_translation"
+    },
+    {
+      "canonical_value": "automotivo",
+      "display_label": "automotivo",
+      "domain": "product_category",
+      "locale": "en",
+      "normalized_alias": "auto",
+      "source_doc_id": "table.product_category_name_translation"
+    },
+    {
+      "canonical_value": "bebes",
+      "display_label": "bebes",
+      "domain": "product_category",
+      "locale": "en",
+      "normalized_alias": "baby",
+      "source_doc_id": "table.product_category_name_translation"
+    },
+    {
+      "canonical_value": "cama_mesa_banho",
+      "display_label": "cama_mesa_banho",
+      "domain": "product_category",
+      "locale": "en",
+      "normalized_alias": "bed_bath_table",
+      "source_doc_id": "table.product_category_name_translation"
+    },
+    {
+      "canonical_value": "livros_interesse_geral",
+      "display_label": "livros_interesse_geral",
+      "domain": "product_category",
+      "locale": "en",
+      "normalized_alias": "books_general_interest",
+      "source_doc_id": "table.product_category_name_translation"
+    },
+    {
+      "canonical_value": "livros_importados",
+      "display_label": "livros_importados",
+      "domain": "product_category",
+      "locale": "en",
+      "normalized_alias": "books_imported",
+      "source_doc_id": "table.product_category_name_translation"
+    },
+    {
+      "canonical_value": "livros_tecnicos",
+      "display_label": "livros_tecnicos",
+      "domain": "product_category",
+      "locale": "en",
+      "normalized_alias": "books_technical",
+      "source_doc_id": "table.product_category_name_translation"
+    },
+    {
+      "canonical_value": "cds_dvds_musicais",
+      "display_label": "cds_dvds_musicais",
+      "domain": "product_category",
+      "locale": "en",
+      "normalized_alias": "cds_dvds_musicals",
+      "source_doc_id": "table.product_category_name_translation"
+    },
+    {
+      "canonical_value": "artigos_de_natal",
+      "display_label": "artigos_de_natal",
+      "domain": "product_category",
+      "locale": "en",
+      "normalized_alias": "christmas_supplies",
+      "source_doc_id": "table.product_category_name_translation"
+    },
+    {
+      "canonical_value": "cine_foto",
+      "display_label": "cine_foto",
+      "domain": "product_category",
+      "locale": "en",
+      "normalized_alias": "cine_photo",
+      "source_doc_id": "table.product_category_name_translation"
+    },
+    {
+      "canonical_value": "pcs",
+      "display_label": "pcs",
+      "domain": "product_category",
+      "locale": "en",
+      "normalized_alias": "computers",
+      "source_doc_id": "table.product_category_name_translation"
+    },
+    {
+      "canonical_value": "informatica_acessorios",
+      "display_label": "informatica_acessorios",
+      "domain": "product_category",
+      "locale": "en",
+      "normalized_alias": "computers_accessories",
+      "source_doc_id": "table.product_category_name_translation"
+    },
+    {
+      "canonical_value": "consoles_games",
+      "display_label": "consoles_games",
+      "domain": "product_category",
+      "locale": "en",
+      "normalized_alias": "consoles_games",
+      "source_doc_id": "table.product_category_name_translation"
+    },
+    {
+      "canonical_value": "construcao_ferramentas_construcao",
+      "display_label": "construcao_ferramentas_construcao",
+      "domain": "product_category",
+      "locale": "en",
+      "normalized_alias": "construction_tools_construction",
+      "source_doc_id": "table.product_category_name_translation"
+    },
+    {
+      "canonical_value": "construcao_ferramentas_iluminacao",
+      "display_label": "construcao_ferramentas_iluminacao",
+      "domain": "product_category",
+      "locale": "en",
+      "normalized_alias": "construction_tools_lights",
+      "source_doc_id": "table.product_category_name_translation"
+    },
+    {
+      "canonical_value": "construcao_ferramentas_seguranca",
+      "display_label": "construcao_ferramentas_seguranca",
+      "domain": "product_category",
+      "locale": "en",
+      "normalized_alias": "construction_tools_safety",
+      "source_doc_id": "table.product_category_name_translation"
+    },
+    {
+      "canonical_value": "cool_stuff",
+      "display_label": "cool_stuff",
+      "domain": "product_category",
+      "locale": "en",
+      "normalized_alias": "cool_stuff",
+      "source_doc_id": "table.product_category_name_translation"
+    },
+    {
+      "canonical_value": "construcao_ferramentas_jardim",
+      "display_label": "construcao_ferramentas_jardim",
+      "domain": "product_category",
+      "locale": "en",
+      "normalized_alias": "costruction_tools_garden",
+      "source_doc_id": "table.product_category_name_translation"
+    },
+    {
+      "canonical_value": "construcao_ferramentas_ferramentas",
+      "display_label": "construcao_ferramentas_ferramentas",
+      "domain": "product_category",
+      "locale": "en",
+      "normalized_alias": "costruction_tools_tools",
+      "source_doc_id": "table.product_category_name_translation"
+    },
+    {
+      "canonical_value": "fraldas_higiene",
+      "display_label": "fraldas_higiene",
+      "domain": "product_category",
+      "locale": "en",
+      "normalized_alias": "diapers_and_hygiene",
+      "source_doc_id": "table.product_category_name_translation"
+    },
+    {
+      "canonical_value": "bebidas",
+      "display_label": "bebidas",
+      "domain": "product_category",
+      "locale": "en",
+      "normalized_alias": "drinks",
+      "source_doc_id": "table.product_category_name_translation"
+    },
+    {
+      "canonical_value": "dvds_blu_ray",
+      "display_label": "dvds_blu_ray",
+      "domain": "product_category",
+      "locale": "en",
+      "normalized_alias": "dvds_blu_ray",
+      "source_doc_id": "table.product_category_name_translation"
+    },
+    {
+      "canonical_value": "eletronicos",
+      "display_label": "eletronicos",
+      "domain": "product_category",
+      "locale": "en",
+      "normalized_alias": "electronics",
+      "source_doc_id": "table.product_category_name_translation"
+    },
+    {
+      "canonical_value": "fashion_roupa_feminina",
+      "display_label": "fashion_roupa_feminina",
+      "domain": "product_category",
+      "locale": "en",
+      "normalized_alias": "fashio_female_clothing",
+      "source_doc_id": "table.product_category_name_translation"
+    },
+    {
+      "canonical_value": "fashion_bolsas_e_acessorios",
+      "display_label": "fashion_bolsas_e_acessorios",
+      "domain": "product_category",
+      "locale": "en",
+      "normalized_alias": "fashion_bags_accessories",
+      "source_doc_id": "table.product_category_name_translation"
+    },
+    {
+      "canonical_value": "fashion_roupa_infanto_juvenil",
+      "display_label": "fashion_roupa_infanto_juvenil",
+      "domain": "product_category",
+      "locale": "en",
+      "normalized_alias": "fashion_childrens_clothes",
+      "source_doc_id": "table.product_category_name_translation"
+    },
+    {
+      "canonical_value": "fashion_roupa_masculina",
+      "display_label": "fashion_roupa_masculina",
+      "domain": "product_category",
+      "locale": "en",
+      "normalized_alias": "fashion_male_clothing",
+      "source_doc_id": "table.product_category_name_translation"
+    },
+    {
+      "canonical_value": "fashion_calcados",
+      "display_label": "fashion_calcados",
+      "domain": "product_category",
+      "locale": "en",
+      "normalized_alias": "fashion_shoes",
+      "source_doc_id": "table.product_category_name_translation"
+    },
+    {
+      "canonical_value": "fashion_esporte",
+      "display_label": "fashion_esporte",
+      "domain": "product_category",
+      "locale": "en",
+      "normalized_alias": "fashion_sport",
+      "source_doc_id": "table.product_category_name_translation"
+    },
+    {
+      "canonical_value": "fashion_underwear_e_moda_praia",
+      "display_label": "fashion_underwear_e_moda_praia",
+      "domain": "product_category",
+      "locale": "en",
+      "normalized_alias": "fashion_underwear_beach",
+      "source_doc_id": "table.product_category_name_translation"
+    },
+    {
+      "canonical_value": "telefonia_fixa",
+      "display_label": "telefonia_fixa",
+      "domain": "product_category",
+      "locale": "en",
+      "normalized_alias": "fixed_telephony",
+      "source_doc_id": "table.product_category_name_translation"
+    },
+    {
+      "canonical_value": "flores",
+      "display_label": "flores",
+      "domain": "product_category",
+      "locale": "en",
+      "normalized_alias": "flowers",
+      "source_doc_id": "table.product_category_name_translation"
+    },
+    {
+      "canonical_value": "alimentos",
+      "display_label": "alimentos",
+      "domain": "product_category",
+      "locale": "en",
+      "normalized_alias": "food",
+      "source_doc_id": "table.product_category_name_translation"
+    },
+    {
+      "canonical_value": "alimentos_bebidas",
+      "display_label": "alimentos_bebidas",
+      "domain": "product_category",
+      "locale": "en",
+      "normalized_alias": "food_drink",
+      "source_doc_id": "table.product_category_name_translation"
+    },
+    {
+      "canonical_value": "moveis_quarto",
+      "display_label": "moveis_quarto",
+      "domain": "product_category",
+      "locale": "en",
+      "normalized_alias": "furniture_bedroom",
+      "source_doc_id": "table.product_category_name_translation"
+    },
+    {
+      "canonical_value": "moveis_decoracao",
+      "display_label": "moveis_decoracao",
+      "domain": "product_category",
+      "locale": "en",
+      "normalized_alias": "furniture_decor",
+      "source_doc_id": "table.product_category_name_translation"
+    },
+    {
+      "canonical_value": "moveis_sala",
+      "display_label": "moveis_sala",
+      "domain": "product_category",
+      "locale": "en",
+      "normalized_alias": "furniture_living_room",
+      "source_doc_id": "table.product_category_name_translation"
+    },
+    {
+      "canonical_value": "moveis_colchao_e_estofado",
+      "display_label": "moveis_colchao_e_estofado",
+      "domain": "product_category",
+      "locale": "en",
+      "normalized_alias": "furniture_mattress_and_upholstery",
+      "source_doc_id": "table.product_category_name_translation"
+    },
+    {
+      "canonical_value": "ferramentas_jardim",
+      "display_label": "ferramentas_jardim",
+      "domain": "product_category",
+      "locale": "en",
+      "normalized_alias": "garden_tools",
+      "source_doc_id": "table.product_category_name_translation"
+    },
+    {
+      "canonical_value": "beleza_saude",
+      "display_label": "beleza_saude",
+      "domain": "product_category",
+      "locale": "en",
+      "normalized_alias": "health_beauty",
+      "source_doc_id": "table.product_category_name_translation"
+    },
+    {
+      "canonical_value": "eletrodomesticos",
+      "display_label": "eletrodomesticos",
+      "domain": "product_category",
+      "locale": "en",
+      "normalized_alias": "home_appliances",
+      "source_doc_id": "table.product_category_name_translation"
+    },
+    {
+      "canonical_value": "eletrodomesticos_2",
+      "display_label": "eletrodomesticos_2",
+      "domain": "product_category",
+      "locale": "en",
+      "normalized_alias": "home_appliances_2",
+      "source_doc_id": "table.product_category_name_translation"
+    },
+    {
+      "canonical_value": "casa_conforto_2",
+      "display_label": "casa_conforto_2",
+      "domain": "product_category",
+      "locale": "en",
+      "normalized_alias": "home_comfort_2",
+      "source_doc_id": "table.product_category_name_translation"
+    },
+    {
+      "canonical_value": "casa_conforto",
+      "display_label": "casa_conforto",
+      "domain": "product_category",
+      "locale": "en",
+      "normalized_alias": "home_confort",
+      "source_doc_id": "table.product_category_name_translation"
+    },
+    {
+      "canonical_value": "casa_construcao",
+      "display_label": "casa_construcao",
+      "domain": "product_category",
+      "locale": "en",
+      "normalized_alias": "home_construction",
+      "source_doc_id": "table.product_category_name_translation"
+    },
+    {
+      "canonical_value": "utilidades_domesticas",
+      "display_label": "utilidades_domesticas",
+      "domain": "product_category",
+      "locale": "en",
+      "normalized_alias": "housewares",
+      "source_doc_id": "table.product_category_name_translation"
+    },
+    {
+      "canonical_value": "industria_comercio_e_negocios",
+      "display_label": "industria_comercio_e_negocios",
+      "domain": "product_category",
+      "locale": "en",
+      "normalized_alias": "industry_commerce_and_business",
+      "source_doc_id": "table.product_category_name_translation"
+    },
+    {
+      "canonical_value": "moveis_cozinha_area_de_servico_jantar_e_jardim",
+      "display_label": "moveis_cozinha_area_de_servico_jantar_e_jardim",
+      "domain": "product_category",
+      "locale": "en",
+      "normalized_alias": "kitchen_dining_laundry_garden_furniture",
+      "source_doc_id": "table.product_category_name_translation"
+    },
+    {
+      "canonical_value": "la_cuisine",
+      "display_label": "la_cuisine",
+      "domain": "product_category",
+      "locale": "en",
+      "normalized_alias": "la_cuisine",
+      "source_doc_id": "table.product_category_name_translation"
+    },
+    {
+      "canonical_value": "malas_acessorios",
+      "display_label": "malas_acessorios",
+      "domain": "product_category",
+      "locale": "en",
+      "normalized_alias": "luggage_accessories",
+      "source_doc_id": "table.product_category_name_translation"
+    },
+    {
+      "canonical_value": "market_place",
+      "display_label": "market_place",
+      "domain": "product_category",
+      "locale": "en",
+      "normalized_alias": "market_place",
+      "source_doc_id": "table.product_category_name_translation"
+    },
+    {
+      "canonical_value": "musica",
+      "display_label": "musica",
+      "domain": "product_category",
+      "locale": "en",
+      "normalized_alias": "music",
+      "source_doc_id": "table.product_category_name_translation"
+    },
+    {
+      "canonical_value": "instrumentos_musicais",
+      "display_label": "instrumentos_musicais",
+      "domain": "product_category",
+      "locale": "en",
+      "normalized_alias": "musical_instruments",
+      "source_doc_id": "table.product_category_name_translation"
+    },
+    {
+      "canonical_value": "moveis_escritorio",
+      "display_label": "moveis_escritorio",
+      "domain": "product_category",
+      "locale": "en",
+      "normalized_alias": "office_furniture",
+      "source_doc_id": "table.product_category_name_translation"
+    },
+    {
+      "canonical_value": "artigos_de_festas",
+      "display_label": "artigos_de_festas",
+      "domain": "product_category",
+      "locale": "en",
+      "normalized_alias": "party_supplies",
+      "source_doc_id": "table.product_category_name_translation"
+    },
+    {
+      "canonical_value": "perfumaria",
+      "display_label": "perfumaria",
+      "domain": "product_category",
+      "locale": "en",
+      "normalized_alias": "perfumery",
+      "source_doc_id": "table.product_category_name_translation"
+    },
+    {
+      "canonical_value": "pet_shop",
+      "display_label": "pet_shop",
+      "domain": "product_category",
+      "locale": "en",
+      "normalized_alias": "pet_shop",
+      "source_doc_id": "table.product_category_name_translation"
+    },
+    {
+      "canonical_value": "seguros_e_servicos",
+      "display_label": "seguros_e_servicos",
+      "domain": "product_category",
+      "locale": "en",
+      "normalized_alias": "security_and_services",
+      "source_doc_id": "table.product_category_name_translation"
+    },
+    {
+      "canonical_value": "sinalizacao_e_seguranca",
+      "display_label": "sinalizacao_e_seguranca",
+      "domain": "product_category",
+      "locale": "en",
+      "normalized_alias": "signaling_and_security",
+      "source_doc_id": "table.product_category_name_translation"
+    },
+    {
+      "canonical_value": "eletroportateis",
+      "display_label": "eletroportateis",
+      "domain": "product_category",
+      "locale": "en",
+      "normalized_alias": "small_appliances",
+      "source_doc_id": "table.product_category_name_translation"
+    },
+    {
+      "canonical_value": "portateis_casa_forno_e_cafe",
+      "display_label": "portateis_casa_forno_e_cafe",
+      "domain": "product_category",
+      "locale": "en",
+      "normalized_alias": "small_appliances_home_oven_and_coffee",
+      "source_doc_id": "table.product_category_name_translation"
+    },
+    {
+      "canonical_value": "esporte_lazer",
+      "display_label": "esporte_lazer",
+      "domain": "product_category",
+      "locale": "en",
+      "normalized_alias": "sports_leisure",
+      "source_doc_id": "table.product_category_name_translation"
+    },
+    {
+      "canonical_value": "papelaria",
+      "display_label": "papelaria",
+      "domain": "product_category",
+      "locale": "en",
+      "normalized_alias": "stationery",
+      "source_doc_id": "table.product_category_name_translation"
+    },
+    {
+      "canonical_value": "tablets_impressao_imagem",
+      "display_label": "tablets_impressao_imagem",
+      "domain": "product_category",
+      "locale": "en",
+      "normalized_alias": "tablets_printing_image",
+      "source_doc_id": "table.product_category_name_translation"
+    },
+    {
+      "canonical_value": "telefonia",
+      "display_label": "telefonia",
+      "domain": "product_category",
+      "locale": "en",
+      "normalized_alias": "telephony",
+      "source_doc_id": "table.product_category_name_translation"
+    },
+    {
+      "canonical_value": "brinquedos",
+      "display_label": "brinquedos",
+      "domain": "product_category",
+      "locale": "en",
+      "normalized_alias": "toys",
+      "source_doc_id": "table.product_category_name_translation"
+    },
+    {
+      "canonical_value": "relogios_presentes",
+      "display_label": "relogios_presentes",
+      "domain": "product_category",
+      "locale": "en",
+      "normalized_alias": "watches_gifts",
+      "source_doc_id": "table.product_category_name_translation"
+    },
+    {
+      "canonical_value": "AC",
+      "display_label": "Acre",
+      "domain": "seller_state",
+      "locale": "pt-BR",
+      "normalized_alias": "acre",
+      "source_doc_id": "table.sellers"
+    },
+    {
+      "canonical_value": "AM",
+      "display_label": "Amazonas",
+      "domain": "seller_state",
+      "locale": "pt-BR",
+      "normalized_alias": "amazonas",
+      "source_doc_id": "table.sellers"
+    },
+    {
+      "canonical_value": "BA",
+      "display_label": "Bahia",
+      "domain": "seller_state",
+      "locale": "pt-BR",
+      "normalized_alias": "bahia",
+      "source_doc_id": "table.sellers"
+    },
+    {
+      "canonical_value": "CE",
+      "display_label": "Ceará",
+      "domain": "seller_state",
+      "locale": "pt-BR",
+      "normalized_alias": "ceará",
+      "source_doc_id": "table.sellers"
+    },
+    {
+      "canonical_value": "DF",
+      "display_label": "Distrito Federal",
+      "domain": "seller_state",
+      "locale": "pt-BR",
+      "normalized_alias": "distrito federal",
+      "source_doc_id": "table.sellers"
+    },
+    {
+      "canonical_value": "ES",
+      "display_label": "Espírito Santo",
+      "domain": "seller_state",
+      "locale": "pt-BR",
+      "normalized_alias": "espírito santo",
+      "source_doc_id": "table.sellers"
+    },
+    {
+      "canonical_value": "GO",
+      "display_label": "Goiás",
+      "domain": "seller_state",
+      "locale": "pt-BR",
+      "normalized_alias": "goiás",
+      "source_doc_id": "table.sellers"
+    },
+    {
+      "canonical_value": "MA",
+      "display_label": "Maranhão",
+      "domain": "seller_state",
+      "locale": "pt-BR",
+      "normalized_alias": "maranhão",
+      "source_doc_id": "table.sellers"
+    },
+    {
+      "canonical_value": "MT",
+      "display_label": "Mato Grosso",
+      "domain": "seller_state",
+      "locale": "pt-BR",
+      "normalized_alias": "mato grosso",
+      "source_doc_id": "table.sellers"
+    },
+    {
+      "canonical_value": "MS",
+      "display_label": "Mato Grosso do Sul",
+      "domain": "seller_state",
+      "locale": "pt-BR",
+      "normalized_alias": "mato grosso do sul",
+      "source_doc_id": "table.sellers"
+    },
+    {
+      "canonical_value": "MG",
+      "display_label": "Minas Gerais",
+      "domain": "seller_state",
+      "locale": "pt-BR",
+      "normalized_alias": "minas gerais",
+      "source_doc_id": "table.sellers"
+    },
+    {
+      "canonical_value": "PR",
+      "display_label": "Paraná",
+      "domain": "seller_state",
+      "locale": "pt-BR",
+      "normalized_alias": "paraná",
+      "source_doc_id": "table.sellers"
+    },
+    {
+      "canonical_value": "PB",
+      "display_label": "Paraíba",
+      "domain": "seller_state",
+      "locale": "pt-BR",
+      "normalized_alias": "paraíba",
+      "source_doc_id": "table.sellers"
+    },
+    {
+      "canonical_value": "PA",
+      "display_label": "Pará",
+      "domain": "seller_state",
+      "locale": "pt-BR",
+      "normalized_alias": "pará",
+      "source_doc_id": "table.sellers"
+    },
+    {
+      "canonical_value": "PE",
+      "display_label": "Pernambuco",
+      "domain": "seller_state",
+      "locale": "pt-BR",
+      "normalized_alias": "pernambuco",
+      "source_doc_id": "table.sellers"
+    },
+    {
+      "canonical_value": "PI",
+      "display_label": "Piauí",
+      "domain": "seller_state",
+      "locale": "pt-BR",
+      "normalized_alias": "piauí",
+      "source_doc_id": "table.sellers"
+    },
+    {
+      "canonical_value": "RJ",
+      "display_label": "Rio de Janeiro",
+      "domain": "seller_state",
+      "locale": "pt-BR",
+      "normalized_alias": "rio de janeiro",
+      "source_doc_id": "table.sellers"
+    },
+    {
+      "canonical_value": "RN",
+      "display_label": "Rio Grande do Norte",
+      "domain": "seller_state",
+      "locale": "pt-BR",
+      "normalized_alias": "rio grande do norte",
+      "source_doc_id": "table.sellers"
+    },
+    {
+      "canonical_value": "RS",
+      "display_label": "Rio Grande do Sul",
+      "domain": "seller_state",
+      "locale": "pt-BR",
+      "normalized_alias": "rio grande do sul",
+      "source_doc_id": "table.sellers"
+    },
+    {
+      "canonical_value": "RO",
+      "display_label": "Rondônia",
+      "domain": "seller_state",
+      "locale": "pt-BR",
+      "normalized_alias": "rondônia",
+      "source_doc_id": "table.sellers"
+    },
+    {
+      "canonical_value": "SC",
+      "display_label": "Santa Catarina",
+      "domain": "seller_state",
+      "locale": "pt-BR",
+      "normalized_alias": "santa catarina",
+      "source_doc_id": "table.sellers"
+    },
+    {
+      "canonical_value": "SE",
+      "display_label": "Sergipe",
+      "domain": "seller_state",
+      "locale": "pt-BR",
+      "normalized_alias": "sergipe",
+      "source_doc_id": "table.sellers"
+    },
+    {
+      "canonical_value": "SP",
+      "display_label": "São Paulo",
+      "domain": "seller_state",
+      "locale": "pt-BR",
+      "normalized_alias": "são paulo",
+      "source_doc_id": "table.sellers"
+    }
+  ],
+  "data_manifest_sha256": "0ef8f69b909bbcaefce0a9f644ddf858b0997abd949f2bed7272f8373a694c24",
+  "documents": [
+    {
+      "allowed_profiles": [
+        "retail"
+      ],
+      "content": {
+        "missing_rows": 13
+      },
+      "doc_id": "data_quality.category_translation_gaps",
+      "kind": "data_quality",
+      "source_path": "data/manifests/olistbr-brazilian-ecommerce-v2-manifest.json",
+      "source_sha256": "0ef8f69b909bbcaefce0a9f644ddf858b0997abd949f2bed7272f8373a694c24",
+      "source_type": "data_manifest",
+      "title": "Product category translation gaps"
+    },
+    {
+      "allowed_profiles": [
+        "retail"
+      ],
+      "content": {
+        "difference_cents": 16531888,
+        "item_total_cents": 1584355324,
+        "payment_total_cents": 1600887212
+      },
+      "doc_id": "data_quality.monetary_mismatch",
+      "kind": "data_quality",
+      "source_path": "data/manifests/olistbr-brazilian-ecommerce-v2-manifest.json",
+      "source_sha256": "0ef8f69b909bbcaefce0a9f644ddf858b0997abd949f2bed7272f8373a694c24",
+      "source_type": "data_manifest",
+      "title": "Payments differ from item plus freight totals"
+    },
+    {
+      "allowed_profiles": [
+        "retail"
+      ],
+      "content": {
+        "distinct_review_ids": 98410,
+        "rows": 99224
+      },
+      "doc_id": "data_quality.review_id_non_unique",
+      "kind": "data_quality",
+      "source_path": "data/manifests/olistbr-brazilian-ecommerce-v2-manifest.json",
+      "source_sha256": "0ef8f69b909bbcaefce0a9f644ddf858b0997abd949f2bed7272f8373a694c24",
+      "source_type": "data_manifest",
+      "title": "review_id is not unique"
+    },
+    {
+      "allowed_profiles": [
+        "retail"
+      ],
+      "content": {
+        "columns": [
+          "review_comment_title",
+          "review_comment_message"
+        ]
+      },
+      "doc_id": "data_quality.review_whitespace_null",
+      "kind": "data_quality",
+      "source_path": "data/manifests/olistbr-brazilian-ecommerce-v2-manifest.json",
+      "source_sha256": "0ef8f69b909bbcaefce0a9f644ddf858b0997abd949f2bed7272f8373a694c24",
+      "source_type": "data_manifest",
+      "title": "Blank review text is normalized to NULL"
+    },
+    {
+      "allowed_profiles": [
+        "retail"
+      ],
+      "content": {
+        "left": {
+          "column": "customer_id",
+          "table": "customers"
+        },
+        "operator": "=",
+        "right": {
+          "column": "customer_id",
+          "table": "orders"
+        }
+      },
+      "doc_id": "join.customers_customer_id__orders_customer_id",
+      "kind": "join",
+      "source_path": "src/commerce_agent/query_engine/_ast_policy.py",
+      "source_sha256": "cb65ff475334bfb7ddfe1091c04c53d06bc28c506ce17d2a83f0747fa86b61d6",
+      "source_type": "ast_policy",
+      "title": "retail.customers.customer_id = retail.orders.customer_id"
+    },
+    {
+      "allowed_profiles": [
+        "retail"
+      ],
+      "content": {
+        "left": {
+          "column": "order_id",
+          "table": "order_items"
+        },
+        "operator": "=",
+        "right": {
+          "column": "order_id",
+          "table": "orders"
+        }
+      },
+      "doc_id": "join.order_items_order_id__orders_order_id",
+      "kind": "join",
+      "source_path": "src/commerce_agent/query_engine/_ast_policy.py",
+      "source_sha256": "cb65ff475334bfb7ddfe1091c04c53d06bc28c506ce17d2a83f0747fa86b61d6",
+      "source_type": "ast_policy",
+      "title": "retail.order_items.order_id = retail.orders.order_id"
+    },
+    {
+      "allowed_profiles": [
+        "retail"
+      ],
+      "content": {
+        "left": {
+          "column": "product_id",
+          "table": "order_items"
+        },
+        "operator": "=",
+        "right": {
+          "column": "product_id",
+          "table": "products"
+        }
+      },
+      "doc_id": "join.order_items_product_id__products_product_id",
+      "kind": "join",
+      "source_path": "src/commerce_agent/query_engine/_ast_policy.py",
+      "source_sha256": "cb65ff475334bfb7ddfe1091c04c53d06bc28c506ce17d2a83f0747fa86b61d6",
+      "source_type": "ast_policy",
+      "title": "retail.order_items.product_id = retail.products.product_id"
+    },
+    {
+      "allowed_profiles": [
+        "retail"
+      ],
+      "content": {
+        "left": {
+          "column": "seller_id",
+          "table": "order_items"
+        },
+        "operator": "=",
+        "right": {
+          "column": "seller_id",
+          "table": "sellers"
+        }
+      },
+      "doc_id": "join.order_items_seller_id__sellers_seller_id",
+      "kind": "join",
+      "source_path": "src/commerce_agent/query_engine/_ast_policy.py",
+      "source_sha256": "cb65ff475334bfb7ddfe1091c04c53d06bc28c506ce17d2a83f0747fa86b61d6",
+      "source_type": "ast_policy",
+      "title": "retail.order_items.seller_id = retail.sellers.seller_id"
+    },
+    {
+      "allowed_profiles": [
+        "retail"
+      ],
+      "content": {
+        "left": {
+          "column": "order_id",
+          "table": "order_payments"
+        },
+        "operator": "=",
+        "right": {
+          "column": "order_id",
+          "table": "orders"
+        }
+      },
+      "doc_id": "join.order_payments_order_id__orders_order_id",
+      "kind": "join",
+      "source_path": "src/commerce_agent/query_engine/_ast_policy.py",
+      "source_sha256": "cb65ff475334bfb7ddfe1091c04c53d06bc28c506ce17d2a83f0747fa86b61d6",
+      "source_type": "ast_policy",
+      "title": "retail.order_payments.order_id = retail.orders.order_id"
+    },
+    {
+      "allowed_profiles": [
+        "retail"
+      ],
+      "content": {
+        "left": {
+          "column": "order_id",
+          "table": "order_reviews"
+        },
+        "operator": "=",
+        "right": {
+          "column": "order_id",
+          "table": "orders"
+        }
+      },
+      "doc_id": "join.order_reviews_order_id__orders_order_id",
+      "kind": "join",
+      "source_path": "src/commerce_agent/query_engine/_ast_policy.py",
+      "source_sha256": "cb65ff475334bfb7ddfe1091c04c53d06bc28c506ce17d2a83f0747fa86b61d6",
+      "source_type": "ast_policy",
+      "title": "retail.order_reviews.order_id = retail.orders.order_id"
+    },
+    {
+      "allowed_profiles": [
+        "retail"
+      ],
+      "content": {
+        "left": {
+          "column": "product_category_name",
+          "table": "product_category_name_translation"
+        },
+        "operator": "=",
+        "right": {
+          "column": "product_category_name",
+          "table": "products"
+        }
+      },
+      "doc_id": "join.product_category_name_translation_product_category_name__products_product_category_name",
+      "kind": "join",
+      "source_path": "src/commerce_agent/query_engine/_ast_policy.py",
+      "source_sha256": "cb65ff475334bfb7ddfe1091c04c53d06bc28c506ce17d2a83f0747fa86b61d6",
+      "source_type": "ast_policy",
+      "title": "retail.product_category_name_translation.product_category_name = retail.products.product_category_name"
+    },
+    {
+      "allowed_profiles": [
+        "retail"
+      ],
+      "content": {
+        "currency": "BRL",
+        "definition": "SUM(order_items.freight_value)",
+        "grain": "order_item",
+        "status": "active"
+      },
+      "doc_id": "metric.freight_amount",
+      "kind": "metric",
+      "source_path": "docs/project/specs/2026-08-31-day-2b-business-value-knowledge-design.md",
+      "source_sha256": "4da86e5621756138923cc91bcc69d4f7a17f5cc2017a5e146b1325b035e22a5a",
+      "source_type": "design_spec",
+      "title": "freight_amount"
+    },
+    {
+      "allowed_profiles": [
+        "retail"
+      ],
+      "content": {
+        "required_clarifications": [
+          "fact source",
+          "freight inclusion",
+          "order status set",
+          "time field"
+        ],
+        "status": "clarification_required"
+      },
+      "doc_id": "metric.gmv",
+      "kind": "metric",
+      "source_path": "docs/project/specs/2026-08-31-day-2b-business-value-knowledge-design.md",
+      "source_sha256": "4da86e5621756138923cc91bcc69d4f7a17f5cc2017a5e146b1325b035e22a5a",
+      "source_type": "design_spec",
+      "title": "gmv"
+    },
+    {
+      "allowed_profiles": [
+        "retail"
+      ],
+      "content": {
+        "currency": "BRL",
+        "definition": "SUM(order_items.price)",
+        "grain": "order_item",
+        "includes_freight": false,
+        "status": "active"
+      },
+      "doc_id": "metric.item_amount",
+      "kind": "metric",
+      "source_path": "docs/project/specs/2026-08-31-day-2b-business-value-knowledge-design.md",
+      "source_sha256": "4da86e5621756138923cc91bcc69d4f7a17f5cc2017a5e146b1325b035e22a5a",
+      "source_type": "design_spec",
+      "title": "item_amount"
+    },
+    {
+      "allowed_profiles": [
+        "retail"
+      ],
+      "content": {
+        "definition": "COUNT(DISTINCT orders.order_id)",
+        "implicit_status_filter": false,
+        "status": "active"
+      },
+      "doc_id": "metric.order_count",
+      "kind": "metric",
+      "source_path": "docs/project/specs/2026-08-31-day-2b-business-value-knowledge-design.md",
+      "source_sha256": "4da86e5621756138923cc91bcc69d4f7a17f5cc2017a5e146b1325b035e22a5a",
+      "source_type": "design_spec",
+      "title": "order_count"
+    },
+    {
+      "allowed_profiles": [
+        "retail"
+      ],
+      "content": {
+        "currency": "BRL",
+        "definition": "SUM(order_payments.payment_value)",
+        "grain": "payment_record",
+        "status": "active"
+      },
+      "doc_id": "metric.payment_amount",
+      "kind": "metric",
+      "source_path": "docs/project/specs/2026-08-31-day-2b-business-value-knowledge-design.md",
+      "source_sha256": "4da86e5621756138923cc91bcc69d4f7a17f5cc2017a5e146b1325b035e22a5a",
+      "source_type": "design_spec",
+      "title": "payment_amount"
+    },
+    {
+      "allowed_profiles": [
+        "retail"
+      ],
+      "content": {
+        "allowed": [
+          "retail tables",
+          "business value alias view"
+        ],
+        "write": false
+      },
+      "doc_id": "permission.agent_reader",
+      "kind": "permission",
+      "source_path": "db/migrations/versions/0002_knowledge_baseline.py",
+      "source_sha256": "f7cd105559023e1766af2a27c4dffc9b9d652293d2872161340b3b12500cc1e9",
+      "source_type": "security_migration",
+      "title": "agent_reader boundary"
+    },
+    {
+      "allowed_profiles": [
+        "retail"
+      ],
+      "content": {
+        "allowed": [
+          "retail Knowledge view"
+        ],
+        "retail_access": false,
+        "write": false
+      },
+      "doc_id": "permission.knowledge_reader",
+      "kind": "permission",
+      "source_path": "db/migrations/versions/0002_knowledge_baseline.py",
+      "source_sha256": "f7cd105559023e1766af2a27c4dffc9b9d652293d2872161340b3b12500cc1e9",
+      "source_type": "security_migration",
+      "title": "knowledge_reader boundary"
+    },
+    {
+      "allowed_profiles": [
+        "retail"
+      ],
+      "content": {
+        "columns": [
+          "customer_city",
+          "customer_id",
+          "customer_state",
+          "customer_unique_id",
+          "customer_zip_code_prefix"
+        ],
+        "schema": "retail"
+      },
+      "doc_id": "table.customers",
+      "kind": "table",
+      "source_path": "db/migrations/versions/0001_retail_schema.py",
+      "source_sha256": "bdf1a42a8f8e4b2d43f5064f314957f7b517596d41eebbd332f0a14a522c8ab0",
+      "source_type": "migration",
+      "title": "retail.customers"
+    },
+    {
+      "allowed_profiles": [
+        "retail"
+      ],
+      "content": {
+        "columns": [
+          "freight_value",
+          "order_id",
+          "order_item_id",
+          "price",
+          "product_id",
+          "seller_id",
+          "shipping_limit_date"
+        ],
+        "schema": "retail"
+      },
+      "doc_id": "table.order_items",
+      "kind": "table",
+      "source_path": "db/migrations/versions/0001_retail_schema.py",
+      "source_sha256": "bdf1a42a8f8e4b2d43f5064f314957f7b517596d41eebbd332f0a14a522c8ab0",
+      "source_type": "migration",
+      "title": "retail.order_items"
+    },
+    {
+      "allowed_profiles": [
+        "retail"
+      ],
+      "content": {
+        "columns": [
+          "order_id",
+          "payment_installments",
+          "payment_sequential",
+          "payment_type",
+          "payment_value"
+        ],
+        "schema": "retail"
+      },
+      "doc_id": "table.order_payments",
+      "kind": "table",
+      "source_path": "db/migrations/versions/0001_retail_schema.py",
+      "source_sha256": "bdf1a42a8f8e4b2d43f5064f314957f7b517596d41eebbd332f0a14a522c8ab0",
+      "source_type": "migration",
+      "title": "retail.order_payments"
+    },
+    {
+      "allowed_profiles": [
+        "retail"
+      ],
+      "content": {
+        "columns": [
+          "order_id",
+          "review_answer_timestamp",
+          "review_comment_message",
+          "review_comment_title",
+          "review_creation_date",
+          "review_id",
+          "review_row_id",
+          "review_score"
+        ],
+        "schema": "retail"
+      },
+      "doc_id": "table.order_reviews",
+      "kind": "table",
+      "source_path": "db/migrations/versions/0001_retail_schema.py",
+      "source_sha256": "bdf1a42a8f8e4b2d43f5064f314957f7b517596d41eebbd332f0a14a522c8ab0",
+      "source_type": "migration",
+      "title": "retail.order_reviews"
+    },
+    {
+      "allowed_profiles": [
+        "retail"
+      ],
+      "content": {
+        "columns": [
+          "customer_id",
+          "order_approved_at",
+          "order_delivered_carrier_date",
+          "order_delivered_customer_date",
+          "order_estimated_delivery_date",
+          "order_id",
+          "order_purchase_timestamp",
+          "order_status"
+        ],
+        "schema": "retail"
+      },
+      "doc_id": "table.orders",
+      "kind": "table",
+      "source_path": "db/migrations/versions/0001_retail_schema.py",
+      "source_sha256": "bdf1a42a8f8e4b2d43f5064f314957f7b517596d41eebbd332f0a14a522c8ab0",
+      "source_type": "migration",
+      "title": "retail.orders"
+    },
+    {
+      "allowed_profiles": [
+        "retail"
+      ],
+      "content": {
+        "columns": [
+          "product_category_name",
+          "product_category_name_english"
+        ],
+        "schema": "retail"
+      },
+      "doc_id": "table.product_category_name_translation",
+      "kind": "table",
+      "source_path": "db/migrations/versions/0001_retail_schema.py",
+      "source_sha256": "bdf1a42a8f8e4b2d43f5064f314957f7b517596d41eebbd332f0a14a522c8ab0",
+      "source_type": "migration",
+      "title": "retail.product_category_name_translation"
+    },
+    {
+      "allowed_profiles": [
+        "retail"
+      ],
+      "content": {
+        "columns": [
+          "product_category_name",
+          "product_description_lenght",
+          "product_height_cm",
+          "product_id",
+          "product_length_cm",
+          "product_name_lenght",
+          "product_photos_qty",
+          "product_weight_g",
+          "product_width_cm"
+        ],
+        "schema": "retail"
+      },
+      "doc_id": "table.products",
+      "kind": "table",
+      "source_path": "db/migrations/versions/0001_retail_schema.py",
+      "source_sha256": "bdf1a42a8f8e4b2d43f5064f314957f7b517596d41eebbd332f0a14a522c8ab0",
+      "source_type": "migration",
+      "title": "retail.products"
+    },
+    {
+      "allowed_profiles": [
+        "retail"
+      ],
+      "content": {
+        "columns": [
+          "seller_city",
+          "seller_id",
+          "seller_state",
+          "seller_zip_code_prefix"
+        ],
+        "schema": "retail"
+      },
+      "doc_id": "table.sellers",
+      "kind": "table",
+      "source_path": "db/migrations/versions/0001_retail_schema.py",
+      "source_sha256": "bdf1a42a8f8e4b2d43f5064f314957f7b517596d41eebbd332f0a14a522c8ab0",
+      "source_type": "migration",
+      "title": "retail.sellers"
+    }
+  ],
+  "revision_id": "retail-catalog-v1",
+  "schema_version": 1
+}
