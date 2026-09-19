@@ -467,7 +467,7 @@ Codex 对 e6053fd 增量做终局验证与裁定：增量验证 11 项全 PASS�
 ## 5. 下一步计划（CLOSED——均为可选后续）
 
 1. **push（✅ 已执行，2026-09-18）**：按终局后续裁定执行——归档 commit `1440185` + 裁定记录 `86061b2` 后 push；前置检查四项全绿（分支 main / 远端 origin=github.com/senningi47/commerce-analyst-agent / 89 commits 全历史 d87768a→86061b2 / 敏感扫描 0 真实命中 + `.env` 从未入库）；`git push -u origin main` 成功（新远端分支 + 跟踪建立）。
-2. **仓库补录（分批，另开归档任务）**：裁定要求优先补齐**干净 checkout 运行所必需**的代码/迁移/配置/测试——实际缺口经盘点远大于文档原记载「Day 1–2 部分工件」：Day 1–3 基础层整体未入库（`knowledge/`、`model/`、`context_builder/` 实现、`value_resolver/`、迁移 0001–0003、`alembic.ini`、`compose.yaml`、`data/knowledge`、约 60 个测试文件、bootstrap/import 脚本）；其余历史材料（specs/plans/research/早期报告）可延后。禁止 `git add .`，逐路径分批。
+2. **仓库补录（批次 1 ✅ 完成 2026-09-19）**：Day 1–3 基础层已按裁定分四个逻辑 commit 入库（`1fe82b1` 迁移 0001–0003 + alembic + compose + python pin、`edf6499` 四个源码包、`6bfe6bf` configs + knowledge catalog + manifests + bootstrap/import/manual 脚本、`133dbb8` ~55 个测试/夹具），逐路径 add、逐文件敏感扫描。**临时 clone 实测抓到并修复两个干净 checkout 缺陷**（`2df0a0b`）：①autocrlf 换行转换破坏原始字节 sha256 校验（快照 evidence/manifests）→ `.gitattributes` 冻结被校验路径；②tokenizer 缓存为刻意 gitignore 的派生物 → README 补一次性免费 provision 步骤；③catalog 测试补数据缺失 skipif。**终验：clone + provision 后 930 passed / 143 skipped / 0 failed**（本地 933/140 不变，差 = 3 个数据守卫跳过）。**批次 2（历史材料，可延后）**：specs/plans/research/早期报告/DATA_PROVENANCE/spikes；两项留用户裁定：`bird-interact-full-evaluator-only-manifest.json`（按红线未读取未入库）与 `.vscode/`、`.tmp-*`（建议永不入库）。
 3. **sim 侧余额核对（✅ 已完成 2026-09-19，免费）**：用户提供平台读数（总消耗 **91.06 元**；分日 22.36/47.74/12.73）→ 财务结算记录入账本 `sim_reconciliation_20260919`；**平台实扣终账 91.06/160（57%，含 sim）**，与收官估算差 +2.87 已归因（sim + 汇率漂移 + 小额未计轮）；签署保留边界④解除；零付费补跑。
 4. **待排期 P2（审查 F8，2026-09-18 登记）**：SSE 持久游标列——事件表迁移加持久 cursor 列，替换 `sse.py` 按 occurred_at/attempt_id 的动态 `row_number()`；验收条件：晚到/重排事件不重发、跨 attempt 断线重连语义、与现有事件导入兼容。落地前 F3 修复只保证会话内游标语义正确，**不等于**可靠持久重连。**终局裁定：排在下一次 SSE 可靠性迭代，作为宣称「可靠持久重连」前的验收门，不阻塞归档。**
 5. **待排期 P2（pit 79 入库）**：spool 导入器库级 per-(experiment,task,mode) 聚合（c 模式一轮一文件），替代调用侧预聚合变体。**终局裁定：优先于下一次 c 模式批量评测落实；此前继续使用已验证的调用侧预聚合流程。**
@@ -849,3 +849,11 @@ Codex 对 e6053fd 增量做终局验证与裁定：增量验证 11 项全 PASS�
 - **终账升级**：**平台实扣 91.06/160（57%，含 sim）**；peak 零泄漏获平台账单旁证（残差量级排除隐性 peak 计费）；签署保留边界④解除，其余四项不变。
 - **记录**：账本 `sim_reconciliation_20260919` 节；最终报告 §11；HANDOFF §3/§5.3；README/面试材料/CLAUDE.md 口径同步；执行日志 §40。
 - **零付费零 DB 变更零进程变更**；commit 后 push（沿用归档裁定授予的收官文档流程）。
+
+### 8.21 补录批次 1 轮（2026-09-19，零付费，用户「确认执行剩余事项」行使）
+
+- **入库**：四个逻辑 commit（`1fe82b1`/`edf6499`/`6bfe6bf`/`133dbb8`）+ clone 验证修复 `2df0a0b`，共 ~110 文件；逐文件敏感扫描（0 密钥形态命中；2 处 DSN 形态均为变量/合成占位）。
+- **clone 实测发现并修复**：①autocrlf 破坏字节哈希校验 → `.gitattributes`；②tokenizer 缓存 = gitignored 派生物 → README 补免费 provision 步骤；③catalog 测试补数据 skipif。
+- **终验**：干净 clone + provision = **930/143/0 failed**（本地 933/140 不变）；本地 catalog 测试 3 passed（skipif 未误伤）。
+- **安全处置**：`bird-interact-full-evaluator-only-manifest.json` 按红线未读取未入库（checksum-only 性质，留用户裁定）；`scripts/manual/request_bird_full_gt.sh` 经审读为隔离正向工具（零 GT 内容）后入库；`scripts/spikes/` 归批次 2。
+- **零付费零 DB 变更零进程变更**；commit 后 push。

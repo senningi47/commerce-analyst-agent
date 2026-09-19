@@ -39,7 +39,7 @@ Codex 三轮验证（§2.40/日志 §37）: 6 项 FIXED-VERIFIED、F8 延期披�
          重放脚本退出码修正；**933 passed / 140 skipped**；收官口径 = 有限范围收官 + 已披露保留，不声称「全部问题清零」
 Codex 终局裁定（§2.41/日志 §38）: 四项全 ACCEPT、增量验证 11 项 PASS——**签署「有限范围收官声明成立（保留已披露边界）」，审查循环关闭**；
          五项保留边界（F8 待排期/值匹配契约/COUNT 保守误拒/混合口径预算 sim 待核对/有序题仅一道有模型覆盖）；最终报告 §10 为签署记录
-待办（后续安排裁定 2026-09-18）: ①push **已执行**（1440185+86061b2 后，四项前置检查全绿，89 commits 全历史上 origin/main）②Day 1–3 基础层分批补录（缺口远大于原记载：4 包实现/迁移 0001–0003/alembic/compose/~60 测试/bootstrap 脚本，另开任务、逐路径、禁 git add .；**远端 checkout 当前不可运行**）③sim 余额对账 **✅ 完成**（平台实扣 91.06/160=57%，账本 sim_reconciliation_20260919，边界④解除）④F8→下次 SSE 迭代验收门 ⑤导入器库级聚合→优先于下次 c 批评测 ⑥可选：v4+修复环重测、cybermarket 恢复
+待办（后续安排裁定 2026-09-18）: ①push **已执行**（1440185+86061b2 后，四项前置检查全绿，89 commits 全历史上 origin/main）②Day 1–3 补录 **批次 1 ✅ 完成**（4 commit 入库 ~110 文件 + clone 实测修复 autocrlf 哈希/tokenizer provision/数据 skipif 三缺陷；**干净 checkout 终验 930/143/0**；批次 2=历史材料待执行；evaluator-only manifest 按红线未入库待裁定）③sim 余额对账 **✅ 完成**（平台实扣 91.06/160=57%，账本 sim_reconciliation_20260919，边界④解除）④F8→下次 SSE 迭代验收门 ⑤导入器库级聚合→优先于下次 c 批评测 ⑥可选：v4+修复环重测、cybermarket 恢复
 终态证据: 消融报告（2026-09-17-ablation-repair-120.md）+ a 批报告 + 执行日志 §30–§33 + 账本四节；消融收官文档 commit 待授权；未 push
 ```text
 Day 4 overall: PASS；Day 5 Phase A + Gate P preflight 全 PASS（模型已切 deepseek-flash）

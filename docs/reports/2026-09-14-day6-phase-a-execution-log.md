@@ -521,3 +521,14 @@ Codex 后续安排裁定（push 同意 / 审查文件入库全同意 / Day 1–2
 3. **peak 平台旁证**：四窗全按 off-peak 收敛至 2.3% 残差——隐性 peak（2×）计费必然产生远超此量级的残差，平台账单独立佐证零 peak 泄漏。
 4. **终账升级**：**平台实扣 91.06/160（57%，含 sim）**；「混合口径估算」口径退役（假定账户仅用于本项目）；签署保留边界④解除，其余四项（F8/值匹配契约/COUNT 误拒/有序题覆盖）不变。
 5. **记录**：账本 `sim_reconciliation_20260919`；最终报告 §11 + §1/§4 预算行升级；HANDOFF §3/§5.3/§8.20；README/面试材料/CLAUDE.md 同步。零付费零补跑；commit 后 push（收官文档流程内）。
+
+
+## 41. 补录批次 1 COMPLETE：Day 1–3 基础层入库、clone 实测修复两个干净 checkout 缺陷、终验 930/143/0（2026-09-19，零付费）
+
+用户「确认执行剩余事项」行使，按裁定「优先补齐干净 checkout 运行所必需的代码、迁移、配置和测试；不要直接执行 git add .」执行：
+
+1. **入库（4 个逻辑 commit，~110 文件，逐路径 add + 逐文件敏感扫描 0 真实命中）**：`1fe82b1` 迁移 0001–0003 + alembic 三件套 + compose.yaml + .python-version（3.11）；`edf6499` knowledge/model/context_builder/value_resolver 四包实现 + query_engine 内部件 + orchestration `__init__`；`6bfe6bf` configs（tokenizer artifact、capability v1–v3、price 两份、prompt-policies v1、run-profiles v1）+ data/knowledge catalog + 公开/olist manifests + bootstrap/import/provision 脚本 + 两个 manual 向导；`133dbb8` ~55 个测试/夹具（contracts/、fixtures、integration 六目录、unit 四目录）。
+2. **clone 实测（裁定核心验收）两轮抓到真缺陷**：首轮 6 failed——①autocrlf 在全新 checkout 把 LF 转 CRLF，破坏快照 evidence 与 Olist manifest 的原始字节 sha256 校验 → 新增 `.gitattributes` 对 configs/**、data/{knowledge,manifests}/**、tests/fixtures/**、docs/project/research/** 冻结换行（`2df0a0b`）；②tokenizer 缓存（6.1MB）系刻意 gitignore 的派生物，clone 缺失 → README 快速开始补一次性免费 provision 步骤（CDN 下载 + fail-closed 校验，无 API key）；③3 个 catalog builder 测试硬依赖 gitignored 的 Olist 原始 CSV → 补 skipif 数据守卫。
+3. **终验**：全新 clone + provision = **930 passed / 143 skipped / 0 failed**（= 本地 933/140 − 3 个数据守卫跳过，零失败）；本地 suite 933/140 不变，catalog 测试 3 passed 确认守卫未误伤。
+4. **安全处置**：`bird-interact-full-evaluator-only-manifest.json` 按红线（不访问/枚举 evaluator-only 内容）未读取、未入库，留用户裁定（按其向导源码该文件仅含路径/字节数/SHA-256）；`request_bird_full_gt.sh` 审读确认零 GT 内容且内嵌隔离纪律后入库；`scripts/spikes/`、早期 specs/plans/reports、DATA_PROVENANCE 归批次 2；`.vscode/`、`.tmp-*` 建议永不入库。
+5. **判定**：零付费零 GT 读取零 DB 变更；远端 `origin/main` @ `2df0a0b` 现可从干净 checkout 运行（含一次免费 provision）。
