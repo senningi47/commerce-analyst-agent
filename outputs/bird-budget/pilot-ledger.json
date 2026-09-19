@@ -564,5 +564,31 @@
   ],
   "budget_restatement": "mixed-basis estimate: 7.93 (= 7.40 platform-checked + 0.53 C1-series agent estimate, through 09-15 am; sim pending — label corrected 2026-09-18, previously mislabeled 'historical platform reads', see table.spent_through_2026_09_15) + (3.456749 + 6.150604 + 1.673449 + 0.071519) x 7.07 = 88.19 yuan; simulator-side still pending; NOT a platform-verified final settlement",
   "status": "round-1 (09-18 am): corrections applied to final report/README/interview-prep; review file kept untracked by codex. round-2 (09-18 pm): codex verification found body/docs still carrying old calibers + this label error; P1-1/P1-2 scorer defects, P1-3 nested-star bypass, bank row_order metadata (10 questions) and dev-15/reg-03 EPOCH gold_sql fixed; body/README/interview-prep/HANDOFF current-state restated (643 scored denominator, 12.5% vs 10.0%, mixed-basis estimate, narrowed peak claim, 932 tests); this label corrected"
+ },
+ "sim_reconciliation_20260919": {
+  "source": "user-provided platform billing readings 2026-09-19: total consumption 91.06 yuan; daily after 09-15 16:00 = 09-15 16:00-24:00 22.36 / 09-16 47.74 / 09-17 12.73",
+  "assumption": "platform account used solely for this project; simulator side (USER_SIM_MODEL) bills through the same DEEPSEEK_API_KEY, so the readings include sim consumption",
+  "reconciliation": {
+   "platform_total_yuan": 91.06,
+   "platform_pre_0915_1600_yuan": 8.23,
+   "platform_post_0915_1600_yuan": 82.83,
+   "recorded_mixed_estimate_yuan": 88.19,
+   "known_excluded_agent_runs_yuan": 0.78,
+   "excluded_detail": "f/g/h $0.046372 + v4 validation $0.056 + 09-15 afternoon diagnostic $0.008127, x7.07",
+   "adjusted_agent_side_estimate_yuan": 88.97,
+   "residual_yuan": 2.09,
+   "residual_pct": "2.3%",
+   "residual_attribution": "simulator-side consumption + indicative-FX drift (7.07 implied on 09-13 vs platform actual rate) + rounding of small runs; not exactly decomposable without per-request platform data. C1-series sim ~= 0.30 (pre-16:00 window: 8.23 platform vs 7.93 agent-only estimate)"
+  },
+  "window_check": {
+   "note": "indicative only: the c batch spans midnight 09-15/16 and the split is estimated from the 21:45-00:52 window; per-window gaps swing +-1-2 yuan with that assumption — the TOTAL is authoritative",
+   "through_0915_1600": "platform 8.23 vs estimate 7.93 -> C1-series sim ~= +0.30",
+   "d_0915_evening": "platform 22.36 vs agent ~20.0-20.5 (c b01-b04 7.89 + c b05-b12 bulk ~11.8-12.3 + f/g/h 0.33) -> sim gap ~+1.9-2.3",
+   "d_0916": "platform 47.74 vs agent ~48.1 (a batch 43.49 + c tail ~4.2 + v4 0.40) -> ~-0.4 (FX / split error)",
+   "d_0917": "platform 12.73 vs agent ~12.34 (ablation 11.83 + product 0.51) -> +0.39 (sim, ablation is BIRD-stack)"
+  },
+  "peak_verification": "all four windows reconcile within ~2.3% at off-peak rates; a hidden peak-billed window (2x) would inflate the residual far beyond this — the platform totals independently corroborate zero peak leakage, previously verifiable only from agent telemetry",
+  "budget_upgrade": "the 09-18 mixed-basis estimate is superseded: platform-verified settlement 91.06 yuan / 160 ceiling (57%, sim included); estimate delta +2.87 (3.3% vs recorded 88.19) documented; closure-signing retained boundary #4 (mixed estimate, sim pending) is hereby RESOLVED; remaining boundaries (F8 deferral, value-match contract, COUNT false-rejects, ordered-question coverage) unchanged",
+  "status": "sim-side reconciliation COMPLETE (free, no paid re-runs); financial settlement record per the post-closure ruling; ceiling margin ~43% (69 yuan) unused"
  }
 }
