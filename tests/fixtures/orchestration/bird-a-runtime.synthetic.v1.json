@@ -1,0 +1,1 @@
+{"queries":{"SELECT COUNT(*) AS order_count FROM synthetic_orders":{"columns":["order_count"],"rows":[{"order_count":8}]}},"revision":"bird-a-runtime-fixture-v1","schemas":{"synthetic:orders":{"columns":["status","order_count"],"table":"synthetic_orders"}}}
