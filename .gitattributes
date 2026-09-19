@@ -1,0 +1,8 @@
+# Files whose exact bytes are verified by SHA-256 checks (snapshot review
+# evidence, dataset manifests, knowledge catalog, test fixtures) must survive
+# a fresh checkout byte-exact — no EOL normalization on them.
+configs/** -text
+data/knowledge/** -text
+data/manifests/** -text
+tests/fixtures/** -text
+docs/project/research/** -text

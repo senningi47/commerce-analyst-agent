@@ -1,10 +1,20 @@
 from collections import Counter
 from pathlib import Path
 
+import pytest
+
 from commerce_agent.knowledge._catalog import canonical_catalog_bytes
 from scripts.build_knowledge_catalog import build_catalog
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
+
+# the builder reads the Olist raw CSVs from data/raw/, which git ignores —
+# these tests can only run where the dataset has been imported locally
+# (2026-09-19 backfill: a clean checkout must skip, not fail)
+pytestmark = pytest.mark.skipif(
+    not (REPO_ROOT / "data/raw/olistbr-brazilian-ecommerce-v2/files").is_dir(),
+    reason="Olist raw dataset (gitignored) not present — import it locally to run the builder tests",
+)
 
 
 def test_builder_produces_reviewed_document_and_alias_counts() -> None:

@@ -49,8 +49,11 @@ docs/                     规格、计划、执行日志、评测报告（全留
 ## 快速开始
 
 ```bash
-# 离线测试（无数据库/无网络）
-uv run pytest -q                       # 932 passed, 140 skipped
+# 一次性准备（免费，仅 CDN 下载并 fail-closed 校验 tokenizer 工件）
+uv run python scripts/provision_deepseek_tokenizer.py install --manifest configs/model/deepseek-tokenizer-artifact.v1.json
+
+# 离线测试（无数据库/无 API key）
+uv run pytest -q                       # 933 passed, 140 skipped
 uv run ruff check src tests scripts db/migrations
 
 # PostgreSQL 集成/e2e（需 docker compose 起产品库 + .env）
