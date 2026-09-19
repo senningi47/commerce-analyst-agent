@@ -532,3 +532,10 @@ Codex 后续安排裁定（push 同意 / 审查文件入库全同意 / Day 1–2
 3. **终验**：全新 clone + provision = **930 passed / 143 skipped / 0 failed**（= 本地 933/140 − 3 个数据守卫跳过，零失败）；本地 suite 933/140 不变，catalog 测试 3 passed 确认守卫未误伤。
 4. **安全处置**：`bird-interact-full-evaluator-only-manifest.json` 按红线（不访问/枚举 evaluator-only 内容）未读取、未入库，留用户裁定（按其向导源码该文件仅含路径/字节数/SHA-256）；`request_bird_full_gt.sh` 审读确认零 GT 内容且内嵌隔离纪律后入库；`scripts/spikes/`、早期 specs/plans/reports、DATA_PROVENANCE 归批次 2；`.vscode/`、`.tmp-*` 建议永不入库。
 5. **判定**：零付费零 GT 读取零 DB 变更；远端 `origin/main` @ `2df0a0b` 现可从干净 checkout 运行（含一次免费 provision）。
+
+
+## 42. 批次 2 裁定：历史材料不执行，补录任务关闭，后续安排裁定全链走完（2026-09-19，零付费）
+
+用户裁定：批次 2 历史材料（specs/plans/research/早期报告/DATA_PROVENANCE/spikes）不执行，维持未跟踪；evaluator-only manifest 同状态（从未读取）；`.vscode/`、`.tmp-*` 永不入库。补录任务就此关闭——批次 1 已达成「干净 checkout 可运行」目标（终验 930/143/0）。
+
+后续安排裁定全链：归档 ✅（1440185）→ push ✅（0f8485a）→ sim 对账 ✅（473d9cf，平台终账 91.06/160）→ 补录批次 1 ✅（1fe82b1…2df0a0b）→ 批次 2 裁定不执行（本节）。交接文档无未决事项；仓库终态 = origin/main 可运行 + 四份审查文件归档 + 平台核对终账 + 全部裁定留痕。
