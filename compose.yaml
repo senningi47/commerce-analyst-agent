@@ -1,0 +1,28 @@
+services:
+  product-postgres:
+    image: "${PRODUCT_POSTGRES_IMAGE:?set PRODUCT_POSTGRES_IMAGE to postgres@sha256 digest}"
+    container_name: commerce_analyst_product_postgres
+    environment:
+      POSTGRES_DB: commerce_analyst
+      POSTGRES_USER: commerce_admin
+      POSTGRES_PASSWORD: "${PRODUCT_POSTGRES_ADMIN_PASSWORD:?set product admin password}"
+    ports:
+      - "127.0.0.1:5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U commerce_admin -d commerce_analyst"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+    volumes:
+      - product_postgres_data:/var/lib/postgresql
+    networks:
+      - product_internal
+    restart: unless-stopped
+
+volumes:
+  product_postgres_data:
+    name: commerce_analyst_product_postgres_data
+
+networks:
+  product_internal:
+    name: commerce_analyst_product_internal
